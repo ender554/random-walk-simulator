@@ -1,13 +1,39 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Controls from './components/Controls';
 import RandomWalkCanvas from './components/RandomWalkCanvas';
 import './App.css';
+
+const stripePaymentLink = 'https://buy.stripe.com/test_unlocked';
 
 function App() {
   const canvasRef = useRef(null);
   const [steps, setSteps] = useState(5000);
   const [stepSize, setStepSize] = useState(4);
   const [seed, setSeed] = useState('balanced');
+  const [unlocked, setUnlocked] = useState(false);
+
+  const maxSteps = unlocked ? 100000 : 5000;
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const stored = localStorage.getItem('unlocked') === 'true';
+    setUnlocked(stored);
+
+    const handleStorage = (event) => {
+      if (event.key === 'unlocked') {
+        setUnlocked(event.newValue === 'true');
+      }
+    };
+
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, []);
+
+  useEffect(() => {
+    if (steps > maxSteps) {
+      setSteps(maxSteps);
+    }
+  }, [maxSteps, steps]);
 
   const handleRun = () => {
     canvasRef.current?.drawWalk(steps, stepSize, seed);
@@ -21,8 +47,21 @@ function App() {
     canvasRef.current?.exportPNG();
   };
 
+  const handleBuy = () => {
+    if (typeof window === 'undefined') return;
+    window.open(stripePaymentLink, '_blank', 'noopener');
+  };
+
   return (
     <div className="app-shell">
+      <header className="page-header">
+        <h1>Random Walk Simulator</h1>
+        <p>
+          Explore deterministic random walks, visualize Brownian motion,
+          and export the path as an image with consistent steps, sizes, and seed.
+        </p>
+      </header>
+
       <Controls
         steps={steps}
         setSteps={setSteps}
@@ -33,10 +72,22 @@ function App() {
         onRun={handleRun}
         onReset={handleReset}
         onExport={handleExport}
+        maxSteps={maxSteps}
+        unlocked={unlocked}
+        onBuy={handleBuy}
       />
 
       <div className="canvas-wrapper">
         <RandomWalkCanvas ref={canvasRef} />
+      </div>
+
+      <div className="canvas-description">
+        <p>The Random Walk Simulator follows a point that steps one direction at a time.</p>
+        <p>Up, down, left, or right moves build a continuous neon line on the canvas.</p>
+        <p>Every run is deterministic thanks to a seed, so the same inputs yield the same journey.</p>
+        <p>Adjust step count and size to witness how Brownian motion scales with finer increments.</p>
+        <p>This visualization helps demonstrate diffusion, stochastic paths, and probabilistic intuition.</p>
+        <p>Export snapshots for presentations or teaching moments about randomness.</p>
       </div>
     </div>
   );

@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Random Walk Pro</title>
+    <style>
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: #080c11;
+        color: #edf3ff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+      }
+
+      .shell {
+        text-align: center;
+        padding: 2rem;
+      }
+
+      button {
+        margin-top: 1.5rem;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        border: none;
+        font-size: 1rem;
+        font-weight: 600;
+        background: #1de5d0;
+        color: #031019;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <h1>Thanks for unlocking Random Walk Pro!</h1>
+      <p>Your purchase has enabled export and larger runs.</p>
+      <button type="button" onclick="returnHome()">Return to simulator</button>
+    </div>
+
+    <script>
+      localStorage.setItem('unlocked', 'true');
+
+      function returnHome() {
+        window.location.href = '/';
+      }
+    </script>
+  </body>
+</html>
