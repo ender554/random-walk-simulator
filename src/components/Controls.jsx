@@ -43,13 +43,13 @@ function Controls({
         <input
           id="step-size-range"
           type="range"
-        min="1"
-        max="10"
-        step="1"
-        value={stepSize}
-        onChange={(event) => setStepSize(Number(event.target.value))}
-      />
-    </div>
+          min="1"
+          max="10"
+          step="1"
+          value={stepSize}
+          onChange={(event) => setStepSize(Number(event.target.value))}
+        />
+      </div>
 
       <div className="control-row">
         <label htmlFor="seed-input">Seed</label>

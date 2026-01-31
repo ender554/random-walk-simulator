@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import Controls from './components/Controls';
 import RandomWalkCanvas from './components/RandomWalkCanvas';
+import { useWalkStats } from './hooks/useWalkStats';
 import './App.css';
 
 const stripePaymentLink = 'https://buy.stripe.com/7sY00i33610691rfEC28801';
@@ -28,6 +29,12 @@ function App() {
     window.open(stripePaymentLink, '_blank', 'noopener');
   };
 
+  const stats = useWalkStats(steps, stepSize, seed);
+  const formatDistance = (value) =>
+    value.toLocaleString(undefined, { maximumFractionDigits: 1 });
+  const diffSign = stats.difference >= 0 ? '+' : '-';
+  const diffValue = `${diffSign}${formatDistance(Math.abs(stats.difference))} px`;
+
   return (
     <div className="app-shell">
       <header className="page-header">
@@ -54,6 +61,36 @@ function App() {
       <div className="canvas-wrapper">
         <RandomWalkCanvas ref={canvasRef} />
       </div>
+
+      <section className="stats-panel">
+        <h2>Run statistics</h2>
+        <div className="stats-grid">
+          <div className="stat-row">
+            <span>Steps:</span>
+            <span>{steps.toLocaleString()}</span>
+          </div>
+          <div className="stat-row">
+            <span>Final displacement:</span>
+            <span>{formatDistance(stats.finalDistance)} px</span>
+          </div>
+          <div className="stat-row">
+            <span>Mean distance over time:</span>
+            <span>{formatDistance(stats.meanDistance)} px</span>
+          </div>
+          <div className="stat-row">
+            <span>Expected distance (√n):</span>
+            <span>{formatDistance(stats.expectedDistance)} px</span>
+          </div>
+          <div className="stat-row">
+            <span>Actual vs expected:</span>
+            <span>{diffValue}</span>
+          </div>
+          <div className="stat-row">
+            <span>Seed:</span>
+            <span>{seed || 'N/A'}</span>
+          </div>
+        </div>
+      </section>
 
       <div className="canvas-description">
         <p>The Random Walk Simulator follows a point that steps one direction at a time.</p>
