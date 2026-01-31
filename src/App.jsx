@@ -1,35 +1,45 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useRef, useState } from 'react';
+import Controls from './components/Controls';
+import RandomWalkCanvas from './components/RandomWalkCanvas';
+import './App.css';
 
 function App() {
-  const [count, setCount] = useState(0)
+  const canvasRef = useRef(null);
+  const [steps, setSteps] = useState(5000);
+  const [stepSize, setStepSize] = useState(4);
+  const [seed, setSeed] = useState('balanced');
+
+  const handleRun = () => {
+    canvasRef.current?.drawWalk(steps, stepSize, seed);
+  };
+
+  const handleReset = () => {
+    canvasRef.current?.clear();
+  };
+
+  const handleExport = () => {
+    canvasRef.current?.exportPNG();
+  };
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <div className="app-shell">
+      <Controls
+        steps={steps}
+        setSteps={setSteps}
+        stepSize={stepSize}
+        setStepSize={setStepSize}
+        seed={seed}
+        setSeed={setSeed}
+        onRun={handleRun}
+        onReset={handleReset}
+        onExport={handleExport}
+      />
+
+      <div className="canvas-wrapper">
+        <RandomWalkCanvas ref={canvasRef} />
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    </div>
+  );
 }
 
-export default App
+export default App;

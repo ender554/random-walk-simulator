@@ -1,42 +1,117 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+.app-shell {
+  min-height: 100vh;
+  padding: 2rem 1rem 3rem;
+  background: #0b0f14;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: #edf3ff;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+.controls-panel {
+  width: min(960px, 100%);
+  background: #101522;
+  border: 1px solid #1f2836;
+  border-radius: 18px;
+  padding: 1.75rem;
+  box-shadow: 0 20px 60px rgba(5, 8, 15, 0.65);
+  margin-bottom: 2rem;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.controls-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+.eyebrow {
+  margin: 0;
+  font-size: 0.85rem;
+  letter-spacing: 0.3rem;
+  text-transform: uppercase;
+  color: #32ffd6;
 }
 
-.card {
-  padding: 2em;
+.subtitle {
+  margin: 0.25rem 0 0;
+  color: #8892b0;
+  font-size: 0.95rem;
 }
 
-.read-the-docs {
-  color: #888;
+.control-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 1rem;
+}
+
+.control-row label {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #c8d8ff;
+}
+
+.control-row span {
+  color: #1de5d0;
+  font-weight: 600;
+}
+
+.control-row input[type='range'] {
+  width: 100%;
+  accent-color: #1de5d0;
+}
+
+.control-row input[type='text'] {
+  width: 100%;
+  background: #141a28;
+  border: 1px solid #1d2535;
+  border-radius: 8px;
+  padding: 0.65rem 0.75rem;
+  color: #edf3ff;
+}
+
+.control-row input[type='text']::placeholder {
+  color: #4b5670;
+}
+
+.button-row {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
+
+.button-row button {
+  border: 1px solid transparent;
+  background: #161f30;
+  color: #edf3ff;
+  border-radius: 10px;
+  padding: 0.65rem 1.4rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.button-row button:hover {
+  border-color: #1de5d0;
+  color: #1de5d0;
+}
+
+.canvas-wrapper {
+  width: min(820px, 100%);
+  border-radius: 20px;
+  padding: 0.75rem;
+  background: #0b0f14;
+  box-shadow: 0 20px 50px rgba(3, 7, 13, 0.7);
+  display: flex;
+  justify-content: center;
+}
+
+.canvas-wrapper canvas {
+  border-radius: 16px;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
 }
