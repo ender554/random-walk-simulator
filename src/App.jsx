@@ -45,7 +45,8 @@ function App() {
 
   return (
     <div className="app-shell">
-      <header className="page-header">
+      <main className="tool-main">
+        <header className="page-header">
         <h1>Random Walk Simulator</h1>
         <p>
           Explore deterministic random walks, visualize Brownian motion, and export the path as an
@@ -92,6 +93,7 @@ function App() {
         <p>This visualization helps demonstrate diffusion, stochastic paths, and probabilistic intuition.</p>
         <p>Export snapshots for presentations or teaching moments about randomness.</p>
       </div>
+      </main>
     </div>
   );
 }
