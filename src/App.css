@@ -78,12 +78,6 @@
   font-weight: 600;
 }
 
-.slider-meta {
-  margin: 0;
-  font-size: 0.8rem;
-  color: #5c6c8f;
-}
-
 .control-row input[type='range'] {
   width: 100%;
   accent-color: #1de5d0;
@@ -129,6 +123,9 @@
 .buy-row {
   margin-top: 1rem;
   display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  align-items: flex-start;
 }
 
 .buy-link {
@@ -144,6 +141,12 @@
 .buy-link:hover {
   transform: translateY(-1px);
   box-shadow: 0 10px 25px rgba(29, 229, 208, 0.4);
+}
+
+.support-line {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #7c99c5;
 }
 
 .canvas-wrapper {

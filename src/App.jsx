@@ -1,39 +1,15 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import Controls from './components/Controls';
 import RandomWalkCanvas from './components/RandomWalkCanvas';
 import './App.css';
 
-const stripePaymentLink = 'https://buy.stripe.com/bJe00i33624a0uV1NM28800';
+const stripePaymentLink = 'https://buy.stripe.com/7sY00i33610691rfEC28801';
 
 function App() {
   const canvasRef = useRef(null);
   const [steps, setSteps] = useState(5000);
   const [stepSize, setStepSize] = useState(4);
   const [seed, setSeed] = useState('balanced');
-  const [unlocked, setUnlocked] = useState(false);
-
-  const maxSteps = unlocked ? 100000 : 5000;
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const stored = localStorage.getItem('unlocked') === 'true';
-    setUnlocked(stored);
-
-    const handleStorage = (event) => {
-      if (event.key === 'unlocked') {
-        setUnlocked(event.newValue === 'true');
-      }
-    };
-
-    window.addEventListener('storage', handleStorage);
-    return () => window.removeEventListener('storage', handleStorage);
-  }, []);
-
-  useEffect(() => {
-    if (steps > maxSteps) {
-      setSteps(maxSteps);
-    }
-  }, [maxSteps, steps]);
 
   const handleRun = () => {
     canvasRef.current?.drawWalk(steps, stepSize, seed);
@@ -72,8 +48,6 @@ function App() {
         onRun={handleRun}
         onReset={handleReset}
         onExport={handleExport}
-        maxSteps={maxSteps}
-        unlocked={unlocked}
         onBuy={handleBuy}
       />
 

@@ -10,8 +10,6 @@ function Controls({
   onRun,
   onReset,
   onExport,
-  maxSteps,
-  unlocked,
   onBuy
 }) {
   return (
@@ -27,12 +25,11 @@ function Controls({
         <label htmlFor="steps-range">
           Steps <span>{steps.toLocaleString()}</span>
         </label>
-        <p className="slider-meta">Max {maxSteps.toLocaleString()}</p>
         <input
           id="steps-range"
           type="range"
           min="100"
-          max={maxSteps}
+          max="100000"
           step="100"
           value={steps}
           onChange={(event) => setSteps(Number(event.target.value))}
@@ -72,20 +69,19 @@ function Controls({
         <button type="button" onClick={onReset}>
           Reset
         </button>
-        {unlocked && (
-          <button type="button" onClick={onExport}>
-            Export PNG
-          </button>
-        )}
+        <button type="button" onClick={onExport}>
+          Export PNG
+        </button>
       </div>
 
-      {!unlocked && (
-        <div className="buy-row">
+      <div className="buy-row">
         <button type="button" className="buy-link" onClick={onBuy}>
-            Unlock Export &amp; Large Runs ($4.99)
+          ❤️ Support this tool
         </button>
-        </div>
-      )}
+        <p className="support-line">
+          This tool is free. If you found it useful, consider supporting it.
+        </p>
+      </div>
     </section>
   );
 }
