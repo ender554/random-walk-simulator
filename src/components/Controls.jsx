@@ -81,9 +81,9 @@ function Controls({
 
       {!unlocked && (
         <div className="buy-row">
-          <button type="button" className="buy-link" onClick={onBuy}>
-            Unlock Export &amp; Large Runs ($5)
-          </button>
+        <button type="button" className="buy-link" onClick={onBuy}>
+            Unlock Export &amp; Large Runs ($4.99)
+        </button>
         </div>
       )}
     </section>
