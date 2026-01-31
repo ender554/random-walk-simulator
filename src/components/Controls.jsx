@@ -8,6 +8,7 @@ function Controls({
   seed,
   setSeed,
   onRun,
+  onRandomSeed,
   onReset,
   onExport,
   onBuy
@@ -65,6 +66,9 @@ function Controls({
       <div className="button-row">
         <button type="button" onClick={onRun}>
           Run
+        </button>
+        <button type="button" onClick={onRandomSeed}>
+          🎲 Random
         </button>
         <button type="button" onClick={onReset}>
           Reset

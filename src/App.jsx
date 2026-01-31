@@ -12,6 +12,20 @@ function App() {
   const [stepSize, setStepSize] = useState(4);
   const [seed, setSeed] = useState('balanced');
 
+  const stats = useWalkStats(steps, stepSize, seed);
+  const fmt = (v) =>
+    v.toLocaleString(undefined, { maximumFractionDigits: 1 });
+  const diff =
+    (stats.difference >= 0 ? '+' : '-') +
+    fmt(Math.abs(stats.difference)) +
+    ' px';
+
+  const handleRandomSeed = () => {
+    const s = Math.random().toString(36).slice(2, 10);
+    setSeed(s);
+    canvasRef.current?.drawWalk(steps, stepSize, s);
+  };
+
   const handleRun = () => {
     canvasRef.current?.drawWalk(steps, stepSize, seed);
   };
@@ -29,19 +43,13 @@ function App() {
     window.open(stripePaymentLink, '_blank', 'noopener');
   };
 
-  const stats = useWalkStats(steps, stepSize, seed);
-  const formatDistance = (value) =>
-    value.toLocaleString(undefined, { maximumFractionDigits: 1 });
-  const diffSign = stats.difference >= 0 ? '+' : '-';
-  const diffValue = `${diffSign}${formatDistance(Math.abs(stats.difference))} px`;
-
   return (
     <div className="app-shell">
       <header className="page-header">
         <h1>Random Walk Simulator</h1>
         <p>
-          Explore deterministic random walks, visualize Brownian motion,
-          and export the path as an image with consistent steps, sizes, and seed.
+          Explore deterministic random walks, visualize Brownian motion, and export the path as an
+          image with consistent steps, sizes, and seed.
         </p>
       </header>
 
@@ -53,6 +61,7 @@ function App() {
         seed={seed}
         setSeed={setSeed}
         onRun={handleRun}
+        onRandomSeed={handleRandomSeed}
         onReset={handleReset}
         onExport={handleExport}
         onBuy={handleBuy}
@@ -64,31 +73,14 @@ function App() {
 
       <section className="stats-panel">
         <h2>Run statistics</h2>
+
         <div className="stats-grid">
-          <div className="stat-row">
-            <span>Steps:</span>
-            <span>{steps.toLocaleString()}</span>
-          </div>
-          <div className="stat-row">
-            <span>Final displacement:</span>
-            <span>{formatDistance(stats.finalDistance)} px</span>
-          </div>
-          <div className="stat-row">
-            <span>Mean distance over time:</span>
-            <span>{formatDistance(stats.meanDistance)} px</span>
-          </div>
-          <div className="stat-row">
-            <span>Expected distance (√n):</span>
-            <span>{formatDistance(stats.expectedDistance)} px</span>
-          </div>
-          <div className="stat-row">
-            <span>Actual vs expected:</span>
-            <span>{diffValue}</span>
-          </div>
-          <div className="stat-row">
-            <span>Seed:</span>
-            <span>{seed || 'N/A'}</span>
-          </div>
+          <div className="stat-row"><span>Steps:</span><span>{steps}</span></div>
+          <div className="stat-row"><span>Final displacement:</span><span>{fmt(stats.finalDistance)} px</span></div>
+          <div className="stat-row"><span>Mean distance:</span><span>{fmt(stats.meanDistance)} px</span></div>
+          <div className="stat-row"><span>Expected (vn):</span><span>{fmt(stats.expectedDistance)} px</span></div>
+          <div className="stat-row"><span>Actual vs expected:</span><span>{diff}</span></div>
+          <div className="stat-row"><span>Seed:</span><span>{seed || 'N/A'}</span></div>
         </div>
       </section>
 
@@ -105,3 +97,4 @@ function App() {
 }
 
 export default App;
+
