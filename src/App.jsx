@@ -3,7 +3,7 @@ import Controls from './components/Controls';
 import RandomWalkCanvas from './components/RandomWalkCanvas';
 import './App.css';
 
-const stripePaymentLink = 'https://buy.stripe.com/test_unlocked';
+const stripePaymentLink = 'https://buy.stripe.com/bJe00i33624a0uV1NM28800';
 
 function App() {
   const canvasRef = useRef(null);
