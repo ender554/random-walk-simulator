@@ -36,7 +36,7 @@ export const tools = [
     name: "Gambler's Ruin Simulator",
     short: 'Bet repeatedly from a starting bankroll and see how often you go broke.',
     category: 'random-paths',
-    status: 'soon',
+    status: 'live',
   },
   {
     slug: 'stock-price-simulator',
@@ -57,7 +57,7 @@ export const tools = [
     name: 'Central Limit Theorem Simulator',
     short: 'Average random samples and watch any distribution become a bell curve.',
     category: 'distributions',
-    status: 'soon',
+    status: 'live',
   },
   {
     slug: 'galton-board',

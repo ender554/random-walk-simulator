@@ -1,4 +1,4 @@
-import React from 'react';
+import SupportRow from '../../../shared/SupportRow';
 
 function Controls({
   steps,
@@ -10,8 +10,7 @@ function Controls({
   onRun,
   onRandomSeed,
   onReset,
-  onExport,
-  onBuy
+  onExport
 }) {
   return (
     <section className="controls-panel">
@@ -78,14 +77,7 @@ function Controls({
         </button>
       </div>
 
-      <div className="buy-row">
-        <button type="button" className="buy-link" onClick={onBuy}>
-          ❤️ Support this tool
-        </button>
-        <p className="support-line">
-          This tool is free. If you found it useful, consider supporting it.
-        </p>
-      </div>
+      <SupportRow />
     </section>
   );
 }

@@ -4,8 +4,8 @@ import RandomWalkCanvas from './components/RandomWalkCanvas';
 import { useWalkStats } from './hooks/useWalkStats';
 import SiteLayout from '../../shared/SiteLayout';
 import RelatedTools from '../../shared/RelatedTools';
-import { DONATION_LINK } from '../../site';
-import './App.css';
+import { randomSeed } from '../../utils/seed';
+import '../../shared/tool.css';
 
 function App() {
   const canvasRef = useRef(null);
@@ -22,7 +22,7 @@ function App() {
     ' px';
 
   const handleRandomSeed = () => {
-    const s = Math.random().toString(36).slice(2, 10);
+    const s = randomSeed();
     setSeed(s);
     canvasRef.current?.drawWalk(steps, stepSize, s);
   };
@@ -39,10 +39,6 @@ function App() {
     canvasRef.current?.exportPNG();
   };
 
-  const handleBuy = () => {
-    if (typeof window === 'undefined') return;
-    window.open(DONATION_LINK, '_blank', 'noopener');
-  };
 
   return (
     <SiteLayout>
@@ -66,7 +62,6 @@ function App() {
           onRandomSeed={handleRandomSeed}
           onReset={handleReset}
           onExport={handleExport}
-          onBuy={handleBuy}
         />
 
         <div className="canvas-wrapper">
