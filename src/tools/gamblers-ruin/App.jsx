@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import SiteLayout from '../../shared/SiteLayout';
 import RelatedTools from '../../shared/RelatedTools';
-import SupportRow from '../../shared/SupportRow';
 import { gamblersRuinTheory, simulateGames } from '../../utils/gamblersRuin';
 import { exportCanvasPNG } from '../../utils/canvas';
 import { randomSeed } from '../../utils/seed';
@@ -150,7 +149,6 @@ function App() {
             </button>
           </div>
 
-          <SupportRow />
         </section>
 
         <div className="canvas-wrapper chart-wrapper">

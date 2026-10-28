@@ -1,4 +1,3 @@
-import SupportRow from '../../../shared/SupportRow';
 
 function Controls({
   steps,
@@ -77,7 +76,6 @@ function Controls({
         </button>
       </div>
 
-      <SupportRow />
     </section>
   );
 }
