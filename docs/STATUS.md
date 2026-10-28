@@ -1,12 +1,12 @@
 # Status
 
 state: BUILD  
-phase: 1  
+phase: 2  
 budget_hours: 16  
 hard_max_hours: 20  
 hours_used: 1  
 launch_deadline: unset  
-next_action: Choose the final name and domain, then deploy to Cloudflare.  
+next_action: Review the more-tools PR; choose the final name and domain, then deploy to Cloudflare.  
 blocked_by: name and domain (Josh)
 
 ## Done
@@ -15,6 +15,8 @@ blocked_by: name and domain (Josh)
 - Random Walk Simulator moved into the suite
 - Gambler's Ruin Simulator live (compares simulated ruin with the exact formula)
 - Central Limit Theorem Simulator live (five source distributions, normal overlay, zoom)
+- Phase 2 (approved by Josh 2026-10-28, not deployed): the remaining seven tools on the more-tools branch:
+  Stock Price Path, Diffusion-Limited Aggregation, Galton Board, Coin Flip, Monty Hall, Birthday Paradox, Monte Carlo π
 - SEO basics: per-page metadata, canonical URLs, structured data, sitemap, robots.txt
 
 ## Before launch

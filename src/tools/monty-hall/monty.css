@@ -1,0 +1,72 @@
+.monty-play {
+  width: min(960px, 100%);
+  background: #101522;
+  border: 1px solid #1f2836;
+  border-radius: 18px;
+  padding: 1.5rem;
+}
+
+.monty-play h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.25rem;
+}
+
+.monty-message {
+  margin: 0 0 1rem;
+  color: #c8d8ff;
+  min-height: 1.5em;
+}
+
+.door-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
+  gap: 0.75rem;
+}
+
+.door {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 1rem 0.5rem;
+  background: #161f30;
+  border: 2px solid #2c3850;
+  border-radius: 12px;
+  color: #edf3ff;
+  cursor: pointer;
+  font: inherit;
+}
+
+.door:disabled {
+  cursor: default;
+}
+
+.door:not(:disabled):hover {
+  border-color: #1de5d0;
+}
+
+.door.chosen {
+  border-color: #ffd166;
+}
+
+.door.final {
+  border-color: #1de5d0;
+  box-shadow: 0 0 0 3px rgba(29, 229, 208, 0.25);
+}
+
+.door-face {
+  font-size: 2.2rem;
+  line-height: 1;
+}
+
+.door-number {
+  font-weight: 700;
+  color: #aab6d4;
+}
+
+.tally {
+  margin-top: 1rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.5rem 1.5rem;
+}

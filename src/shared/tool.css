@@ -280,3 +280,11 @@
   flex-direction: column;
   align-items: stretch;
 }
+
+.square-chart {
+  align-items: center;
+}
+
+.square-chart canvas {
+  width: min(600px, 100%);
+}

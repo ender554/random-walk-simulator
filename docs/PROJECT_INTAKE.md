@@ -43,7 +43,10 @@ Phase 1 (this intake):
 - About and Privacy pages
 - Per-page title, description, canonical, Open Graph and structured data; sitemap and robots.txt
 
-Later phases (each needs its own go-ahead): the remaining seven tools, ads.
+Later phases (each needs its own go-ahead):
+
+- Phase 2, the remaining seven tools: approved by Josh 2026-10-28, built on a dev branch, not deployed
+- Phase 3: ads
 
 - Estimated focused hours: 16
 - Scope-freeze hour: 15
