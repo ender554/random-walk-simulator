@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import SiteLayout from '../../shared/SiteLayout';
 import RelatedTools from '../../shared/RelatedTools';
+import FurtherReading from '../../shared/FurtherReading';
 import { distributions, histogram, sampleMeans, summarize } from '../../utils/clt';
 import { exportCanvasPNG } from '../../utils/canvas';
 import { randomSeed } from '../../utils/seed';
@@ -197,6 +198,7 @@ function App() {
           </p>
         </section>
 
+        <FurtherReading slug="central-limit-theorem" />
         <RelatedTools slug="central-limit-theorem" />
       </div>
     </SiteLayout>

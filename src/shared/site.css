@@ -200,3 +200,36 @@
   color: #ffffff;
   margin-top: 2rem;
 }
+
+.further-reading {
+  width: min(820px, 100%);
+  margin: 2rem auto 0;
+}
+
+.further-reading h2 {
+  font-size: 1.25rem;
+  margin: 0 0 0.75rem;
+}
+
+.further-reading ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 0.9rem;
+}
+
+.further-reading li a {
+  font-weight: 600;
+}
+
+.further-reading li .badge {
+  margin: 0 0.5rem 0 0;
+}
+
+.further-reading li p {
+  margin: 0.2rem 0 0;
+  color: #aab6d4;
+  font-size: 0.93rem;
+  line-height: 1.5;
+}

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import SiteLayout from '../../shared/SiteLayout';
 import RelatedTools from '../../shared/RelatedTools';
+import FurtherReading from '../../shared/FurtherReading';
 import { gamblersRuinTheory, simulateGames } from '../../utils/gamblersRuin';
 import { exportCanvasPNG } from '../../utils/canvas';
 import { randomSeed } from '../../utils/seed';
@@ -216,6 +217,7 @@ function App() {
           </p>
         </section>
 
+        <FurtherReading slug="gamblers-ruin" />
         <RelatedTools slug="gamblers-ruin" />
       </div>
     </SiteLayout>

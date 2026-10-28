@@ -4,6 +4,7 @@ import RandomWalkCanvas from './components/RandomWalkCanvas';
 import { useWalkStats } from './hooks/useWalkStats';
 import SiteLayout from '../../shared/SiteLayout';
 import RelatedTools from '../../shared/RelatedTools';
+import FurtherReading from '../../shared/FurtherReading';
 import { randomSeed } from '../../utils/seed';
 import '../../shared/tool.css';
 
@@ -113,6 +114,7 @@ function App() {
           </p>
         </section>
 
+        <FurtherReading slug="random-walk" />
         <RelatedTools slug="random-walk" />
       </div>
     </SiteLayout>
