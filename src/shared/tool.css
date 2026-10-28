@@ -288,3 +288,54 @@
 .square-chart canvas {
   width: min(600px, 100%);
 }
+
+/* Shared action buttons: export, data, share, fullscreen */
+
+.export-group {
+  display: inline-flex;
+  align-items: stretch;
+}
+
+.export-group button {
+  border-top-right-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
+}
+
+.export-group select {
+  background: #161f30;
+  color: #edf3ff;
+  border: 1px solid #2c3850;
+  border-left: none;
+  border-radius: 0 10px 10px 0;
+  padding: 0 0.5rem;
+  font: inherit;
+  font-size: 0.85rem;
+}
+
+.button-row button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.canvas-wrapper:fullscreen {
+  background: #0b0f14;
+  justify-content: center;
+  padding: 2rem;
+  overflow: auto;
+}
+
+.canvas-wrapper:fullscreen canvas {
+  max-height: calc(100vh - 6rem);
+  width: auto;
+  max-width: 100%;
+}
+
+.canvas-wrapper.square-chart:fullscreen canvas {
+  width: auto;
+}
+
+.trust-note {
+  margin: 0.75rem 0 0;
+  color: #8a96b3;
+  font-size: 0.85rem;
+}
