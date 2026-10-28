@@ -2,17 +2,38 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="google-site-verification" content="XxuSiICrKCukhC90phvkx1YgWrb_Ch49KJgRzWDoUr0" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Random Walk Simulator – Brownian Motion Visualizer</title>
+    <title>%VITE_SITE_NAME% – Interactive Probability Simulators</title>
     <meta
       name="description"
-      content="Interactive 2D random walk simulator with deterministic seeds. Visualize Brownian motion, adjust step count and size, and export images."
+      content="Free interactive probability simulators: random walks, Brownian motion, bell curves and famous probability puzzles. Repeatable seeds and image export for students and teachers."
     />
+    <link rel="canonical" href="%VITE_SITE_URL%/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="%VITE_SITE_NAME%" />
+    <meta property="og:title" content="%VITE_SITE_NAME% – Interactive Probability Simulators" />
+    <meta property="og:description" content="Run random walks, watch bell curves form, and test famous probability puzzles in your browser." />
+    <meta property="og:url" content="%VITE_SITE_URL%/" />
+    <meta name="twitter:card" content="summary" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "%VITE_SITE_NAME%",
+        "url": "%VITE_SITE_URL%/",
+        "description": "Free interactive probability simulators for students and teachers.",
+        "publisher": {
+          "@type": "Organization",
+          "name": "Five54 Precision",
+          "url": "https://five54precision.com"
+        }
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
+    <script type="module" src="/src/pages/hub/main.jsx"></script>
   </body>
 </html>

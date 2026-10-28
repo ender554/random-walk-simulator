@@ -1,5 +1,5 @@
 import React, { forwardRef, useImperativeHandle, useRef } from 'react';
-import { generateWalk } from '../utils/randomWalk';
+import { generateWalk } from '../../../utils/randomWalk';
 
 const RandomWalkCanvas = forwardRef((_, ref) => {
   const canvasRef = useRef(null);

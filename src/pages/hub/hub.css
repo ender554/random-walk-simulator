@@ -1,0 +1,38 @@
+.hub-hero {
+  text-align: center;
+  max-width: 760px;
+  margin: 1rem auto 2.5rem;
+}
+
+.hub-hero h1 {
+  margin: 0;
+  font-size: clamp(1.9rem, 4vw, 2.8rem);
+  line-height: 1.15;
+  color: #ffffff;
+}
+
+.hub-hero p {
+  margin: 1rem 0 0;
+  color: #aab6d4;
+  font-size: 1.05rem;
+  line-height: 1.6;
+}
+
+.hub-categories {
+  display: grid;
+  gap: 2.5rem;
+}
+
+.hub-categories h2 {
+  margin: 0;
+  font-size: 1.35rem;
+}
+
+.category-blurb {
+  margin: 0.3rem 0 1rem;
+  color: #aab6d4;
+}
+
+.hub-about {
+  margin-top: 3rem;
+}

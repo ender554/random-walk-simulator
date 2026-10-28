@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { generateWalk } from '../utils/randomWalk';
+import { generateWalk } from '../../../utils/randomWalk';
 
 const empty = {
   finalDistance: 0,
