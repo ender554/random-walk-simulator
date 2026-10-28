@@ -339,3 +339,137 @@
   color: #8a96b3;
   font-size: 0.85rem;
 }
+
+.predict {
+  width: min(960px, 100%);
+  background: #121a2b;
+  border: 1px dashed #2c3850;
+  border-radius: 14px;
+  padding: 0.9rem 1.2rem;
+}
+
+.predict summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: #ffd166;
+}
+
+.predict form {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 0.75rem;
+}
+
+.predict input {
+  flex: 1;
+  min-width: 10rem;
+  background: #141a28;
+  border: 1px solid #1d2535;
+  border-radius: 8px;
+  padding: 0.55rem 0.7rem;
+  color: #edf3ff;
+  font: inherit;
+}
+
+.predict button {
+  background: #161f30;
+  color: #edf3ff;
+  border: 1px solid #2c3850;
+  border-radius: 10px;
+  padding: 0.5rem 1rem;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.predict p {
+  color: #c3cde3;
+  margin: 0.75rem 0 0.25rem;
+}
+
+.predict-answer {
+  color: #1de5d0 !important;
+}
+
+/* Small inline panels (probability calculators, step controls) */
+
+.panel {
+  width: min(960px, 100%);
+  background: #101522;
+  border: 1px solid #1f2836;
+  border-radius: 18px;
+  padding: 1.25rem 1.5rem;
+}
+
+.panel h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1.15rem;
+}
+
+.inline-fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: end;
+}
+
+.inline-fields label {
+  display: grid;
+  gap: 0.3rem;
+  font-size: 0.9rem;
+  color: #c8d8ff;
+  font-weight: 600;
+}
+
+.inline-fields input,
+.inline-fields select,
+.inline-fields textarea {
+  background: #141a28;
+  border: 1px solid #1d2535;
+  border-radius: 8px;
+  padding: 0.5rem 0.65rem;
+  color: #edf3ff;
+  font: inherit;
+  min-width: 6rem;
+}
+
+.result-line {
+  margin: 0.75rem 0 0;
+  color: #c3cde3;
+}
+
+.result-line strong {
+  color: #1de5d0;
+}
+
+.small-multiples {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.small-multiples figure {
+  margin: 0;
+}
+
+.small-multiples figcaption {
+  color: #c8d8ff;
+  font-size: 0.9rem;
+  margin-bottom: 0.3rem;
+}
+
+.small-multiples canvas {
+  width: 100%;
+  height: auto;
+  border-radius: 10px;
+}
+
+.sample-strip {
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 0.85rem;
+  color: #c3cde3;
+  overflow-wrap: anywhere;
+  margin: 0.5rem 0 0;
+}
