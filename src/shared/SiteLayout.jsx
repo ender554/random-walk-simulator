@@ -4,7 +4,7 @@ import './site.css';
 
 const isEmbedded = () => typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('embed') === '1';
 
-function SiteLayout({ children }) {
+function SiteLayout({ children, wide = false }) {
   // Embedded in a class site or LMS: just the tool, with a link back
   if (isEmbedded()) {
     const full = window.location.href.replace(/([?&])embed=1&?/, '$1').replace(/[?&]$/, '');
@@ -35,7 +35,7 @@ function SiteLayout({ children }) {
         </nav>
       </header>
 
-      <main id="main" className="site-main">
+      <main id="main" className={wide ? 'site-main site-main-wide' : 'site-main'}>
         {children}
       </main>
 

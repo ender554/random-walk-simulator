@@ -211,81 +211,95 @@ function App() {
       intro="Throw random points at a square with a circle inside it, and estimate π from the share that lands inside. See how wrong you should expect to be, compare quasi-random points, try Buffon's needle, and get code that reproduces your exact run."
     >
 
-      <section className="controls-panel" aria-label="Simulation settings">
-        <div className="mode-tabs" role="group" aria-label="Experiment">
-          <button type="button" aria-pressed={mode === 'darts'} onClick={() => set('mode', 'darts')}>Random darts</button>
-          <button type="button" aria-pressed={mode === 'needles'} onClick={() => set('mode', 'needles')}>Buffon&apos;s needle</button>
+      <div className="workbench">
+        <div className="workbench-controls">
+          <section className="controls-panel" aria-label="Simulation settings">
+            <div className="mode-tabs" role="group" aria-label="Experiment">
+              <button type="button" aria-pressed={mode === 'darts'} onClick={() => set('mode', 'darts')}>Random darts</button>
+              <button type="button" aria-pressed={mode === 'needles'} onClick={() => set('mode', 'needles')}>Buffon&apos;s needle</button>
+            </div>
+            <div className="control-grid">
+              <LogRangeControl id="points-range" label={mode === 'darts' ? 'Points to throw' : 'Needles to drop'} value={count}
+                minExp={2} maxExp={mode === 'darts' ? 5.3 : 4.3} onChange={(v) => set('count', v)} />
+              {mode === 'darts' ? (
+                <div className="control-row">
+                  <label htmlFor="method-select">Points</label>
+                  <select id="method-select" value={method} onChange={(e) => set('method', e.target.value)}>
+                    <option value="random">Random (seeded)</option>
+                    <option value="halton">Quasi-random (Halton sequence)</option>
+                  </select>
+                </div>
+              ) : (
+                <RangeControl id="needle-range" label="Needle length (line spacing = 1)" value={needle} min={0.1} max={1}
+                  step={0.05} onChange={(v) => set('needle', v)} />
+              )}
+              <SeedControl value={seed} onChange={(v) => set('seed', v)} />
+              {mode === 'darts' && (
+                <div className="control-row">
+                  <label htmlFor="speed-select">Animation speed</label>
+                  <select id="speed-select" value={speed} onChange={(e) => setSpeed(Number(e.target.value))}>
+                    {SPEEDS.map((s, i) => <option key={s.label} value={i}>{s.label}</option>)}
+                  </select>
+                </div>
+              )}
+            </div>
+            {mode === 'darts' && (
+              <>
+                <label className="check-row" htmlFor="full-check">
+                  <input id="full-check" type="checkbox" checked={full} onChange={(e) => set('full', e.target.checked)} />
+                  Use a full circle in a 2 × 2 square instead of a quarter circle
+                </label>
+                <label className="check-row" htmlFor="compare-check">
+                  <input id="compare-check" type="checkbox" checked={compare} onChange={(e) => set('compare', e.target.checked)} />
+                  Compare with {method === 'random' ? 'quasi-random Halton' : 'random'} points on the chart
+                </label>
+              </>
+            )}
+            <ToolActions
+              image={mode === 'darts' ? { draw: squareDraw, size: SQUARE, filename: 'monte-carlo-pi.png' } : { draw: (c) => needleRun && drawNeedles(c, needleRun), size: { width: 800, height: 480 }, filename: 'buffons-needle.png' }}
+              onCsv={mode === 'darts' ? exportCsv : undefined}
+              csvLabel="Download points (CSV)"
+              onReset={reset}
+              fullscreenRef={boardWrapRef}
+            >
+              <button type="button" onClick={() => set('seed', randomSeed())}>🎲 New throw</button>
+            </ToolActions>
+          </section>
+          {mode === 'darts' && (
+            <section className="panel" aria-label="Throw controls">
+              <div className="button-row">
+                <button type="button" onClick={() => { setShown(0); setGoal(0); }}>Clear</button>
+                <button type="button" onClick={() => throwMore(1)}>+1 point</button>
+                <button type="button" onClick={() => throwMore(10)}>+10</button>
+                <button type="button" onClick={() => throwMore(100)}>+100</button>
+                <button type="button" onClick={() => throwMore(1000)}>+1,000</button>
+                <button type="button" className="primary" onClick={() => { setShown(0); setGoal(count); }}>Throw all {count.toLocaleString()}</button>
+                <button type="button" onClick={() => { drawSquare(squareRef.current, points, 0, count, full); setShown(count); setGoal(count); }} disabled={shown >= count}>
+                  Skip animation
+                </button>
+              </div>
+            </section>
+          )}
         </div>
-        <div className="control-grid">
-          <LogRangeControl id="points-range" label={mode === 'darts' ? 'Points to throw' : 'Needles to drop'} value={count}
-            minExp={2} maxExp={mode === 'darts' ? 5.3 : 4.3} onChange={(v) => set('count', v)} />
+        <div className={mode === 'darts' ? 'workbench-stage square-stage' : 'workbench-stage'}>
           {mode === 'darts' ? (
-            <div className="control-row">
-              <label htmlFor="method-select">Points</label>
-              <select id="method-select" value={method} onChange={(e) => set('method', e.target.value)}>
-                <option value="random">Random (seeded)</option>
-                <option value="halton">Quasi-random (Halton sequence)</option>
-              </select>
+            <div className="canvas-wrapper chart-wrapper square-chart" ref={boardWrapRef}>
+              <canvas ref={squareRef} width={SQUARE.width} height={SQUARE.height} role="img"
+                aria-label={`${shown.toLocaleString()} points; ${inside.toLocaleString()} inside the circle, estimating pi as ${fixed(estimate, 4)}.`} />
+              <Legend items={[{ color: PALETTE.cyan, label: 'Inside the circle' }, { color: PALETTE.pink, label: 'Outside' }]} />
             </div>
           ) : (
-            <RangeControl id="needle-range" label="Needle length (line spacing = 1)" value={needle} min={0.1} max={1}
-              step={0.05} onChange={(v) => set('needle', v)} />
-          )}
-          <SeedControl value={seed} onChange={(v) => set('seed', v)} />
-          {mode === 'darts' && (
-            <div className="control-row">
-              <label htmlFor="speed-select">Animation speed</label>
-              <select id="speed-select" value={speed} onChange={(e) => setSpeed(Number(e.target.value))}>
-                {SPEEDS.map((s, i) => <option key={s.label} value={i}>{s.label}</option>)}
-              </select>
+            <div className="canvas-wrapper chart-wrapper" ref={boardWrapRef}>
+              <canvas ref={needleRef} width={800} height={480} role="img"
+                aria-label={`${needleRun?.needles.length} needles; ${needleRun?.hits} cross a line, estimating pi as ${fixed(needleEstimate, 4)}.`} />
+              <Legend items={[{ color: PALETTE.cyan, label: 'Crosses a line' }, { color: PALETTE.pink, label: 'Misses' }]} />
             </div>
           )}
         </div>
-        {mode === 'darts' && (
-          <>
-            <label className="check-row" htmlFor="full-check">
-              <input id="full-check" type="checkbox" checked={full} onChange={(e) => set('full', e.target.checked)} />
-              Use a full circle in a 2 × 2 square instead of a quarter circle
-            </label>
-            <label className="check-row" htmlFor="compare-check">
-              <input id="compare-check" type="checkbox" checked={compare} onChange={(e) => set('compare', e.target.checked)} />
-              Compare with {method === 'random' ? 'quasi-random Halton' : 'random'} points on the chart
-            </label>
-          </>
-        )}
-        <ToolActions
-          image={mode === 'darts' ? { draw: squareDraw, size: SQUARE, filename: 'monte-carlo-pi.png' } : { draw: (c) => needleRun && drawNeedles(c, needleRun), size: { width: 800, height: 480 }, filename: 'buffons-needle.png' }}
-          onCsv={mode === 'darts' ? exportCsv : undefined}
-          csvLabel="Download points (CSV)"
-          onReset={reset}
-          fullscreenRef={boardWrapRef}
-        >
-          <button type="button" onClick={() => set('seed', randomSeed())}>🎲 New throw</button>
-        </ToolActions>
-      </section>
+      </div>
 
       {mode === 'darts' ? (
         <>
-          <section className="panel" aria-label="Throw controls">
-            <div className="button-row">
-              <button type="button" onClick={() => { setShown(0); setGoal(0); }}>Clear</button>
-              <button type="button" onClick={() => throwMore(1)}>+1 point</button>
-              <button type="button" onClick={() => throwMore(10)}>+10</button>
-              <button type="button" onClick={() => throwMore(100)}>+100</button>
-              <button type="button" onClick={() => throwMore(1000)}>+1,000</button>
-              <button type="button" className="primary" onClick={() => { setShown(0); setGoal(count); }}>Throw all {count.toLocaleString()}</button>
-              <button type="button" onClick={() => { drawSquare(squareRef.current, points, 0, count, full); setShown(count); setGoal(count); }} disabled={shown >= count}>
-                Skip animation
-              </button>
-            </div>
-          </section>
-
-          <div className="canvas-wrapper chart-wrapper square-chart" ref={boardWrapRef}>
-            <canvas ref={squareRef} width={SQUARE.width} height={SQUARE.height} role="img"
-              aria-label={`${shown.toLocaleString()} points; ${inside.toLocaleString()} inside the circle, estimating pi as ${fixed(estimate, 4)}.`} />
-            <Legend items={[{ color: PALETTE.cyan, label: 'Inside the circle' }, { color: PALETTE.pink, label: 'Outside' }]} />
-          </div>
-
           <section className="stats-panel" aria-live="polite">
             <h2>Estimate</h2>
             <div className="stats-grid">
@@ -355,11 +369,6 @@ function App() {
         </>
       ) : (
         <>
-          <div className="canvas-wrapper chart-wrapper" ref={boardWrapRef}>
-            <canvas ref={needleRef} width={800} height={480} role="img"
-              aria-label={`${needleRun?.needles.length} needles; ${needleRun?.hits} cross a line, estimating pi as ${fixed(needleEstimate, 4)}.`} />
-            <Legend items={[{ color: PALETTE.cyan, label: 'Crosses a line' }, { color: PALETTE.pink, label: 'Misses' }]} />
-          </div>
           <section className="stats-panel">
             <h2>Buffon&apos;s needle estimate</h2>
             <div className="stats-grid">

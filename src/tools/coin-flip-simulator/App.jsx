@@ -218,38 +218,42 @@ function App() {
         {handsOn > 0 && <Sequence seq={sequence} count={handsOn} />}
       </section>
 
-
-      <section className="controls-panel" aria-label="Simulation settings">
-        <div className="control-grid">
-          <LogRangeControl id="flips-range" label="Flips per run" value={flips} minExp={1} maxExp={6} onChange={(v) => { set('flips', v); setHandsOn(0); }} />
-          <RangeControl id="p-range" label="Chance of heads" display={`${Math.round(p * 100)}%`} value={p}
-            min={0.05} max={0.95} step={0.01} onChange={(v) => set('p', v)} />
-          <RangeControl id="runs-range" label="Runs" value={runCount} min={1} max={8} onChange={(v) => set('runs', v)} />
-          <SeedControl value={seed} onChange={(v) => { set('seed', v); setHandsOn(0); }} />
+      <div className="workbench">
+        <div className="workbench-controls">
+          <section className="controls-panel" aria-label="Simulation settings">
+            <div className="control-grid">
+              <LogRangeControl id="flips-range" label="Flips per run" value={flips} minExp={1} maxExp={6} onChange={(v) => { set('flips', v); setHandsOn(0); }} />
+              <RangeControl id="p-range" label="Chance of heads" display={`${Math.round(p * 100)}%`} value={p}
+                min={0.05} max={0.95} step={0.01} onChange={(v) => set('p', v)} />
+              <RangeControl id="runs-range" label="Runs" value={runCount} min={1} max={8} onChange={(v) => set('runs', v)} />
+              <SeedControl value={seed} onChange={(v) => { set('seed', v); setHandsOn(0); }} />
+            </div>
+            <div className="preset-row" role="group" aria-label="Chart view">
+              <button type="button" aria-pressed={mode === 'share'} onClick={() => set('mode', 'share')}>Share of heads</button>
+              <button type="button" aria-pressed={mode === 'diff'} onClick={() => set('mode', 'diff')}>Heads minus tails</button>
+            </div>
+            <ToolActions
+              image={{ draw, size: CHART_SIZE, filename: 'coin-flips.png' }}
+              onCsv={exportCsv}
+              csvLabel="Download run 1 flips (CSV)"
+              onReset={() => { reset(); setHandsOn(0); }}
+              fullscreenRef={chartRef}
+            >
+              <button type="button" onClick={() => { set('seed', randomSeed()); setHandsOn(0); }}>🎲 Flip again</button>
+            </ToolActions>
+          </section>
         </div>
-        <div className="preset-row" role="group" aria-label="Chart view">
-          <button type="button" aria-pressed={mode === 'share'} onClick={() => set('mode', 'share')}>Share of heads</button>
-          <button type="button" aria-pressed={mode === 'diff'} onClick={() => set('mode', 'diff')}>Heads minus tails</button>
+        <div className="workbench-stage">
+          <div className="canvas-wrapper chart-wrapper" ref={chartRef}>
+            <canvas ref={canvasRef} width={CHART_SIZE.width} height={CHART_SIZE.height} role="img"
+              aria-label={`${mode === 'share' ? 'Running share of heads' : 'Heads minus tails'} for ${runCount} runs of ${flips} flips.`} />
+            <p className="chart-caption">
+              {mode === 'share'
+                ? 'Each colored line is one run. The dashed line is the true chance of heads, and the shaded band is where the share should be about 95% of the time. The share converges.'
+                : 'The same runs as heads minus tails. The band widens like √n: the raw gap keeps growing even while the share converges.'}
+            </p>
+          </div>
         </div>
-        <ToolActions
-          image={{ draw, size: CHART_SIZE, filename: 'coin-flips.png' }}
-          onCsv={exportCsv}
-          csvLabel="Download run 1 flips (CSV)"
-          onReset={() => { reset(); setHandsOn(0); }}
-          fullscreenRef={chartRef}
-        >
-          <button type="button" onClick={() => { set('seed', randomSeed()); setHandsOn(0); }}>🎲 Flip again</button>
-        </ToolActions>
-      </section>
-
-      <div className="canvas-wrapper chart-wrapper" ref={chartRef}>
-        <canvas ref={canvasRef} width={CHART_SIZE.width} height={CHART_SIZE.height} role="img"
-          aria-label={`${mode === 'share' ? 'Running share of heads' : 'Heads minus tails'} for ${runCount} runs of ${flips} flips.`} />
-        <p className="chart-caption">
-          {mode === 'share'
-            ? 'Each colored line is one run. The dashed line is the true chance of heads, and the shaded band is where the share should be about 95% of the time. The share converges.'
-            : 'The same runs as heads minus tails. The band widens like √n: the raw gap keeps growing even while the share converges.'}
-        </p>
       </div>
 
       <section className="stats-panel">

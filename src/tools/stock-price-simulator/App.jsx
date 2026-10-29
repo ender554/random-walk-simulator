@@ -128,66 +128,71 @@ function App() {
       intro="Simulate thousands of possible futures for a stock price. See percentile bands, the distribution of final prices, the odds of hitting a target, and why the typical outcome is worse than the average one. Every number is checked against its exact formula."
     >
 
-      <section className="controls-panel" aria-label="Simulation settings">
-        <div className="control-grid">
-          <div className="control-row">
-            <label htmlFor="s0-input">Start price ($)</label>
-            <input id="s0-input" type="number" min="1" step="any" className="number-input" value={s0}
-              onChange={(e) => set('s0', Math.max(1, Number(e.target.value) || 100))} />
+      <div className="workbench">
+        <div className="workbench-controls">
+          <section className="controls-panel" aria-label="Simulation settings">
+            <div className="control-grid">
+              <div className="control-row">
+                <label htmlFor="s0-input">Start price ($)</label>
+                <input id="s0-input" type="number" min="1" step="any" className="number-input" value={s0}
+                  onChange={(e) => set('s0', Math.max(1, Number(e.target.value) || 100))} />
+              </div>
+              <RangeControl id="mu-range" label="Expected annual return (μ)" display={pct(mu)} value={mu}
+                min={-0.1} max={0.3} step={0.005} onChange={(v) => set('mu', v)} />
+              <RangeControl id="sigma-range" label="Annual volatility (σ)" display={pct(sigma, 0)} value={sigma}
+                min={0.01} max={1} step={0.01} onChange={(v) => set('sigma', v)} />
+              <RangeControl id="years-range" label="Years" value={years} min={1} max={30} onChange={(v) => set('years', v)} />
+              <RangeControl id="paths-range" label="Simulated paths" display={paths.toLocaleString()} value={paths}
+                min={10} max={5000} step={10} onChange={(v) => set('paths', v)} />
+              <SeedControl value={seed} onChange={(v) => set('seed', v)} />
+            </div>
+            <div className="preset-row" role="group" aria-label="Example settings (rough long-run figures)">
+              {PRESETS.map((preset) => (
+                <button key={preset.label} type="button" aria-pressed={mu === preset.mu && sigma === preset.sigma}
+                  onClick={() => { set('mu', preset.mu); set('sigma', preset.sigma); }}>
+                  {preset.label}
+                </button>
+              ))}
+            </div>
+            <div className="preset-row" role="group" aria-label="Chart view">
+              {[['both', 'Paths and bands'], ['paths', 'Paths only'], ['bands', 'Bands only']].map(([key, label]) => (
+                <button key={key} type="button" aria-pressed={show === key} onClick={() => set('show', key)}>{label}</button>
+              ))}
+              <button type="button" aria-pressed={log} onClick={() => set('log', !log)}>{log ? 'Log scale' : 'Linear scale'}</button>
+            </div>
+            <label className="check-row" htmlFor="fat-check">
+              <input id="fat-check" type="checkbox" checked={fat} onChange={(e) => set('fat', e.target.checked)} />
+              Fat-tailed daily shocks (Student t, same volatility): extreme days happen more often, like real markets
+            </label>
+            <ToolActions
+              image={{ draw, size: CHART_SIZE, filename: 'stock-price-paths.png' }}
+              onCsv={exportCsv}
+              csvLabel="Download paths, monthly (CSV)"
+              onReset={reset}
+              fullscreenRef={chartWrapRef}
+            >
+              <button type="button" onClick={() => set('seed', randomSeed())}>🎲 New paths</button>
+            </ToolActions>
+          </section>
+        </div>
+        <div className="workbench-stage">
+          <div className="canvas-wrapper chart-wrapper" ref={chartWrapRef}>
+            <canvas ref={canvasRef} width={CHART_SIZE.width} height={CHART_SIZE.height} role="img"
+              aria-label={`${paths} simulated price paths over ${years} years starting at ${money(s0)}; ${belowCount} end below the start.`} />
+            <Legend
+              items={[
+                ...(show !== 'bands' ? [{ color: PALETTE.cyan, label: `Ends above ${money(s0)}` }, { color: PALETTE.pink, label: `Ends below ${money(s0)}` }] : []),
+                ...(show !== 'paths' ? [{ color: 'rgba(29, 229, 208, 0.5)', label: '25–75% and 5–95% of paths' }] : []),
+                { color: PALETTE.yellow, label: 'Median (solid) and mean (dashed) predicted' },
+                { color: PALETTE.violet, label: 'Target' },
+              ]}
+            />
+            <p className="chart-caption">
+              {log ? 'Log price scale: a move from $50 to $100 looks the same size as $100 to $200.' : 'Linear price scale: notice how far the winners stretch to the right.'}
+              {paths > 200 && show !== 'bands' ? ` Showing 200 of ${paths.toLocaleString()} paths; the bands and statistics use all of them.` : ''}
+            </p>
           </div>
-          <RangeControl id="mu-range" label="Expected annual return (μ)" display={pct(mu)} value={mu}
-            min={-0.1} max={0.3} step={0.005} onChange={(v) => set('mu', v)} />
-          <RangeControl id="sigma-range" label="Annual volatility (σ)" display={pct(sigma, 0)} value={sigma}
-            min={0.01} max={1} step={0.01} onChange={(v) => set('sigma', v)} />
-          <RangeControl id="years-range" label="Years" value={years} min={1} max={30} onChange={(v) => set('years', v)} />
-          <RangeControl id="paths-range" label="Simulated paths" display={paths.toLocaleString()} value={paths}
-            min={10} max={5000} step={10} onChange={(v) => set('paths', v)} />
-          <SeedControl value={seed} onChange={(v) => set('seed', v)} />
         </div>
-        <div className="preset-row" role="group" aria-label="Example settings (rough long-run figures)">
-          {PRESETS.map((preset) => (
-            <button key={preset.label} type="button" aria-pressed={mu === preset.mu && sigma === preset.sigma}
-              onClick={() => { set('mu', preset.mu); set('sigma', preset.sigma); }}>
-              {preset.label}
-            </button>
-          ))}
-        </div>
-        <div className="preset-row" role="group" aria-label="Chart view">
-          {[['both', 'Paths and bands'], ['paths', 'Paths only'], ['bands', 'Bands only']].map(([key, label]) => (
-            <button key={key} type="button" aria-pressed={show === key} onClick={() => set('show', key)}>{label}</button>
-          ))}
-          <button type="button" aria-pressed={log} onClick={() => set('log', !log)}>{log ? 'Log scale' : 'Linear scale'}</button>
-        </div>
-        <label className="check-row" htmlFor="fat-check">
-          <input id="fat-check" type="checkbox" checked={fat} onChange={(e) => set('fat', e.target.checked)} />
-          Fat-tailed daily shocks (Student t, same volatility): extreme days happen more often, like real markets
-        </label>
-        <ToolActions
-          image={{ draw, size: CHART_SIZE, filename: 'stock-price-paths.png' }}
-          onCsv={exportCsv}
-          csvLabel="Download paths, monthly (CSV)"
-          onReset={reset}
-          fullscreenRef={chartWrapRef}
-        >
-          <button type="button" onClick={() => set('seed', randomSeed())}>🎲 New paths</button>
-        </ToolActions>
-      </section>
-
-      <div className="canvas-wrapper chart-wrapper" ref={chartWrapRef}>
-        <canvas ref={canvasRef} width={CHART_SIZE.width} height={CHART_SIZE.height} role="img"
-          aria-label={`${paths} simulated price paths over ${years} years starting at ${money(s0)}; ${belowCount} end below the start.`} />
-        <Legend
-          items={[
-            ...(show !== 'bands' ? [{ color: PALETTE.cyan, label: `Ends above ${money(s0)}` }, { color: PALETTE.pink, label: `Ends below ${money(s0)}` }] : []),
-            ...(show !== 'paths' ? [{ color: 'rgba(29, 229, 208, 0.5)', label: '25–75% and 5–95% of paths' }] : []),
-            { color: PALETTE.yellow, label: 'Median (solid) and mean (dashed) predicted' },
-            { color: PALETTE.violet, label: 'Target' },
-          ]}
-        />
-        <p className="chart-caption">
-          {log ? 'Log price scale: a move from $50 to $100 looks the same size as $100 to $200.' : 'Linear price scale: notice how far the winners stretch to the right.'}
-          {paths > 200 && show !== 'bands' ? ` Showing 200 of ${paths.toLocaleString()} paths; the bands and statistics use all of them.` : ''}
-        </p>
       </div>
 
       <section className="stats-panel">

@@ -133,88 +133,93 @@ function App() {
       intro="Pick any distribution, average n random draws, and repeat thousands of times. Watch each sample being drawn, see the averages pile up into a bell curve, check probabilities against theory, and find out when the theorem breaks."
     >
 
-      <section className="controls-panel" aria-label="Simulation settings">
-        <div className="control-grid">
-          <div className="control-row">
-            <label htmlFor="dist-select">Source distribution</label>
-            <select id="dist-select" value={settings.dist} onChange={(e) => { set('dist', e.target.value); setShown(null); }}>
-              {DISTRIBUTION_KEYS.map((key) => (
-                <option key={key} value={key}>{makeDistribution(key, settings.skew).label}</option>
-              ))}
-            </select>
+      <div className="workbench">
+        <div className="workbench-controls">
+          <section className="controls-panel" aria-label="Simulation settings">
+            <div className="control-grid">
+              <div className="control-row">
+                <label htmlFor="dist-select">Source distribution</label>
+                <select id="dist-select" value={settings.dist} onChange={(e) => { set('dist', e.target.value); setShown(null); }}>
+                  {DISTRIBUTION_KEYS.map((key) => (
+                    <option key={key} value={key}>{makeDistribution(key, settings.skew).label}</option>
+                  ))}
+                </select>
+              </div>
+              {settings.dist === 'lognormal' && (
+                <RangeControl id="skew-range" label="Skewness of the source" display={lognormalSkewness(settings.skew).toFixed(1)}
+                  value={settings.skew} min={0.25} max={1.5} step={0.05} onChange={(v) => set('skew', v)} />
+              )}
+              <RangeControl id="n-range" label="Sample size n (values in each average)" value={n} min={1} max={100}
+                onChange={(v) => { set('n', v); setShown(null); }} />
+              <RangeControl id="samples-range" label="Number of samples (how many averages)" display={samples.toLocaleString()}
+                value={samples} min={100} max={10000} step={100} onChange={(v) => { set('samples', v); setShown(null); }} />
+              <SeedControl value={seed} onChange={(v) => set('seed', v)} />
+            </div>
+
+            <label className="check-row" htmlFor="zoom-check">
+              <input id="zoom-check" type="checkbox" checked={zoom && canZoom} disabled={!canZoom}
+                onChange={(e) => set('zoom', e.target.checked)} />
+              Zoom in on the sample means
+            </label>
+
+            <ToolActions
+              image={{ draw: meansDraw, size: MEANS_SIZE, filename: 'central-limit-theorem.png' }}
+              onCsv={exportCsv}
+              csvLabel="Download sample means (CSV)"
+              onReset={() => { reset(); setShown(null); }}
+              fullscreenRef={chartsRef}
+            >
+              <button type="button" onClick={() => { set('seed', randomSeed()); setShown(null); }}>🎲 New samples</button>
+            </ToolActions>
+          </section>
+
+          <section className="panel" aria-labelledby="step-heading">
+            <h2 id="step-heading">Step through one sample at a time</h2>
+            <div className="button-row">
+              <button type="button" onClick={() => setShown(0)}>Start from zero</button>
+              <button type="button" onClick={() => step(1)}>+1 sample</button>
+              <button type="button" onClick={() => step(10)}>+10</button>
+              <button type="button" onClick={() => step(100)}>+100</button>
+              <button type="button" onClick={() => setShown(null)} disabled={shown === null}>Show all</button>
+            </div>
+            <p className="result-line" aria-live="polite">
+              {shown === null
+                ? `Showing all ${samples.toLocaleString()} samples × ${n} values each.`
+                : `${shown.toLocaleString()} of ${samples.toLocaleString()} samples drawn, ${n} values each.`}
+            </p>
+            {sample && (
+              <p className="sample-strip">
+                Sample #{latest + 1}: {sample.values.slice(0, 40).map((v) => +v.toFixed(2)).join(', ')}
+                {sample.values.length > 40 ? ', …' : ''} → average <strong>{sample.mean.toFixed(3)}</strong>
+              </p>
+            )}
+          </section>
+        </div>
+        <div className="workbench-stage">
+          <div className="canvas-wrapper chart-wrapper" ref={chartsRef}>
+            <h2 className="chart-title">
+              {sample ? `The source distribution, with sample #${latest + 1}'s ${n} values` : `One draw from the source: ${dist.label.toLowerCase()}`}
+            </h2>
+            <canvas ref={sourceRef} width={800} height={200} role="img"
+              aria-label={`Shape of the ${dist.label} distribution${sample ? `, with ${n} sampled values averaging ${sample.mean.toFixed(3)}` : ''}.`} />
+            <h2 className="chart-title">
+              Averages of {n} draws, {visible.length.toLocaleString()} times
+            </h2>
+            <canvas ref={meansRef} width={MEANS_SIZE.width} height={MEANS_SIZE.height} role="img"
+              aria-label={`Histogram of ${visible.length} sample means of ${n} draws, centered at ${fmt(observed.mean)} with spread ${fmt(observed.sd)}.`} />
+            <Legend
+              items={[
+                { color: COLORS.bars, label: 'Sample means' },
+                ...(Number.isFinite(se) ? [{ color: COLORS.curve, label: 'Normal curve predicted by the CLT' }] : []),
+                { color: '#a78bfa', label: 'Probability region' },
+                ...(sample ? [{ color: COLORS.sample, label: 'Latest sample' }] : []),
+              ]}
+            />
+            {outside > 0.001 && (
+              <p className="chart-caption">{pct(outside)} of the averages fall outside this view.</p>
+            )}
           </div>
-          {settings.dist === 'lognormal' && (
-            <RangeControl id="skew-range" label="Skewness of the source" display={lognormalSkewness(settings.skew).toFixed(1)}
-              value={settings.skew} min={0.25} max={1.5} step={0.05} onChange={(v) => set('skew', v)} />
-          )}
-          <RangeControl id="n-range" label="Sample size n (values in each average)" value={n} min={1} max={100}
-            onChange={(v) => { set('n', v); setShown(null); }} />
-          <RangeControl id="samples-range" label="Number of samples (how many averages)" display={samples.toLocaleString()}
-            value={samples} min={100} max={10000} step={100} onChange={(v) => { set('samples', v); setShown(null); }} />
-          <SeedControl value={seed} onChange={(v) => set('seed', v)} />
         </div>
-
-        <label className="check-row" htmlFor="zoom-check">
-          <input id="zoom-check" type="checkbox" checked={zoom && canZoom} disabled={!canZoom}
-            onChange={(e) => set('zoom', e.target.checked)} />
-          Zoom in on the sample means
-        </label>
-
-        <ToolActions
-          image={{ draw: meansDraw, size: MEANS_SIZE, filename: 'central-limit-theorem.png' }}
-          onCsv={exportCsv}
-          csvLabel="Download sample means (CSV)"
-          onReset={() => { reset(); setShown(null); }}
-          fullscreenRef={chartsRef}
-        >
-          <button type="button" onClick={() => { set('seed', randomSeed()); setShown(null); }}>🎲 New samples</button>
-        </ToolActions>
-      </section>
-
-      <section className="panel" aria-labelledby="step-heading">
-        <h2 id="step-heading">Step through one sample at a time</h2>
-        <div className="button-row">
-          <button type="button" onClick={() => setShown(0)}>Start from zero</button>
-          <button type="button" onClick={() => step(1)}>+1 sample</button>
-          <button type="button" onClick={() => step(10)}>+10</button>
-          <button type="button" onClick={() => step(100)}>+100</button>
-          <button type="button" onClick={() => setShown(null)} disabled={shown === null}>Show all</button>
-        </div>
-        <p className="result-line" aria-live="polite">
-          {shown === null
-            ? `Showing all ${samples.toLocaleString()} samples × ${n} values each.`
-            : `${shown.toLocaleString()} of ${samples.toLocaleString()} samples drawn, ${n} values each.`}
-        </p>
-        {sample && (
-          <p className="sample-strip">
-            Sample #{latest + 1}: {sample.values.slice(0, 40).map((v) => +v.toFixed(2)).join(', ')}
-            {sample.values.length > 40 ? ', …' : ''} → average <strong>{sample.mean.toFixed(3)}</strong>
-          </p>
-        )}
-      </section>
-
-      <div className="canvas-wrapper chart-wrapper" ref={chartsRef}>
-        <h2 className="chart-title">
-          {sample ? `The source distribution, with sample #${latest + 1}'s ${n} values` : `One draw from the source: ${dist.label.toLowerCase()}`}
-        </h2>
-        <canvas ref={sourceRef} width={800} height={200} role="img"
-          aria-label={`Shape of the ${dist.label} distribution${sample ? `, with ${n} sampled values averaging ${sample.mean.toFixed(3)}` : ''}.`} />
-        <h2 className="chart-title">
-          Averages of {n} draws, {visible.length.toLocaleString()} times
-        </h2>
-        <canvas ref={meansRef} width={MEANS_SIZE.width} height={MEANS_SIZE.height} role="img"
-          aria-label={`Histogram of ${visible.length} sample means of ${n} draws, centered at ${fmt(observed.mean)} with spread ${fmt(observed.sd)}.`} />
-        <Legend
-          items={[
-            { color: COLORS.bars, label: 'Sample means' },
-            ...(Number.isFinite(se) ? [{ color: COLORS.curve, label: 'Normal curve predicted by the CLT' }] : []),
-            { color: '#a78bfa', label: 'Probability region' },
-            ...(sample ? [{ color: COLORS.sample, label: 'Latest sample' }] : []),
-          ]}
-        />
-        {outside > 0.001 && (
-          <p className="chart-caption">{pct(outside)} of the averages fall outside this view.</p>
-        )}
       </div>
 
       <section className="panel" aria-labelledby="prob-heading">

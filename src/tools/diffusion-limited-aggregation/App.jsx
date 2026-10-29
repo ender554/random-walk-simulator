@@ -150,87 +150,92 @@ function App() {
       intro="Release random walkers one at a time; each wanders until it touches the growing cluster and sticks. Grow coral, frost and lightning-like fractals from different seeds, measure the fractal dimension properly, and export the result as high-resolution art, SVG or data."
     >
 
-      <section className="controls-panel" aria-label="Growth settings">
-        <div className="control-grid">
-          <div className="control-row">
-            <label htmlFor="shape-select">Seed</label>
-            <select id="shape-select" value={shape} onChange={(e) => set('shape', e.target.value)}>
-              {Object.entries(SEEDS).map(([key, label]) => <option key={key} value={key}>{label}</option>)}
-            </select>
-          </div>
-          <RangeControl id="particles-range" label="Particles" display={particles.toLocaleString()} value={particles}
-            min={500} max={20000} step={500} onChange={(v) => set('particles', v)} />
-          <RangeControl id="stick-range" label="Stickiness" display={`${Math.round(stickiness * 100)}%`} value={stickiness}
-            min={0.05} max={1} step={0.05} onChange={(v) => set('stickiness', v)} />
-          <RangeControl id="bias-range" label="Drift (wind)" display={bias === 0 ? 'none' : `${Math.round(bias * 100)}%`} value={bias}
-            min={0} max={0.3} step={0.01} onChange={(v) => set('bias', v)} />
-          {bias > 0 && (
-            <RangeControl id="angle-range" label="Drift direction" display={`${angle}°`} value={angle} min={0} max={345} step={15} onChange={(v) => set('angle', v)} />
-          )}
-          <div className="control-row">
-            <label htmlFor="speed-select">Speed</label>
-            <select id="speed-select" value={speed} onChange={(e) => set('speed', Number(e.target.value))}>
-              {SPEEDS.map((s, i) => <option key={s.label} value={i}>{s.label}</option>)}
-            </select>
-          </div>
-          <SeedControl value={seed} onChange={(v) => set('seed', v)} />
+      <div className="workbench">
+        <div className="workbench-controls">
+          <section className="controls-panel" aria-label="Growth settings">
+            <div className="control-grid">
+              <div className="control-row">
+                <label htmlFor="shape-select">Seed</label>
+                <select id="shape-select" value={shape} onChange={(e) => set('shape', e.target.value)}>
+                  {Object.entries(SEEDS).map(([key, label]) => <option key={key} value={key}>{label}</option>)}
+                </select>
+              </div>
+              <RangeControl id="particles-range" label="Particles" display={particles.toLocaleString()} value={particles}
+                min={500} max={20000} step={500} onChange={(v) => set('particles', v)} />
+              <RangeControl id="stick-range" label="Stickiness" display={`${Math.round(stickiness * 100)}%`} value={stickiness}
+                min={0.05} max={1} step={0.05} onChange={(v) => set('stickiness', v)} />
+              <RangeControl id="bias-range" label="Drift (wind)" display={bias === 0 ? 'none' : `${Math.round(bias * 100)}%`} value={bias}
+                min={0} max={0.3} step={0.01} onChange={(v) => set('bias', v)} />
+              {bias > 0 && (
+                <RangeControl id="angle-range" label="Drift direction" display={`${angle}°`} value={angle} min={0} max={345} step={15} onChange={(v) => set('angle', v)} />
+              )}
+              <div className="control-row">
+                <label htmlFor="speed-select">Speed</label>
+                <select id="speed-select" value={speed} onChange={(e) => set('speed', Number(e.target.value))}>
+                  {SPEEDS.map((s, i) => <option key={s.label} value={i}>{s.label}</option>)}
+                </select>
+              </div>
+              <SeedControl value={seed} onChange={(v) => set('seed', v)} />
+            </div>
+
+            <details className="style-panel">
+              <summary>🎨 Style and art options</summary>
+              <div className="control-grid">
+                <div className="control-row">
+                  <label htmlFor="color-select">Color by</label>
+                  <select id="color-select" value={color} onChange={(e) => set('color', e.target.value)}>
+                    <option value="order">Arrival order (age)</option>
+                    <option value="distance">Distance from the seed</option>
+                    <option value="depth">Branch depth (steps from the seed)</option>
+                  </select>
+                </div>
+                <div className="control-row">
+                  <label htmlFor="palette-select">Palette</label>
+                  <select id="palette-select" value={palette} onChange={(e) => set('palette', e.target.value)}>
+                    {Object.keys(PALETTES).map((key) => <option key={key} value={key}>{key[0].toUpperCase() + key.slice(1)}</option>)}
+                  </select>
+                </div>
+                <div className="control-row">
+                  <label htmlFor="bg-select">Background</label>
+                  <select id="bg-select" value={bg} onChange={(e) => set('bg', e.target.value)}>
+                    {Object.keys(BACKGROUNDS).map((key) => <option key={key} value={key}>{key[0].toUpperCase() + key.slice(1)}</option>)}
+                  </select>
+                </div>
+              </div>
+            </details>
+
+            <ToolActions
+              image={{ draw: imageDraw, size: SIZE, filename: 'diffusion-limited-aggregation.png' }}
+              onCsv={exportCsv}
+              csvLabel="Download particles (CSV)"
+              onReset={reset}
+              fullscreenRef={wrapRef}
+            >
+              <button type="button" onClick={() => set('seed', randomSeed())}>🎲 Grow a new one</button>
+              <button type="button" onClick={exportSvg} disabled={!progress.done}>Save SVG</button>
+            </ToolActions>
+          </section>
+
+          <section className="panel" aria-label="Growth controls">
+            <div className="button-row">
+              <button type="button" onClick={() => setPaused((v) => !v)} disabled={progress.done}>{paused ? '▶ Resume' : '⏸ Pause'}</button>
+              <button type="button" onClick={skipToEnd} disabled={progress.done}>Skip to the end</button>
+              <button type="button" onClick={() => { setPaused(false); setRunId((id) => id + 1); }}>Restart</button>
+            </div>
+            <label className="check-row" htmlFor="walkers-check">
+              <input id="walkers-check" type="checkbox" checked={showWalkers} onChange={(e) => setShowWalkers(e.target.checked)} />
+              Show the wandering particle (use the slow speed)
+            </label>
+          </section>
         </div>
-
-        <details className="style-panel">
-          <summary>🎨 Style and art options</summary>
-          <div className="control-grid">
-            <div className="control-row">
-              <label htmlFor="color-select">Color by</label>
-              <select id="color-select" value={color} onChange={(e) => set('color', e.target.value)}>
-                <option value="order">Arrival order (age)</option>
-                <option value="distance">Distance from the seed</option>
-                <option value="depth">Branch depth (steps from the seed)</option>
-              </select>
-            </div>
-            <div className="control-row">
-              <label htmlFor="palette-select">Palette</label>
-              <select id="palette-select" value={palette} onChange={(e) => set('palette', e.target.value)}>
-                {Object.keys(PALETTES).map((key) => <option key={key} value={key}>{key[0].toUpperCase() + key.slice(1)}</option>)}
-              </select>
-            </div>
-            <div className="control-row">
-              <label htmlFor="bg-select">Background</label>
-              <select id="bg-select" value={bg} onChange={(e) => set('bg', e.target.value)}>
-                {Object.keys(BACKGROUNDS).map((key) => <option key={key} value={key}>{key[0].toUpperCase() + key.slice(1)}</option>)}
-              </select>
+        <div className="workbench-stage square-stage">
+          <div className="canvas-wrapper dla-stack" ref={wrapRef}>
+            <div className="dla-layers">
+              <canvas ref={canvasRef} width={SIZE.width} height={SIZE.height} role="img"
+                aria-label={`A branching cluster of ${progress.count} particles grown by diffusion-limited aggregation.`} />
+              <canvas ref={overlayRef} className="dla-overlay" width={SIZE.width} height={SIZE.height} aria-hidden="true" />
             </div>
           </div>
-        </details>
-
-        <ToolActions
-          image={{ draw: imageDraw, size: SIZE, filename: 'diffusion-limited-aggregation.png' }}
-          onCsv={exportCsv}
-          csvLabel="Download particles (CSV)"
-          onReset={reset}
-          fullscreenRef={wrapRef}
-        >
-          <button type="button" onClick={() => set('seed', randomSeed())}>🎲 Grow a new one</button>
-          <button type="button" onClick={exportSvg} disabled={!progress.done}>Save SVG</button>
-        </ToolActions>
-      </section>
-
-      <section className="panel" aria-label="Growth controls">
-        <div className="button-row">
-          <button type="button" onClick={() => setPaused((v) => !v)} disabled={progress.done}>{paused ? '▶ Resume' : '⏸ Pause'}</button>
-          <button type="button" onClick={skipToEnd} disabled={progress.done}>Skip to the end</button>
-          <button type="button" onClick={() => { setPaused(false); setRunId((id) => id + 1); }}>Restart</button>
-        </div>
-        <label className="check-row" htmlFor="walkers-check">
-          <input id="walkers-check" type="checkbox" checked={showWalkers} onChange={(e) => setShowWalkers(e.target.checked)} />
-          Show the wandering particle (use the slow speed)
-        </label>
-      </section>
-
-      <div className="canvas-wrapper dla-stack" ref={wrapRef}>
-        <div className="dla-layers">
-          <canvas ref={canvasRef} width={SIZE.width} height={SIZE.height} role="img"
-            aria-label={`A branching cluster of ${progress.count} particles grown by diffusion-limited aggregation.`} />
-          <canvas ref={overlayRef} className="dla-overlay" width={SIZE.width} height={SIZE.height} aria-hidden="true" />
         </div>
       </div>
 

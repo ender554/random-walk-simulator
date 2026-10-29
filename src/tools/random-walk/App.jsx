@@ -169,109 +169,114 @@ function App() {
       intro="Release one walker or a thousand, watch them diffuse step by step, and check the √n law against live charts. Switch to Lévy flights, self-avoiding walks or drift, then style the paths as art and export PNG, SVG or data."
     >
 
-      <section className="controls-panel" aria-label="Walk settings">
-        <div className="control-grid">
-          <div className="control-row">
-            <label htmlFor="rule-select">Step rule</label>
-            <select id="rule-select" value={rule} onChange={(e) => set('rule', e.target.value)}>
-              {Object.entries(RULES).map(([key, value]) => <option key={key} value={key}>{value.label}</option>)}
-            </select>
-          </div>
-          {rule === 'levy' && (
-            <RangeControl id="alpha-range" label="Tail exponent α (smaller = longer jumps)" value={alpha} min={1.1} max={2.5} step={0.1} onChange={(v) => set('alpha', v)} />
-          )}
-          <LogRangeControl id="walkers-range" label="Walkers" value={walkers} minExp={0} maxExp={3} onChange={(v) => set('walkers', Math.max(1, v))} />
-          <LogRangeControl id="steps-range" label="Steps per walker" value={steps} minExp={1} maxExp={Math.log10(maxSteps)} onChange={(v) => set('steps', v)} />
-          {rule !== 'selfAvoiding' && (
-            <>
-              <RangeControl id="drift-range" label="Drift (bias per step)" display={settings.drift === 0 ? 'none' : settings.drift.toFixed(2)} value={settings.drift} min={0} max={0.3} step={0.01} onChange={(v) => set('drift', v)} />
-              {settings.drift > 0 && (
-                <RangeControl id="angle-range" label="Drift direction" display={`${settings.angle}°`} value={settings.angle} min={0} max={345} step={15} onChange={(v) => set('angle', v)} />
+      <div className="workbench">
+        <div className="workbench-controls">
+          <section className="controls-panel" aria-label="Walk settings">
+            <div className="control-grid">
+              <div className="control-row">
+                <label htmlFor="rule-select">Step rule</label>
+                <select id="rule-select" value={rule} onChange={(e) => set('rule', e.target.value)}>
+                  {Object.entries(RULES).map(([key, value]) => <option key={key} value={key}>{value.label}</option>)}
+                </select>
+              </div>
+              {rule === 'levy' && (
+                <RangeControl id="alpha-range" label="Tail exponent α (smaller = longer jumps)" value={alpha} min={1.1} max={2.5} step={0.1} onChange={(v) => set('alpha', v)} />
               )}
-            </>
-          )}
-          <div className="control-row">
-            <label htmlFor="boundary-select">Edges</label>
-            <select id="boundary-select" value={boundary} onChange={(e) => set('boundary', e.target.value)}>
-              <option value="none">No walls (zoom to fit)</option>
-              <option value="reflect">Walls that reflect</option>
-              <option value="wrap">Wrap around (torus)</option>
-            </select>
+              <LogRangeControl id="walkers-range" label="Walkers" value={walkers} minExp={0} maxExp={3} onChange={(v) => set('walkers', Math.max(1, v))} />
+              <LogRangeControl id="steps-range" label="Steps per walker" value={steps} minExp={1} maxExp={Math.log10(maxSteps)} onChange={(v) => set('steps', v)} />
+              {rule !== 'selfAvoiding' && (
+                <>
+                  <RangeControl id="drift-range" label="Drift (bias per step)" display={settings.drift === 0 ? 'none' : settings.drift.toFixed(2)} value={settings.drift} min={0} max={0.3} step={0.01} onChange={(v) => set('drift', v)} />
+                  {settings.drift > 0 && (
+                    <RangeControl id="angle-range" label="Drift direction" display={`${settings.angle}°`} value={settings.angle} min={0} max={345} step={15} onChange={(v) => set('angle', v)} />
+                  )}
+                </>
+              )}
+              <div className="control-row">
+                <label htmlFor="boundary-select">Edges</label>
+                <select id="boundary-select" value={boundary} onChange={(e) => set('boundary', e.target.value)}>
+                  <option value="none">No walls (zoom to fit)</option>
+                  <option value="reflect">Walls that reflect</option>
+                  <option value="wrap">Wrap around (torus)</option>
+                </select>
+              </div>
+              {boundary !== 'none' && (
+                <RangeControl id="box-range" label="Box half-width (steps)" value={box} min={5} max={500} step={5} onChange={(v) => set('box', v)} />
+              )}
+              <SeedControl value={seed} onChange={(v) => set('seed', v)} />
+            </div>
+            {steps < settings.steps && (
+              <p className="chart-caption">Limited to {steps.toLocaleString()} steps with {walkers.toLocaleString()} walkers to keep the page fast.</p>
+            )}
+
+            <details className="style-panel">
+              <summary>🎨 Style and art options</summary>
+              <div className="control-grid">
+                <div className="control-row">
+                  <label htmlFor="color-select">Color</label>
+                  <select id="color-select" value={color} onChange={(e) => set('color', e.target.value)}>
+                    <option value="walker">One color per walker</option>
+                    <option value="time">Gradient along each path (by time)</option>
+                    <option value="single">Single color</option>
+                  </select>
+                </div>
+                <div className="control-row">
+                  <label htmlFor="palette-select">Palette</label>
+                  <select id="palette-select" value={palette} onChange={(e) => set('palette', e.target.value)}>
+                    {Object.keys(PALETTES).map((key) => <option key={key} value={key}>{key[0].toUpperCase() + key.slice(1)}</option>)}
+                  </select>
+                </div>
+                <div className="control-row">
+                  <label htmlFor="bg-select">Background</label>
+                  <select id="bg-select" value={bg} onChange={(e) => set('bg', e.target.value)}>
+                    {Object.keys(BACKGROUNDS).map((key) => <option key={key} value={key}>{key[0].toUpperCase() + key.slice(1)}</option>)}
+                  </select>
+                </div>
+                <RangeControl id="width-range" label="Line width" value={width} min={0.25} max={6} step={0.25} onChange={(v) => set('width', v)} />
+                <RangeControl id="opacity-range" label="Opacity" display={`${Math.round(opacity * 100)}%`} value={opacity} min={0.05} max={1} step={0.05} onChange={(v) => set('opacity', v)} />
+              </div>
+            </details>
+
+            <ToolActions
+              image={{ draw: (c) => drawWalks(c, { ...drawOpts, from: 0, to: at }), size: SIZE, filename: 'random-walk.png' }}
+              onCsv={exportCsv}
+              csvLabel="Download positions (CSV)"
+              onReset={reset}
+              fullscreenRef={wrapRef}
+            >
+              <button type="button" onClick={() => set('seed', randomSeed())}>🎲 New walk</button>
+              <button type="button" onClick={exportSvg}>Save SVG</button>
+            </ToolActions>
+          </section>
+
+          <section className="panel" aria-label="Playback">
+            <div className="button-row">
+              <button type="button" className="primary" onClick={() => { if (at >= steps) setShown(0); setPlaying((p) => !p); }}>
+                {playing ? '⏸ Pause' : at >= steps ? '▶ Replay' : '▶ Play'}
+              </button>
+              <button type="button" onClick={() => { setShown(0); setPlaying(true); }} disabled={at === 0 && playing}>⏮ Restart</button>
+              <button type="button" onClick={() => { setPlaying(false); setShown(0); }} disabled={at === 0}>Back to start</button>
+              <button type="button" onClick={() => { setPlaying(false); setShown((s) => Math.min(steps, s + 1)); }}>+1 step</button>
+              <button type="button" onClick={() => { setPlaying(false); setShown((s) => Math.min(steps, s + Math.max(10, Math.round(steps / 100)))); }}>+1%</button>
+              <button type="button" onClick={() => { setPlaying(false); setShown(steps); }} disabled={at >= steps}>Show all</button>
+              <label className="visually-hidden" htmlFor="speed-select">Speed</label>
+              <select id="speed-select" className="inline-select" value={speed} onChange={(e) => setSpeed(Number(e.target.value))}>
+                {SPEEDS.map((s, i) => <option key={s.label} value={i}>{s.label}</option>)}
+              </select>
+            </div>
+            <div className="preset-row" role="group" aria-label="View">
+              <button type="button" aria-pressed={view === 'paths'} onClick={() => set('view', 'paths')}>Paths</button>
+              <button type="button" aria-pressed={view === 'heatmap'} onClick={() => set('view', 'heatmap')}>Heatmap of visits</button>
+            </div>
+            <p className="result-line" aria-live="off">Step {at.toLocaleString()} of {steps.toLocaleString()}</p>
+          </section>
+        </div>
+        <div className="workbench-stage">
+          <div className="canvas-wrapper" ref={wrapRef}>
+            <canvas ref={canvasRef} width={SIZE.width} height={SIZE.height} role="img"
+              aria-label={`${walkers} random walk${walkers > 1 ? 's' : ''} of ${at} steps; average distance from start ${fmt(current[1])} steps.`} />
           </div>
-          {boundary !== 'none' && (
-            <RangeControl id="box-range" label="Box half-width (steps)" value={box} min={5} max={500} step={5} onChange={(v) => set('box', v)} />
-          )}
-          <SeedControl value={seed} onChange={(v) => set('seed', v)} />
         </div>
-        {steps < settings.steps && (
-          <p className="chart-caption">Limited to {steps.toLocaleString()} steps with {walkers.toLocaleString()} walkers to keep the page fast.</p>
-        )}
-
-        <details className="style-panel">
-          <summary>🎨 Style and art options</summary>
-          <div className="control-grid">
-            <div className="control-row">
-              <label htmlFor="color-select">Color</label>
-              <select id="color-select" value={color} onChange={(e) => set('color', e.target.value)}>
-                <option value="walker">One color per walker</option>
-                <option value="time">Gradient along each path (by time)</option>
-                <option value="single">Single color</option>
-              </select>
-            </div>
-            <div className="control-row">
-              <label htmlFor="palette-select">Palette</label>
-              <select id="palette-select" value={palette} onChange={(e) => set('palette', e.target.value)}>
-                {Object.keys(PALETTES).map((key) => <option key={key} value={key}>{key[0].toUpperCase() + key.slice(1)}</option>)}
-              </select>
-            </div>
-            <div className="control-row">
-              <label htmlFor="bg-select">Background</label>
-              <select id="bg-select" value={bg} onChange={(e) => set('bg', e.target.value)}>
-                {Object.keys(BACKGROUNDS).map((key) => <option key={key} value={key}>{key[0].toUpperCase() + key.slice(1)}</option>)}
-              </select>
-            </div>
-            <RangeControl id="width-range" label="Line width" value={width} min={0.25} max={6} step={0.25} onChange={(v) => set('width', v)} />
-            <RangeControl id="opacity-range" label="Opacity" display={`${Math.round(opacity * 100)}%`} value={opacity} min={0.05} max={1} step={0.05} onChange={(v) => set('opacity', v)} />
-          </div>
-        </details>
-
-        <ToolActions
-          image={{ draw: (c) => drawWalks(c, { ...drawOpts, from: 0, to: at }), size: SIZE, filename: 'random-walk.png' }}
-          onCsv={exportCsv}
-          csvLabel="Download positions (CSV)"
-          onReset={reset}
-          fullscreenRef={wrapRef}
-        >
-          <button type="button" onClick={() => set('seed', randomSeed())}>🎲 New walk</button>
-          <button type="button" onClick={exportSvg}>Save SVG</button>
-        </ToolActions>
-      </section>
-
-      <section className="panel" aria-label="Playback">
-        <div className="button-row">
-          <button type="button" className="primary" onClick={() => { if (at >= steps) setShown(0); setPlaying((p) => !p); }}>
-            {playing ? '⏸ Pause' : at >= steps ? '▶ Replay' : '▶ Play'}
-          </button>
-          <button type="button" onClick={() => { setShown(0); setPlaying(true); }} disabled={at === 0 && playing}>⏮ Restart</button>
-          <button type="button" onClick={() => { setPlaying(false); setShown(0); }} disabled={at === 0}>Back to start</button>
-          <button type="button" onClick={() => { setPlaying(false); setShown((s) => Math.min(steps, s + 1)); }}>+1 step</button>
-          <button type="button" onClick={() => { setPlaying(false); setShown((s) => Math.min(steps, s + Math.max(10, Math.round(steps / 100)))); }}>+1%</button>
-          <button type="button" onClick={() => { setPlaying(false); setShown(steps); }} disabled={at >= steps}>Show all</button>
-          <label className="visually-hidden" htmlFor="speed-select">Speed</label>
-          <select id="speed-select" className="inline-select" value={speed} onChange={(e) => setSpeed(Number(e.target.value))}>
-            {SPEEDS.map((s, i) => <option key={s.label} value={i}>{s.label}</option>)}
-          </select>
-        </div>
-        <div className="preset-row" role="group" aria-label="View">
-          <button type="button" aria-pressed={view === 'paths'} onClick={() => set('view', 'paths')}>Paths</button>
-          <button type="button" aria-pressed={view === 'heatmap'} onClick={() => set('view', 'heatmap')}>Heatmap of visits</button>
-        </div>
-        <p className="result-line" aria-live="off">Step {at.toLocaleString()} of {steps.toLocaleString()}</p>
-      </section>
-
-      <div className="canvas-wrapper" ref={wrapRef}>
-        <canvas ref={canvasRef} width={SIZE.width} height={SIZE.height} role="img"
-          aria-label={`${walkers} random walk${walkers > 1 ? 's' : ''} of ${at} steps; average distance from start ${fmt(current[1])} steps.`} />
       </div>
 
       <section className="stats-panel" aria-live="off">

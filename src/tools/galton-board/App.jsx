@@ -177,67 +177,72 @@ function App() {
       intro="Drop balls through rows of pegs. Each bounce is a coin flip, left or right, and together the balls stack into a bell curve. Follow a single ball's path, see Pascal's triangle count the routes, and compare the bins with the binomial and normal curves."
     >
 
-      <section className="controls-panel" aria-label="Board settings">
-        <div className="button-row">
-          <button type="button" className="primary" onClick={() => drop(1)}>Drop 1 ball</button>
-          <button type="button" onClick={() => drop(10)}>Drop 10</button>
-          <button type="button" onClick={() => drop(100)}>Drop 100</button>
-          <button type="button" onClick={togglePlay}>{display.playing ? '⏸ Pause' : '▶ Keep dropping'}</button>
-          <button type="button" onClick={finish} disabled={!display.queued && !display.playing}>Finish now</button>
-          <button type="button" onClick={empty}>Empty the board</button>
+      <div className="workbench">
+        <div className="workbench-controls">
+          <section className="controls-panel" aria-label="Board settings">
+            <div className="button-row">
+              <button type="button" className="primary" onClick={() => drop(1)}>Drop 1 ball</button>
+              <button type="button" onClick={() => drop(10)}>Drop 10</button>
+              <button type="button" onClick={() => drop(100)}>Drop 100</button>
+              <button type="button" onClick={togglePlay}>{display.playing ? '⏸ Pause' : '▶ Keep dropping'}</button>
+              <button type="button" onClick={finish} disabled={!display.queued && !display.playing}>Finish now</button>
+              <button type="button" onClick={empty}>Empty the board</button>
+            </div>
+            <div className="control-grid">
+              <RangeControl id="rows-range" label="Rows of pegs" value={rows} min={1} max={20} onChange={(v) => set('rows', v)} />
+              <RangeControl id="p-range" label="Chance of bouncing right" display={`${Math.round(p * 100)}%`} value={p}
+                min={0.1} max={0.9} step={0.01} onChange={(v) => set('p', v)} />
+              <div className="control-row">
+                <label htmlFor="speed-select">Speed</label>
+                <select id="speed-select" value={speed} onChange={(e) => set('speed', Number(e.target.value))}>
+                  {SPEEDS.map((s, i) => <option key={s.label} value={i}>{s.label}</option>)}
+                </select>
+              </div>
+              <SeedControl value={seed} onChange={(v) => set('seed', v)} />
+            </div>
+            <div className="preset-row" role="group" aria-label="Bar labels">
+              {[['count', 'Counts'], ['fraction', 'Share of balls'], ['probability', 'Exact probability'], ['none', 'No labels']].map(([key, label]) => (
+                <button key={key} type="button" aria-pressed={view === key} onClick={() => set('view', key)}>{label}</button>
+              ))}
+            </div>
+            <label className="check-row" htmlFor="pascal-check">
+              <input id="pascal-check" type="checkbox" checked={pascal} onChange={(e) => set('pascal', e.target.checked)} />
+              Show Pascal&apos;s triangle (number of paths to each peg)
+            </label>
+            <label className="check-row" htmlFor="normal-check">
+              <input id="normal-check" type="checkbox" checked={normal} onChange={(e) => set('normal', e.target.checked)} />
+              Show the normal curve, mean and ±1 standard deviation
+            </label>
+            <ToolActions
+              image={{ draw: imageDraw, size: { width: WIDTH, height: HEIGHT }, filename: 'galton-board.png' }}
+              onCsv={exportCsv}
+              csvLabel="Download bin counts (CSV)"
+              onReset={reset}
+              fullscreenRef={chartRef}
+            >
+              <button type="button" onClick={() => set('seed', randomSeed())}>🎲 New balls</button>
+            </ToolActions>
+          </section>
         </div>
-        <div className="control-grid">
-          <RangeControl id="rows-range" label="Rows of pegs" value={rows} min={1} max={20} onChange={(v) => set('rows', v)} />
-          <RangeControl id="p-range" label="Chance of bouncing right" display={`${Math.round(p * 100)}%`} value={p}
-            min={0.1} max={0.9} step={0.01} onChange={(v) => set('p', v)} />
-          <div className="control-row">
-            <label htmlFor="speed-select">Speed</label>
-            <select id="speed-select" value={speed} onChange={(e) => set('speed', Number(e.target.value))}>
-              {SPEEDS.map((s, i) => <option key={s.label} value={i}>{s.label}</option>)}
-            </select>
+        <div className="workbench-stage">
+          <div className="canvas-wrapper chart-wrapper" ref={chartRef}>
+            <canvas ref={canvasRef} width={WIDTH} height={HEIGHT} role="img"
+              aria-label={`Galton board with ${rows} rows; ${landed} balls have landed, averaging bin ${mean.toFixed(2)}.`} />
+            <Legend
+              items={[
+                { color: PALETTE.cyan, label: 'Balls in each bin (number of right bounces)' },
+                { color: PALETTE.yellow, label: 'Binomial prediction' },
+                ...(normal ? [{ color: PALETTE.violet, label: 'Normal curve, mean, ±1σ' }] : []),
+                { color: PALETTE.pink, label: 'Last ball\'s path' },
+              ]}
+            />
+            {lastPath && (
+              <p className="chart-caption" aria-live="off">
+                Last ball: {pathText} → {lastPath[rows]} right bounce{lastPath[rows] === 1 ? '' : 's'} → bin {lastPath[rows]}
+              </p>
+            )}
           </div>
-          <SeedControl value={seed} onChange={(v) => set('seed', v)} />
         </div>
-        <div className="preset-row" role="group" aria-label="Bar labels">
-          {[['count', 'Counts'], ['fraction', 'Share of balls'], ['probability', 'Exact probability'], ['none', 'No labels']].map(([key, label]) => (
-            <button key={key} type="button" aria-pressed={view === key} onClick={() => set('view', key)}>{label}</button>
-          ))}
-        </div>
-        <label className="check-row" htmlFor="pascal-check">
-          <input id="pascal-check" type="checkbox" checked={pascal} onChange={(e) => set('pascal', e.target.checked)} />
-          Show Pascal&apos;s triangle (number of paths to each peg)
-        </label>
-        <label className="check-row" htmlFor="normal-check">
-          <input id="normal-check" type="checkbox" checked={normal} onChange={(e) => set('normal', e.target.checked)} />
-          Show the normal curve, mean and ±1 standard deviation
-        </label>
-        <ToolActions
-          image={{ draw: imageDraw, size: { width: WIDTH, height: HEIGHT }, filename: 'galton-board.png' }}
-          onCsv={exportCsv}
-          csvLabel="Download bin counts (CSV)"
-          onReset={reset}
-          fullscreenRef={chartRef}
-        >
-          <button type="button" onClick={() => set('seed', randomSeed())}>🎲 New balls</button>
-        </ToolActions>
-      </section>
-
-      <div className="canvas-wrapper chart-wrapper" ref={chartRef}>
-        <canvas ref={canvasRef} width={WIDTH} height={HEIGHT} role="img"
-          aria-label={`Galton board with ${rows} rows; ${landed} balls have landed, averaging bin ${mean.toFixed(2)}.`} />
-        <Legend
-          items={[
-            { color: PALETTE.cyan, label: 'Balls in each bin (number of right bounces)' },
-            { color: PALETTE.yellow, label: 'Binomial prediction' },
-            ...(normal ? [{ color: PALETTE.violet, label: 'Normal curve, mean, ±1σ' }] : []),
-            { color: PALETTE.pink, label: 'Last ball\'s path' },
-          ]}
-        />
-        {lastPath && (
-          <p className="chart-caption" aria-live="off">
-            Last ball: {pathText} → {lastPath[rows]} right bounce{lastPath[rows] === 1 ? '' : 's'} → bin {lastPath[rows]}
-          </p>
-        )}
       </div>
 
       <section className="stats-panel">

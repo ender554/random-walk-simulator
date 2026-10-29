@@ -7,7 +7,7 @@ import './tool.css';
 // Common frame for a tool page: heading, the tool itself, further reading, then related tools.
 function ToolPage({ slug, title, intro, children }) {
   return (
-    <SiteLayout>
+    <SiteLayout wide>
       <div className="tool-main">
         <header className="page-header">
           <h1>{title}</h1>

@@ -101,69 +101,74 @@ function App() {
       intro="Start with a bankroll and bet until you reach a target or go broke. Compare flat betting, bold play, the Martingale and other systems on the same coin flips, check every result against the exact formula, and see why no staking plan beats a house edge."
     >
 
-      <section className="controls-panel" aria-label="Simulation settings">
-        <div className="control-grid">
-          <RangeControl id="start-range" label="Starting bankroll" display={money(start)} value={start} min={1} max={500}
-            onChange={(v) => { set('start', v); if (settings.target <= v) set('target', v + 1); }} />
-          <RangeControl id="target-range" label="Stop when you reach" display={open ? 'no target' : money(target)} value={Math.max(settings.target, start + 1)}
-            min={start + 1} max={1000} onChange={(v) => set('target', v)} />
-          <RangeControl id="p-range" label="Chance of winning each bet" display={pct(p)} value={p}
-            min={0.01} max={0.7} step={0.001} onChange={(v) => set('p', v)} />
-          <div className="control-row">
-            <label htmlFor="payout-input">Wins pay (to 1)</label>
-            <input id="payout-input" type="number" min="0.1" step="any" value={payout} onChange={(e) => set('payout', Math.max(0.1, Number(e.target.value) || 1))} />
-          </div>
-          <div className="control-row">
-            <label htmlFor="strategy-select">Betting strategy</label>
-            <select id="strategy-select" value={strategy} onChange={(e) => set('strategy', e.target.value)}>
-              {Object.entries(STRATEGIES).map(([key, value]) => <option key={key} value={key}>{value.label}</option>)}
-            </select>
-          </div>
-          <RangeControl id="unit-range" label="Base bet" display={money(unit)} value={unit} min={1} max={50} onChange={(v) => set('unit', v)} />
-          {strategy === 'martingale' && (
-            <RangeControl id="limit-range" label="Table limit (largest bet allowed)" display={money(limit)} value={limit} min={10} max={5000} step={10} onChange={(v) => set('limit', v)} />
-          )}
-          <LogRangeControl id="games-range" label="Games" value={games} minExp={1} maxExp={5} onChange={(v) => set('games', v)} />
-          <SeedControl value={seed} onChange={(v) => set('seed', v)} />
+      <div className="workbench">
+        <div className="workbench-controls">
+          <section className="controls-panel" aria-label="Simulation settings">
+            <div className="control-grid">
+              <RangeControl id="start-range" label="Starting bankroll" display={money(start)} value={start} min={1} max={500}
+                onChange={(v) => { set('start', v); if (settings.target <= v) set('target', v + 1); }} />
+              <RangeControl id="target-range" label="Stop when you reach" display={open ? 'no target' : money(target)} value={Math.max(settings.target, start + 1)}
+                min={start + 1} max={1000} onChange={(v) => set('target', v)} />
+              <RangeControl id="p-range" label="Chance of winning each bet" display={pct(p)} value={p}
+                min={0.01} max={0.7} step={0.001} onChange={(v) => set('p', v)} />
+              <div className="control-row">
+                <label htmlFor="payout-input">Wins pay (to 1)</label>
+                <input id="payout-input" type="number" min="0.1" step="any" value={payout} onChange={(e) => set('payout', Math.max(0.1, Number(e.target.value) || 1))} />
+              </div>
+              <div className="control-row">
+                <label htmlFor="strategy-select">Betting strategy</label>
+                <select id="strategy-select" value={strategy} onChange={(e) => set('strategy', e.target.value)}>
+                  {Object.entries(STRATEGIES).map(([key, value]) => <option key={key} value={key}>{value.label}</option>)}
+                </select>
+              </div>
+              <RangeControl id="unit-range" label="Base bet" display={money(unit)} value={unit} min={1} max={50} onChange={(v) => set('unit', v)} />
+              {strategy === 'martingale' && (
+                <RangeControl id="limit-range" label="Table limit (largest bet allowed)" display={money(limit)} value={limit} min={10} max={5000} step={10} onChange={(v) => set('limit', v)} />
+              )}
+              <LogRangeControl id="games-range" label="Games" value={games} minExp={1} maxExp={5} onChange={(v) => set('games', v)} />
+              <SeedControl value={seed} onChange={(v) => set('seed', v)} />
+            </div>
+            <div className="preset-row" role="group" aria-label="Game presets">
+              {PRESETS.map((preset) => (
+                <button key={preset.label} type="button" aria-pressed={Math.abs(p - preset.p) < 1e-9 && payout === preset.payout}
+                  onClick={() => { set('p', preset.p); set('payout', preset.payout); }}>
+                  {preset.label}
+                </button>
+              ))}
+            </div>
+            <label className="check-row" htmlFor="open-check">
+              <input id="open-check" type="checkbox" checked={open} onChange={(e) => set('open', e.target.checked)} />
+              Play with no target: keep betting until broke (or 10,000 bets)
+            </label>
+            <p className="chart-caption">Strategy: {STRATEGIES[strategy].short}.</p>
+            <ToolActions
+              image={{ draw, size: CHART_SIZE, filename: 'gamblers-ruin.png' }}
+              onCsv={exportCsv}
+              csvLabel="Download every game (CSV)"
+              onReset={reset}
+              fullscreenRef={chartWrapRef}
+            >
+              <button type="button" onClick={() => set('seed', randomSeed())}>🎲 New games</button>
+            </ToolActions>
+          </section>
         </div>
-        <div className="preset-row" role="group" aria-label="Game presets">
-          {PRESETS.map((preset) => (
-            <button key={preset.label} type="button" aria-pressed={Math.abs(p - preset.p) < 1e-9 && payout === preset.payout}
-              onClick={() => { set('p', preset.p); set('payout', preset.payout); }}>
-              {preset.label}
-            </button>
-          ))}
+        <div className="workbench-stage">
+          <div className="canvas-wrapper chart-wrapper" ref={chartWrapRef}>
+            <canvas ref={canvasRef} width={CHART_SIZE.width} height={CHART_SIZE.height} role="img"
+              aria-label={`Bankroll over time: ${s.reached} of ${s.count} games reached the target, ${s.ruined} went broke.`} />
+            <Legend
+              items={[
+                ...(open ? [] : [{ color: COLORS.target, label: `Reached ${money(target)}` }]),
+                { color: COLORS.ruin, label: 'Went broke' },
+                ...(s.unfinished ? [{ color: COLORS.unfinished, label: 'Still playing at the bet limit' }] : []),
+              ]}
+            />
+            <p className="chart-caption">
+              Bankroll after each bet{s.count > 200 ? `, for the first 200 of ${s.count.toLocaleString()} games` : ''}.
+              {s.count < games ? ` Stopped after ${s.count.toLocaleString()} games to keep the page fast.` : ''}
+            </p>
+          </div>
         </div>
-        <label className="check-row" htmlFor="open-check">
-          <input id="open-check" type="checkbox" checked={open} onChange={(e) => set('open', e.target.checked)} />
-          Play with no target: keep betting until broke (or 10,000 bets)
-        </label>
-        <p className="chart-caption">Strategy: {STRATEGIES[strategy].short}.</p>
-        <ToolActions
-          image={{ draw, size: CHART_SIZE, filename: 'gamblers-ruin.png' }}
-          onCsv={exportCsv}
-          csvLabel="Download every game (CSV)"
-          onReset={reset}
-          fullscreenRef={chartWrapRef}
-        >
-          <button type="button" onClick={() => set('seed', randomSeed())}>🎲 New games</button>
-        </ToolActions>
-      </section>
-
-      <div className="canvas-wrapper chart-wrapper" ref={chartWrapRef}>
-        <canvas ref={canvasRef} width={CHART_SIZE.width} height={CHART_SIZE.height} role="img"
-          aria-label={`Bankroll over time: ${s.reached} of ${s.count} games reached the target, ${s.ruined} went broke.`} />
-        <Legend
-          items={[
-            ...(open ? [] : [{ color: COLORS.target, label: `Reached ${money(target)}` }]),
-            { color: COLORS.ruin, label: 'Went broke' },
-            ...(s.unfinished ? [{ color: COLORS.unfinished, label: 'Still playing at the bet limit' }] : []),
-          ]}
-        />
-        <p className="chart-caption">
-          Bankroll after each bet{s.count > 200 ? `, for the first 200 of ${s.count.toLocaleString()} games` : ''}.
-          {s.count < games ? ` Stopped after ${s.count.toLocaleString()} games to keep the page fast.` : ''}
-        </p>
       </div>
 
       <section className="stats-panel">

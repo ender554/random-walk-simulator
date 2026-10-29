@@ -162,34 +162,52 @@ function App() {
         }}
       />
 
-      <section className="controls-panel" aria-label="Game settings">
-        <div className="control-grid">
-          <div className="control-row">
-            <label htmlFor="host-select">Host rules</label>
-            <select id="host-select" value={host} onChange={(e) => set('host', e.target.value)}>
-              {Object.entries(HOST_RULES).map(([key, rule]) => <option key={key} value={key}>{rule.label}</option>)}
-            </select>
+      <div className="workbench">
+        <div className="workbench-controls">
+          <section className="controls-panel" aria-label="Game settings">
+            <div className="control-grid">
+              <div className="control-row">
+                <label htmlFor="host-select">Host rules</label>
+                <select id="host-select" value={host} onChange={(e) => set('host', e.target.value)}>
+                  {Object.entries(HOST_RULES).map(([key, rule]) => <option key={key} value={key}>{rule.label}</option>)}
+                </select>
+              </div>
+              <RangeControl id="doors-range" label="Doors" value={doors} min={3} max={100} onChange={(v) => set('doors', v)} />
+              <LogRangeControl id="games-range" label="Games to simulate" value={games} minExp={1} maxExp={5} onChange={(v) => set('games', v)} />
+              <SeedControl value={seed} onChange={(v) => set('seed', v)} />
+            </div>
+            <div className="preset-row" role="group" aria-label="Door presets">
+              {[3, 10, 100].map((d) => (
+                <button key={d} type="button" aria-pressed={doors === d} onClick={() => set('doors', d)}>{d} doors</button>
+              ))}
+            </div>
+            <p className="chart-caption">The host {HOST_RULES[host].short}.</p>
+            <ToolActions
+              image={{ draw, size: CHART_SIZE, filename: 'monty-hall.png' }}
+              onCsv={exportCsv}
+              csvLabel="Download games (CSV)"
+              onReset={() => { reset(); setTally(empty); }}
+              fullscreenRef={chartRef}
+            >
+              <button type="button" onClick={() => set('seed', randomSeed())}>🎲 New simulation</button>
+            </ToolActions>
+          </section>
+        </div>
+        <div className="workbench-stage">
+          <div className="canvas-wrapper chart-wrapper" ref={chartRef}>
+            <h2 className="chart-title">Win rate over {games.toLocaleString()} simulated games with {doors} doors</h2>
+            <canvas
+              ref={canvasRef}
+              width={CHART_SIZE.width}
+              height={CHART_SIZE.height}
+              role="img"
+              aria-label={`Switching won ${pct(sim.switchWins / sim.counted)} and staying won ${pct(sim.stayWins / sim.counted)} of ${sim.counted} counted games.`}
+            />
+            <Legend items={[{ color: PALETTE.cyan, label: 'Always switch' }, { color: PALETTE.pink, label: 'Always stay' }]} />
+            <p className="chart-caption">Dashed lines show the theoretical win rates for these host rules.</p>
           </div>
-          <RangeControl id="doors-range" label="Doors" value={doors} min={3} max={100} onChange={(v) => set('doors', v)} />
-          <LogRangeControl id="games-range" label="Games to simulate" value={games} minExp={1} maxExp={5} onChange={(v) => set('games', v)} />
-          <SeedControl value={seed} onChange={(v) => set('seed', v)} />
         </div>
-        <div className="preset-row" role="group" aria-label="Door presets">
-          {[3, 10, 100].map((d) => (
-            <button key={d} type="button" aria-pressed={doors === d} onClick={() => set('doors', d)}>{d} doors</button>
-          ))}
-        </div>
-        <p className="chart-caption">The host {HOST_RULES[host].short}.</p>
-        <ToolActions
-          image={{ draw, size: CHART_SIZE, filename: 'monty-hall.png' }}
-          onCsv={exportCsv}
-          csvLabel="Download games (CSV)"
-          onReset={() => { reset(); setTally(empty); }}
-          fullscreenRef={chartRef}
-        >
-          <button type="button" onClick={() => set('seed', randomSeed())}>🎲 New simulation</button>
-        </ToolActions>
-      </section>
+      </div>
 
       <section className="monty-play" aria-labelledby="play-heading">
         <h2 id="play-heading">Play it yourself</h2>
@@ -215,19 +233,6 @@ function App() {
         <h2 id="race-heading">Race: always stay vs. always switch</h2>
         <Race key={`${playKey}-${games}-${seed}`} sim={sim} games={games} />
       </section>
-
-      <div className="canvas-wrapper chart-wrapper" ref={chartRef}>
-        <h2 className="chart-title">Win rate over {games.toLocaleString()} simulated games with {doors} doors</h2>
-        <canvas
-          ref={canvasRef}
-          width={CHART_SIZE.width}
-          height={CHART_SIZE.height}
-          role="img"
-          aria-label={`Switching won ${pct(sim.switchWins / sim.counted)} and staying won ${pct(sim.stayWins / sim.counted)} of ${sim.counted} counted games.`}
-        />
-        <Legend items={[{ color: PALETTE.cyan, label: 'Always switch' }, { color: PALETTE.pink, label: 'Always stay' }]} />
-        <p className="chart-caption">Dashed lines show the theoretical win rates for these host rules.</p>
-      </div>
 
       <section className="panel" aria-labelledby="cases-heading">
         <h2 id="cases-heading">Why: every simulated game, sorted by your first pick</h2>

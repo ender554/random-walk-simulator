@@ -1,28 +1,27 @@
 .tool-main {
   width: 100%;
-  max-width: 1080px;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1.25rem;
   align-items: center;
 }
 
 .page-header {
   text-align: center;
-  margin-bottom: 1.75rem;
 }
 
 .page-header h1 {
   margin: 0;
-  font-size: clamp(2.3rem, 2vw, 3rem);
-  letter-spacing: 0.05em;
+  font-size: clamp(1.6rem, 3.2vw, 2.5rem);
+  letter-spacing: 0.03em;
+  line-height: 1.15;
   color: #ffffff;
 }
 
 .page-header p {
-  margin: 0.5rem auto 0;
+  margin: 0.4rem auto 0;
   color: #aab6d4;
-  max-width: 640px;
+  max-width: 720px;
   font-size: 1rem;
 }
 
@@ -31,9 +30,92 @@
   background: #101522;
   border: 1px solid #1f2836;
   border-radius: 18px;
-  padding: 1.75rem;
+  padding: 1.25rem;
   box-shadow: 0 20px 60px rgba(5, 8, 15, 0.65);
-  margin-bottom: 2rem;
+}
+
+/* Workbench: the settings and the main visual they drive, kept on screen together.
+   Wide screens: settings on the left, the visual pinned on the right.
+   Narrow screens: the visual pinned at the top while the settings scroll under it. */
+
+.workbench {
+  width: 100%;
+  display: grid;
+  gap: 1rem;
+  align-items: start;
+}
+
+.workbench-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.workbench-controls > * {
+  width: 100%;
+}
+
+.workbench-stage {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  min-width: 0;
+  background: #0b0f14;
+}
+
+.workbench-stage > .canvas-wrapper {
+  width: 100%;
+}
+
+.workbench-stage canvas {
+  align-self: center;
+  width: auto;
+  max-width: 100%;
+}
+
+@media (min-width: 1000px) {
+  .workbench {
+    grid-template-columns: minmax(300px, 380px) minmax(0, 1fr);
+    gap: 1.25rem;
+  }
+
+  .workbench-stage {
+    top: 1rem;
+    background: transparent;
+  }
+
+  .workbench-stage canvas,
+  .workbench-stage.square-stage canvas {
+    max-height: calc(100vh - 9rem);
+  }
+}
+
+@media (max-width: 999px) {
+  .workbench-stage {
+    order: -1;
+    margin: 0 -1rem;
+    padding: 0.4rem 1rem 0.5rem;
+    border-bottom: 1px solid #1f2836;
+  }
+
+  .workbench-stage > .canvas-wrapper {
+    padding: 0.4rem;
+    box-shadow: none;
+  }
+
+  .workbench-stage canvas {
+    max-height: 36vh;
+  }
+
+  .workbench-stage .chart-title {
+    font-size: 0.9rem;
+    margin: 0 0.25rem 0.3rem;
+  }
+
+  .workbench-stage .chart-caption {
+    display: none;
+  }
 }
 
 .controls-heading {
@@ -60,8 +142,8 @@
 .control-row {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
-  margin-bottom: 1rem;
+  gap: 0.3rem;
+  margin-bottom: 0.8rem;
 }
 
 .control-row label {
@@ -166,8 +248,7 @@
   background: #101522;
   border: 1px solid #1f2836;
   border-radius: 18px;
-  padding: 1.5rem;
-  margin-top: 1.25rem;
+  padding: 1.25rem;
 }
 
 .stats-panel h2 {

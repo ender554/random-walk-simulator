@@ -65,7 +65,11 @@
   width: 100%;
   max-width: 1080px;
   margin: 0 auto;
-  padding: 2rem 1rem 3rem;
+  padding: 1.25rem 1rem 3rem;
+}
+
+.site-main-wide {
+  max-width: 1280px;
 }
 
 .site-footer {
@@ -272,7 +276,6 @@
 .embed .faq,
 .embed .further-reading,
 .embed .related,
-.embed .predict,
 .embed .page-header p {
   display: none;
 }

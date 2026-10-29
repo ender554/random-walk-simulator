@@ -214,52 +214,70 @@ function App() {
         }}
       />
 
-      <section className="controls-panel" aria-label="Calculator settings">
-        <div className="control-grid">
-          <div className="control-row">
-            <label htmlFor="question-select">Question</label>
-            <select id="question-select" value={question} onChange={(e) => set('q', e.target.value)}>
-              {Object.entries(QUESTIONS).map(([key, value]) => <option key={key} value={key}>{value.label}</option>)}
-            </select>
-          </div>
-          <div className="control-row">
-            <label htmlFor="space-select">Possible values</label>
-            <select id="space-select" value={settings.space} onChange={(e) => set('space', e.target.value)}>
-              {SPACES.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
-              <option value="custom">Custom number…</option>
-            </select>
-          </div>
-          {settings.space === 'custom' && (
-            <div className="control-row">
-              <label htmlFor="custom-size">Number of possible values</label>
-              <input id="custom-size" type="number" min="2" value={settings.custom} onChange={(e) => set('custom', Number(e.target.value))} />
+      <div className="workbench">
+        <div className="workbench-controls">
+          <section className="controls-panel" aria-label="Calculator settings">
+            <div className="control-grid">
+              <div className="control-row">
+                <label htmlFor="question-select">Question</label>
+                <select id="question-select" value={question} onChange={(e) => set('q', e.target.value)}>
+                  {Object.entries(QUESTIONS).map(([key, value]) => <option key={key} value={key}>{value.label}</option>)}
+                </select>
+              </div>
+              <div className="control-row">
+                <label htmlFor="space-select">Possible values</label>
+                <select id="space-select" value={settings.space} onChange={(e) => set('space', e.target.value)}>
+                  {SPACES.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
+                  <option value="custom">Custom number…</option>
+                </select>
+              </div>
+              {settings.space === 'custom' && (
+                <div className="control-row">
+                  <label htmlFor="custom-size">Number of possible values</label>
+                  <input id="custom-size" type="number" min="2" value={settings.custom} onChange={(e) => set('custom', Number(e.target.value))} />
+                </div>
+              )}
+              {maxPeople > 1000 ? (
+                <LogRangeControl id="people-range" label="People (or items)" value={Math.max(2, n)} minExp={0.31}
+                  maxExp={Math.log10(maxPeople)} onChange={(v) => { set('people', Math.max(2, v)); setRoomSize(null); }} />
+              ) : (
+                <RangeControl id="people-range" label="People in the room" value={n} min={2} max={maxPeople}
+                  onChange={(v) => { set('people', v); setRoomSize(null); }} />
+              )}
+              {question === 'near' && (
+                <RangeControl id="window-range" label="Within how many days" value={window} min={0} max={7}
+                  display={window === 0 ? 'same day' : `±${window} day${window > 1 ? 's' : ''}`} onChange={(v) => set('window', v)} />
+              )}
+              <RangeControl id="trials-range" label="Random rooms to simulate" display={trials.toLocaleString()} value={trials}
+                min={100} max={10000} step={100} onChange={(v) => set('trials', v)} />
+              <SeedControl value={seed} onChange={(v) => set('seed', v)} />
             </div>
-          )}
-          {maxPeople > 1000 ? (
-            <LogRangeControl id="people-range" label="People (or items)" value={Math.max(2, n)} minExp={0.31}
-              maxExp={Math.log10(maxPeople)} onChange={(v) => { set('people', Math.max(2, v)); setRoomSize(null); }} />
-          ) : (
-            <RangeControl id="people-range" label="People in the room" value={n} min={2} max={maxPeople}
-              onChange={(v) => { set('people', v); setRoomSize(null); }} />
-          )}
-          {question === 'near' && (
-            <RangeControl id="window-range" label="Within how many days" value={window} min={0} max={7}
-              display={window === 0 ? 'same day' : `±${window} day${window > 1 ? 's' : ''}`} onChange={(v) => set('window', v)} />
-          )}
-          <RangeControl id="trials-range" label="Random rooms to simulate" display={trials.toLocaleString()} value={trials}
-            min={100} max={10000} step={100} onChange={(v) => set('trials', v)} />
-          <SeedControl value={seed} onChange={(v) => set('seed', v)} />
+            <ToolActions
+              image={{ draw, size: CHART_SIZE, filename: 'birthday-paradox.png' }}
+              onCsv={exportCsv}
+              csvLabel="Download probability table (CSV)"
+              onReset={() => { reset(); setRoomSize(null); }}
+              fullscreenRef={chartWrapRef}
+            >
+              <button type="button" onClick={() => set('seed', randomSeed())}>🎲 New rooms</button>
+            </ToolActions>
+          </section>
         </div>
-        <ToolActions
-          image={{ draw, size: CHART_SIZE, filename: 'birthday-paradox.png' }}
-          onCsv={exportCsv}
-          csvLabel="Download probability table (CSV)"
-          onReset={() => { reset(); setRoomSize(null); }}
-          fullscreenRef={chartWrapRef}
-        >
-          <button type="button" onClick={() => set('seed', randomSeed())}>🎲 New rooms</button>
-        </ToolActions>
-      </section>
+        <div className="workbench-stage">
+          <div className="canvas-wrapper chart-wrapper" ref={chartWrapRef}>
+            <h2 className="chart-title">Chance by group size: {QUESTIONS[question].label.toLowerCase()}</h2>
+            <canvas ref={chartRef} width={CHART_SIZE.width} height={CHART_SIZE.height} role="img"
+              aria-label={`Probability curve; with ${n} people the chance is ${pct(exact)}.`} />
+            <Legend
+              items={[
+                { color: PALETTE.cyan, label: 'Exact chance' },
+                ...(question !== 'anyTwo' ? [{ color: PALETTE.muted, label: 'Any two share (for comparison)' }] : []),
+                ...(simulatable ? [{ color: PALETTE.yellow, label: 'Your simulated rooms' }] : []),
+              ]}
+            />
+          </div>
+        </div>
+      </div>
 
       <section className="stats-panel" aria-live="polite">
         <h2>With {n.toLocaleString()} {isCalendar ? 'people' : 'items'}</h2>
@@ -289,19 +307,6 @@ function App() {
           {question === 'mine' ? ' (counting you)' : ''}, with {size.toLocaleString()} possible {unit}s.
         </p>
       </section>
-
-      <div className="canvas-wrapper chart-wrapper" ref={chartWrapRef}>
-        <h2 className="chart-title">Chance by group size: {QUESTIONS[question].label.toLowerCase()}</h2>
-        <canvas ref={chartRef} width={CHART_SIZE.width} height={CHART_SIZE.height} role="img"
-          aria-label={`Probability curve; with ${n} people the chance is ${pct(exact)}.`} />
-        <Legend
-          items={[
-            { color: PALETTE.cyan, label: 'Exact chance' },
-            ...(question !== 'anyTwo' ? [{ color: PALETTE.muted, label: 'Any two share (for comparison)' }] : []),
-            ...(simulatable ? [{ color: PALETTE.yellow, label: 'Your simulated rooms' }] : []),
-          ]}
-        />
-      </div>
 
       {sim.sampleRoom.length > 0 && (
         <div className="canvas-wrapper chart-wrapper square-chart">
