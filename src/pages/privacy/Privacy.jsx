@@ -22,12 +22,6 @@ function Privacy() {
           we only see totals such as how many people visited a page.
         </p>
 
-        <h2>Donations</h2>
-        <p>
-          The support link opens a Stripe payment page. Stripe handles your payment details under its own privacy
-          policy; we receive only what Stripe shares with merchants, such as the amount and your email address.
-        </p>
-
         <h2>Contact</h2>
         <p>
           {SITE_NAME} is run by {STUDIO_NAME}. Questions about privacy:{' '}

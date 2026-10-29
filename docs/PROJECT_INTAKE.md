@@ -64,7 +64,7 @@ Later phases (each needs its own go-ahead):
 
 ## Monetization
 
-- Model: Free, with a donation link now; display ads after the site has enough content and traffic for AdSense approval
+- Model: Free; display ads after the site has enough content and traffic for AdSense approval
 - Paid value: None; nothing is paywalled
 - Price: $0
 
@@ -72,7 +72,7 @@ Later phases (each needs its own go-ahead):
 
 - Sensitive data: None collected; simulations run in the browser
 - External API: None
-- Platform dependency: Static hosting (Cloudflare), Stripe payment link for donations
+- Platform dependency: Static hosting (Cloudflare)
 - Legal or regulatory: Ads require a privacy policy and cookie consent where applicable; avoid names close to existing brands (e.g. Coolmath)
 - Maintenance: Expected near zero
 - Primary risk: Search traffic stays near zero; ad revenue is negligible below ~100k monthly page views

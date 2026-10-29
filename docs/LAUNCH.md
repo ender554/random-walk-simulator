@@ -5,7 +5,6 @@ Replace `NEW_DOMAIN` with the real domain (for example `chancelab.com`) everywhe
 
 ## 1. Before anything goes live
 
-- [ ] Generate a new two-step backup code in Stripe, then delete `stripe_backup_code.txt` from the repo
 - [ ] Buy the domain at Cloudflare Registrar (a standard `.com`, about $10–11 a year; skip "premium" names)
 - [ ] Set `VITE_SITE_NAME` and `VITE_SITE_URL=https://NEW_DOMAIN` in `.env`
 - [ ] If the name changed: update `name` and `short_name` in `public/site.webmanifest`, then run `npm run og`
@@ -20,22 +19,19 @@ Replace `NEW_DOMAIN` with the real domain (for example `chancelab.com`) everywhe
 
 ## 3. Redirect the old Vercel site
 
-The old site (random-walk-simulator.vercel.app) was a single page: the random walk tool at `/`, plus
-`/success.html` after a Stripe donation. Add this `vercel.json` at the repo root in the same merge to
-`main` that launches the suite. Vercel reads it; Cloudflare ignores it.
+The old site (random-walk-simulator.vercel.app) was a single page: the random walk tool at `/`.
+Add this `vercel.json` at the repo root in the same merge to `main` that launches the suite. Vercel reads it; Cloudflare ignores it.
 
 ```json
 {
   "redirects": [
     { "source": "/", "destination": "https://NEW_DOMAIN/random-walk/", "permanent": true },
-    { "source": "/success.html", "destination": "https://NEW_DOMAIN/success.html", "permanent": true },
     { "source": "/:path*", "destination": "https://NEW_DOMAIN/", "permanent": true }
   ]
 }
 ```
 
 Keep the Vercel project for at least a year; it only serves redirects, so it stays within the Hobby plan.
-Also update the donation link's success URL in Stripe to `https://NEW_DOMAIN/success.html`.
 
 ## 4. Search Console
 

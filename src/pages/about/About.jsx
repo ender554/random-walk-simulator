@@ -1,5 +1,5 @@
 import SiteLayout from '../../shared/SiteLayout';
-import { CONTACT_EMAIL, DONATION_LINK, SITE_NAME, STUDIO_NAME, STUDIO_URL } from '../../site';
+import { CONTACT_EMAIL, SITE_NAME, STUDIO_NAME, STUDIO_URL } from '../../site';
 
 function About() {
   return (
@@ -29,15 +29,6 @@ function About() {
           </a>
           ). Questions, ideas for a simulator, or found a mistake? Email{' '}
           <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>.
-        </p>
-
-        <h2>Support it</h2>
-        <p>
-          Everything here is free. If a simulator helped you,{' '}
-          <a href={DONATION_LINK} target="_blank" rel="noopener noreferrer">
-            you can support {SITE_NAME}
-          </a>
-          .
         </p>
       </article>
     </SiteLayout>

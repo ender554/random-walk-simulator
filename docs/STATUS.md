@@ -29,4 +29,4 @@ Full steps: [LAUNCH.md](LAUNCH.md).
 - [ ] Deploy to Cloudflare; enable Web Analytics
 - [ ] Submit sitemap in Google Search Console
 - [ ] Redirect random-walk-simulator.vercel.app to the new random walk page
-- [ ] Remove `stripe_backup_code.txt` from the repo after rotating the code in Stripe
+- [x] Stripe backup code rotated (2026-10-29); file and donation link removed
