@@ -47,9 +47,13 @@ export default defineConfig(({ mode }) => {
     plugins: [react(), seoFiles(siteUrl)],
     build: {
       rollupOptions: {
-        input: Object.fromEntries(
-          pages.map((p) => [p === '/' ? 'index' : p.slice(1, -1), resolve(root, `.${p}index.html`)]),
-        ),
+        input: {
+          ...Object.fromEntries(
+            pages.map((p) => [p === '/' ? 'index' : p.slice(1, -1), resolve(root, `.${p}index.html`)]),
+          ),
+          // Not in the sitemap; Cloudflare Pages serves it for unknown addresses
+          404: resolve(root, '404.html'),
+        },
       },
     },
   }
