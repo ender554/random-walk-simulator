@@ -27,10 +27,13 @@ const csvCell = (v) => {
   return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 };
 
-export function downloadCSV(filename, headers, rows) {
-  const lines = [headers, ...rows].map((row) => row.map(csvCell).join(','));
-  const blob = new Blob([`${lines.join('\n')}\n`], { type: 'text/csv' });
-  const url = URL.createObjectURL(blob);
+export function downloadText(filename, text, type) {
+  const url = URL.createObjectURL(new Blob([text], { type }));
   download(url, filename);
   setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+export function downloadCSV(filename, headers, rows) {
+  const lines = [headers, ...rows].map((row) => row.map(csvCell).join(','));
+  downloadText(filename, `${lines.join('\n')}\n`, 'text/csv');
 }

@@ -546,3 +546,26 @@
   border-collapse: collapse;
   font-size: 0.93rem;
 }
+
+.style-panel {
+  margin: 0.5rem 0 1rem;
+  border: 1px solid #1f2836;
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+}
+
+.style-panel summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: #c8d8ff;
+  margin-bottom: 0.5rem;
+}
+
+.inline-select {
+  background: #161f30;
+  color: #edf3ff;
+  border: 1px solid #2c3850;
+  border-radius: 10px;
+  padding: 0 0.6rem;
+  font: inherit;
+}
