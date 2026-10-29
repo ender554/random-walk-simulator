@@ -1,6 +1,6 @@
 {
   "redirects": [
     { "source": "/", "destination": "https://chancescope.com/random-walk/", "permanent": true },
-    { "source": "/:path*", "destination": "https://chancescope.com/", "permanent": true }
+    { "source": "/:path(.*)", "destination": "https://chancescope.com/:path", "permanent": true }
   ]
 }
