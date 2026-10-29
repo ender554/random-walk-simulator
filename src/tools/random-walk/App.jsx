@@ -258,6 +258,8 @@ function App() {
           <button type="button" className="primary" onClick={() => { if (at >= steps) setShown(0); setPlaying((p) => !p); }}>
             {playing ? '⏸ Pause' : at >= steps ? '▶ Replay' : '▶ Play'}
           </button>
+          <button type="button" onClick={() => { setShown(0); setPlaying(true); }} disabled={at === 0 && playing}>⏮ Restart</button>
+          <button type="button" onClick={() => { setPlaying(false); setShown(0); }} disabled={at === 0}>Back to start</button>
           <button type="button" onClick={() => { setPlaying(false); setShown((s) => Math.min(steps, s + 1)); }}>+1 step</button>
           <button type="button" onClick={() => { setPlaying(false); setShown((s) => Math.min(steps, s + Math.max(10, Math.round(steps / 100)))); }}>+1%</button>
           <button type="button" onClick={() => { setPlaying(false); setShown(steps); }} disabled={at >= steps}>Show all</button>
