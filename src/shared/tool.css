@@ -478,3 +478,46 @@
   background: #1de5d0;
   color: #0b0f14;
 }
+
+.code-block {
+  margin: 0.5rem 0 0;
+  padding: 1rem;
+  background: #080c11;
+  border: 1px solid #1f2836;
+  border-radius: 12px;
+  overflow-x: auto;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: #c3cde3;
+  max-width: 100%;
+}
+
+.mode-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.mode-tabs button {
+  background: transparent;
+  border: 1px solid #2c3850;
+  color: #c8d8ff;
+  border-radius: 999px;
+  padding: 0.35rem 0.9rem;
+  font: inherit;
+  cursor: pointer;
+}
+
+.mode-tabs button[aria-pressed='true'] {
+  border-color: #1de5d0;
+  color: #1de5d0;
+}
+
+.panel-canvas {
+  width: 100%;
+  height: auto;
+  border-radius: 12px;
+  margin: 0.5rem 0;
+}
