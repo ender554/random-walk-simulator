@@ -1,16 +1,40 @@
-# React + Vite
+# ChanceScope
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Interactive probability simulators by Five54 Precision: random walks, bell curves
+and famous probability puzzles you can run in the browser. It started as the
+Random Walk Simulator.
 
-Currently, two official plugins are available:
+The name and domain (chancescope.com) are set in `.env`. Where things stand:
+[STATUS](docs/STATUS.md). Why it exists and its limits:
+[PROJECT_INTAKE](docs/PROJECT_INTAKE.md).
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+```bash
+npm install
+npm run dev       # local site at http://localhost:5173
+npm run build     # static site in dist/, including sitemap.xml and robots.txt
+npm run lint
+```
 
-## React Compiler
+## Layout
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+| Path | What |
+|---|---|
+| `src/tools.js` | Every tool: name, category, live or coming soon. Drives the hub, related links, build pages and sitemap |
+| `src/shared` | Site layout, related-tools links, base styles |
+| `src/pages` | Hub, About, Privacy |
+| `src/tools/<slug>` | One folder per tool |
+| `src/utils` | Simulation engines shared between tools |
+| `<slug>/index.html` | Each page's HTML with its own title, description and structured data |
+| `docs` | Five54 intake and status |
 
-## Expanding the ESLint configuration
+## Adding a tool
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+1. Add it to `src/tools.js` with `status: 'soon'` (it appears on the hub).
+2. Build it in `src/tools/<slug>/`, wrapped in `SiteLayout` with `RelatedTools`.
+3. Copy `random-walk/index.html` to `<slug>/index.html` and write its title, description and structured data.
+4. Set `status: 'live'`. The build picks up the page and adds it to the sitemap.
+
+## Deploy
+
+Cloudflare Pages: build command `npm run build`, output directory `dist`.
+Set `VITE_SITE_URL` to the real domain before building so canonical URLs and the sitemap point at it.
