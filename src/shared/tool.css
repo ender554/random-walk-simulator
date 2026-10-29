@@ -288,3 +288,284 @@
 .square-chart canvas {
   width: min(600px, 100%);
 }
+
+/* Shared action buttons: export, data, share, fullscreen */
+
+.export-group {
+  display: inline-flex;
+  align-items: stretch;
+}
+
+.export-group button {
+  border-top-right-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
+}
+
+.export-group select {
+  background: #161f30;
+  color: #edf3ff;
+  border: 1px solid #2c3850;
+  border-left: none;
+  border-radius: 0 10px 10px 0;
+  padding: 0 0.5rem;
+  font: inherit;
+  font-size: 0.85rem;
+}
+
+.button-row button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.canvas-wrapper:fullscreen {
+  background: #0b0f14;
+  justify-content: center;
+  padding: 2rem;
+  overflow: auto;
+}
+
+.canvas-wrapper:fullscreen canvas {
+  max-height: calc(100vh - 6rem);
+  width: auto;
+  max-width: 100%;
+}
+
+.canvas-wrapper.square-chart:fullscreen canvas {
+  width: auto;
+}
+
+.trust-note {
+  margin: 0.75rem 0 0;
+  color: #8a96b3;
+  font-size: 0.85rem;
+}
+
+.predict {
+  width: min(960px, 100%);
+  background: #121a2b;
+  border: 1px dashed #2c3850;
+  border-radius: 14px;
+  padding: 0.9rem 1.2rem;
+}
+
+.predict summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: #ffd166;
+}
+
+.predict form {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 0.75rem;
+}
+
+.predict input {
+  flex: 1;
+  min-width: 10rem;
+  background: #141a28;
+  border: 1px solid #1d2535;
+  border-radius: 8px;
+  padding: 0.55rem 0.7rem;
+  color: #edf3ff;
+  font: inherit;
+}
+
+.predict button {
+  background: #161f30;
+  color: #edf3ff;
+  border: 1px solid #2c3850;
+  border-radius: 10px;
+  padding: 0.5rem 1rem;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.predict p {
+  color: #c3cde3;
+  margin: 0.75rem 0 0.25rem;
+}
+
+.predict-answer {
+  color: #1de5d0 !important;
+}
+
+/* Small inline panels (probability calculators, step controls) */
+
+.panel {
+  width: min(960px, 100%);
+  background: #101522;
+  border: 1px solid #1f2836;
+  border-radius: 18px;
+  padding: 1.25rem 1.5rem;
+}
+
+.panel h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1.15rem;
+}
+
+.inline-fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: end;
+}
+
+.inline-fields label {
+  display: grid;
+  gap: 0.3rem;
+  font-size: 0.9rem;
+  color: #c8d8ff;
+  font-weight: 600;
+}
+
+.inline-fields input,
+.inline-fields select,
+.inline-fields textarea {
+  background: #141a28;
+  border: 1px solid #1d2535;
+  border-radius: 8px;
+  padding: 0.5rem 0.65rem;
+  color: #edf3ff;
+  font: inherit;
+  min-width: 6rem;
+}
+
+.result-line {
+  margin: 0.75rem 0 0;
+  color: #c3cde3;
+}
+
+.result-line strong {
+  color: #1de5d0;
+}
+
+.small-multiples {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.small-multiples figure {
+  margin: 0;
+}
+
+.small-multiples figcaption {
+  color: #c8d8ff;
+  font-size: 0.9rem;
+  margin-bottom: 0.3rem;
+}
+
+.small-multiples canvas {
+  width: 100%;
+  height: auto;
+  border-radius: 10px;
+}
+
+.sample-strip {
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 0.85rem;
+  color: #c3cde3;
+  overflow-wrap: anywhere;
+  margin: 0.5rem 0 0;
+}
+
+.button-row button.primary {
+  background: #1de5d0;
+  color: #0b0f14;
+}
+
+.code-block {
+  margin: 0.5rem 0 0;
+  padding: 1rem;
+  background: #080c11;
+  border: 1px solid #1f2836;
+  border-radius: 12px;
+  overflow-x: auto;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: #c3cde3;
+  max-width: 100%;
+}
+
+.mode-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.mode-tabs button {
+  background: transparent;
+  border: 1px solid #2c3850;
+  color: #c8d8ff;
+  border-radius: 999px;
+  padding: 0.35rem 0.9rem;
+  font: inherit;
+  cursor: pointer;
+}
+
+.mode-tabs button[aria-pressed='true'] {
+  border-color: #1de5d0;
+  color: #1de5d0;
+}
+
+.panel-canvas {
+  width: 100%;
+  height: auto;
+  border-radius: 12px;
+  margin: 0.5rem 0;
+}
+
+.control-row .number-input,
+.control-row input[type='number'] {
+  width: 100%;
+  background: #141a28;
+  border: 1px solid #1d2535;
+  border-radius: 8px;
+  padding: 0.65rem 0.75rem;
+  color: #edf3ff;
+  font: inherit;
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+.case-table tr.current td {
+  color: #1de5d0;
+  font-weight: 600;
+}
+.case-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.93rem;
+}
+
+.style-panel {
+  margin: 0.5rem 0 1rem;
+  border: 1px solid #1f2836;
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+}
+
+.style-panel summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: #c8d8ff;
+  margin-bottom: 0.5rem;
+}
+
+.inline-select {
+  background: #161f30;
+  color: #edf3ff;
+  border: 1px solid #2c3850;
+  border-radius: 10px;
+  padding: 0 0.6rem;
+  font: inherit;
+}
