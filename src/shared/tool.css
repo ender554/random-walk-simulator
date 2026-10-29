@@ -521,3 +521,14 @@
   border-radius: 12px;
   margin: 0.5rem 0;
 }
+
+.control-row .number-input,
+.control-row input[type='number'] {
+  width: 100%;
+  background: #141a28;
+  border: 1px solid #1d2535;
+  border-radius: 8px;
+  padding: 0.65rem 0.75rem;
+  color: #edf3ff;
+  font: inherit;
+}
