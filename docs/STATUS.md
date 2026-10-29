@@ -6,7 +6,7 @@ budget_hours: 16
 hard_max_hours: 20  
 hours_used: 1  
 launched: 2026-10-29 at https://chancescope.com  
-next_action: Search Console (domain property + sitemap) and Cloudflare Web Analytics; apply to AdSense once pages are indexed (about late November 2026).  
+next_action: Watch Search Console indexing; apply to AdSense once pages are indexed (about late November 2026).  
 blocked_by: none
 
 ## Done
@@ -30,8 +30,8 @@ Full steps: [LAUNCH.md](LAUNCH.md).
 - [x] 404 page, so unknown addresses return a real 404
 - [x] random-walk-simulator.vercel.app redirects every path to chancescope.com (`vercel.json`); keep the Vercel project until at least 2027-10
 - [x] Stripe backup code rotated (2026-10-29); file and donation link removed
-- [ ] Enable Cloudflare Web Analytics
-- [ ] Search Console: verify the domain, submit the sitemap
+- [x] Cloudflare Web Analytics (enabled on the Pages project; the entry is named chancescope.pages.dev but counts chancescope.com)
+- [x] Search Console: Domain property verified via Cloudflare DNS (keep the google-site-verification TXT record); sitemap submitted, 13 pages
 - [ ] AdSense, once indexed: ads.txt, ad code, privacy page update, consent banner for EU/UK
 
 Leave Cloudflare's "Add security headers" managed transform off: its X-Frame-Options header would break embedding.
