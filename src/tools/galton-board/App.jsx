@@ -3,7 +3,6 @@ import seedrandom from 'seedrandom';
 import ToolPage from '../../shared/ToolPage';
 import ToolActions from '../../shared/ToolActions';
 import Faq from '../../shared/Faq';
-import Predict from '../../shared/Predict';
 import { Legend, RangeControl, SeedControl, StatRow } from '../../shared/controls';
 import { useUrlState } from '../../shared/useUrlState';
 import { PALETTE } from '../../utils/chart';
@@ -177,11 +176,6 @@ function App() {
       title="Galton Board Simulator"
       intro="Drop balls through rows of pegs. Each bounce is a coin flip, left or right, and together the balls stack into a bell curve. Follow a single ball's path, see Pascal's triangle count the routes, and compare the bins with the binomial and normal curves."
     >
-      <Predict
-        question="Drop one ball through 12 rows of pegs. Which bin is it most likely to land in, and what is the chance it lands there?"
-        answer="The middle bin (6 right bounces), but only about 23% of the time: 924 of the 4,096 possible paths lead there. Most single balls land somewhere else; the bell shape only appears after many balls."
-        placeholder="e.g. the middle, 50%"
-      />
 
       <section className="controls-panel" aria-label="Board settings">
         <div className="button-row">

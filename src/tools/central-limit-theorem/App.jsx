@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import ToolPage from '../../shared/ToolPage';
 import ToolActions from '../../shared/ToolActions';
 import Faq from '../../shared/Faq';
-import Predict from '../../shared/Predict';
 import { Legend, RangeControl, SeedControl, StatRow } from '../../shared/controls';
 import { useUrlState } from '../../shared/useUrlState';
 import {
@@ -133,11 +132,6 @@ function App() {
       title="Central Limit Theorem Simulator"
       intro="Pick any distribution, average n random draws, and repeat thousands of times. Watch each sample being drawn, see the averages pile up into a bell curve, check probabilities against theory, and find out when the theorem breaks."
     >
-      <Predict
-        question="Average 30 draws from the skewed exponential distribution, thousands of times. What shape will the averages make, and how spread out will they be?"
-        answer="Very nearly a bell curve, still slightly skewed to the right. Their spread is σ/√n = 1/√30 ≈ 0.18, much narrower than the original data (σ = 1). Set n to 30 to check."
-        placeholder="e.g. bell-shaped, spread about 0.5"
-      />
 
       <section className="controls-panel" aria-label="Simulation settings">
         <div className="control-grid">

@@ -349,58 +349,6 @@
   font-size: 0.85rem;
 }
 
-.predict {
-  width: min(960px, 100%);
-  background: #121a2b;
-  border: 1px dashed #2c3850;
-  border-radius: 14px;
-  padding: 0.9rem 1.2rem;
-}
-
-.predict summary {
-  cursor: pointer;
-  font-weight: 600;
-  color: #ffd166;
-}
-
-.predict form {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-  margin-top: 0.75rem;
-}
-
-.predict input {
-  flex: 1;
-  min-width: 10rem;
-  background: #141a28;
-  border: 1px solid #1d2535;
-  border-radius: 8px;
-  padding: 0.55rem 0.7rem;
-  color: #edf3ff;
-  font: inherit;
-}
-
-.predict button {
-  background: #161f30;
-  color: #edf3ff;
-  border: 1px solid #2c3850;
-  border-radius: 10px;
-  padding: 0.5rem 1rem;
-  font: inherit;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.predict p {
-  color: #c3cde3;
-  margin: 0.75rem 0 0.25rem;
-}
-
-.predict-answer {
-  color: #1de5d0 !important;
-}
-
 /* Small inline panels (probability calculators, step controls) */
 
 .panel {
@@ -577,4 +525,73 @@
   border-radius: 10px;
   padding: 0 0.6rem;
   font: inherit;
+}
+
+/* Challenge: guess, then test it */
+
+.challenge {
+  width: min(960px, 100%);
+  background: #121a2b;
+  border: 1px solid #2c3850;
+  border-left: 4px solid #ffd166;
+  border-radius: 14px;
+  padding: 1rem 1.25rem;
+}
+
+.challenge h2 {
+  margin: 0 0 0.35rem;
+  font-size: 1.1rem;
+  color: #ffd166;
+}
+
+.challenge p {
+  margin: 0 0 0.75rem;
+  color: #c3cde3;
+}
+
+.challenge form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.challenge input {
+  width: 9rem;
+  background: #141a28;
+  border: 1px solid #1d2535;
+  border-radius: 8px;
+  padding: 0.55rem 0.7rem;
+  color: #edf3ff;
+  font: inherit;
+}
+
+.challenge button {
+  background: #ffd166;
+  color: #0b0f14;
+  border: none;
+  border-radius: 10px;
+  padding: 0.55rem 1.1rem;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.challenge-result {
+  margin-top: 0.85rem;
+  padding: 0.75rem 1rem;
+  background: #0b0f14;
+  border-radius: 10px;
+  color: #c3cde3;
+  line-height: 1.55;
+}
+
+.challenge-result strong {
+  color: #1de5d0;
+}
+
+.challenge-history {
+  margin: 0.6rem 0 0;
+  color: #8a96b3;
+  font-size: 0.85rem;
 }

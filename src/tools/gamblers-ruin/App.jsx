@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef } from 'react';
 import ToolPage from '../../shared/ToolPage';
 import ToolActions from '../../shared/ToolActions';
 import Faq from '../../shared/Faq';
-import Predict from '../../shared/Predict';
 import { Legend, LogRangeControl, RangeControl, SeedControl, StatRow } from '../../shared/controls';
 import { useUrlState } from '../../shared/useUrlState';
 import { STRATEGIES, gamblersRuinTheory, simulateGames, summarize } from '../../utils/gamblersRuin';
@@ -101,11 +100,6 @@ function App() {
       title="Gambler's Ruin Simulator"
       intro="Start with a bankroll and bet until you reach a target or go broke. Compare flat betting, bold play, the Martingale and other systems on the same coin flips, check every result against the exact formula, and see why no staking plan beats a house edge."
     >
-      <Predict
-        question="At European roulette, betting $1 on red at a time, you start with $20 and stop at $40. What's your chance of going broke first?"
-        answer="About 75%. A fair coin would give 50%, but the small 1/37 house edge, applied over hundreds of bets, turns it into roughly 3 in 4. Bold play (betting all $20 at once) cuts it to about 51%."
-        placeholder="e.g. 52%"
-      />
 
       <section className="controls-panel" aria-label="Simulation settings">
         <div className="control-grid">

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import ToolPage from '../../shared/ToolPage';
 import ToolActions from '../../shared/ToolActions';
 import Faq from '../../shared/Faq';
-import Predict from '../../shared/Predict';
+import Challenge from '../../shared/Challenge';
 import { Legend, LogRangeControl, RangeControl, SeedControl, StatRow } from '../../shared/controls';
 import { useUrlState } from '../../shared/useUrlState';
 import {
@@ -191,12 +191,27 @@ function App() {
     <ToolPage
       slug="birthday-paradox"
       title="Birthday Paradox Calculator"
-      intro="How many people need to be in a room before two of them probably share a birthday? Only 23. Get exact odds for any group, for your own birthday, for three people or near-birthdays, and for hash collisions, then check them against thousands of random rooms or your own class."
+      intro="How many people need to be in a room before two of them probably share a birthday? Fewer than you think. Get exact odds for any group, for your own birthday, for three people or near-birthdays, and for hash collisions, then check them against thousands of random rooms or your own class."
     >
-      <Predict
-        question="How many people need to be in a room for a better than even chance that two share a birthday?"
-        answer="Just 23. With 23 people there are 253 pairs, each a 1 in 365 chance, and the chance of at least one match is 50.7%. With 70 people it is 99.9%."
+      <Challenge
+        question="How many people need to be in a room for a better than even chance that two of them share a birthday?"
         placeholder="e.g. 180"
+        unit="people"
+        min={2}
+        max={400}
+        onTest={(guess) => {
+          const people = Math.round(guess);
+          set('q', 'anyTwo');
+          set('space', 'birthdays');
+          set('people', Math.min(people, 100));
+          set('seed', randomSeed());
+          setRoomSize(null);
+          const chance = probability('anyTwo', people, 365);
+          return {
+            verdict: people === 23 ? '🎉 Exactly right!' : Math.abs(people - 23) <= 3 ? 'Very close!' : people > 23 ? 'Fewer than that!' : 'A few more than that.',
+            detail: `With ${people} people the chance is ${chance >= 0.999 && people < 366 ? "over 99.9%" : pct(chance)}${people <= 100 ? ' (the calculator below is now set to your guess)' : ''}. The answer is 23 people, for 50.7%: 23 people make 253 pairs, and each pair is a 1 in 365 chance.`,
+          };
+        }}
       />
 
       <section className="controls-panel" aria-label="Calculator settings">

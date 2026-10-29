@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react';
 import ToolPage from '../../shared/ToolPage';
 import ToolActions from '../../shared/ToolActions';
 import Faq from '../../shared/Faq';
-import Predict from '../../shared/Predict';
 import { Legend, RangeControl, SeedControl, StatRow } from '../../shared/controls';
 import { useUrlState } from '../../shared/useUrlState';
 import { SEEDS, createAggregation, massRadius } from '../../utils/dla';
@@ -150,11 +149,6 @@ function App() {
       title="Diffusion-Limited Aggregation Simulator"
       intro="Release random walkers one at a time; each wanders until it touches the growing cluster and sticks. Grow coral, frost and lightning-like fractals from different seeds, measure the fractal dimension properly, and export the result as high-resolution art, SVG or data."
     >
-      <Predict
-        question="Particles stick wherever they first touch the cluster. Will the cluster end up as a solid blob, or something else?"
-        answer="Something else: a branching fractal. Wandering particles almost always hit the tips of arms before they can reach the gaps, so the tips keep growing and the gaps stay empty. Its fractal dimension is about 1.71."
-        placeholder="e.g. a round blob"
-      />
 
       <section className="controls-panel" aria-label="Growth settings">
         <div className="control-grid">

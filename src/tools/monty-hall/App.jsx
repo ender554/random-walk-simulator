@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import ToolPage from '../../shared/ToolPage';
 import ToolActions from '../../shared/ToolActions';
 import Faq from '../../shared/Faq';
-import Predict from '../../shared/Predict';
+import Challenge from '../../shared/Challenge';
 import { Legend, LogRangeControl, RangeControl, SeedControl, StatRow } from '../../shared/controls';
 import { useUrlState } from '../../shared/useUrlState';
 import { HOST_RULES, simulateGames, theory } from '../../utils/montyHall';
@@ -140,10 +140,26 @@ function App() {
       title="Monty Hall Problem Simulator"
       intro="Three doors, one car, two goats. You pick a door, the host opens another to show a goat, and offers you the switch. Play it, play the host, race the two strategies, and change the host's rules to see exactly when switching stops helping."
     >
-      <Predict
+      <Challenge
         question="You pick a door, the host opens a goat door, and offers a switch. Out of 100 games, how many would you win by always switching?"
-        answer="About 67 of 100. Staying wins only when your first guess was right (1 in 3); switching wins every time it was wrong (2 in 3)."
         placeholder="e.g. 50"
+        unit="of 100"
+        min={0}
+        max={100}
+        onTest={(guess) => {
+          const testSeed = randomSeed();
+          set('doors', 3);
+          set('host', 'knows');
+          set('games', 1000);
+          set('seed', testSeed);
+          const run = simulateGames({ games: 1000, doors: 3, rule: 'knows', seed: testSeed });
+          const actual = (run.switchWins / run.counted) * 100;
+          const off = Math.abs(guess - actual);
+          return {
+            verdict: off <= 5 ? '🎉 Spot on!' : off <= 15 ? 'Close!' : 'Not quite. Most people guess 50.',
+            detail: `You guessed ${guess}. Always switching won ${actual.toFixed(1)} of every 100 games (${run.switchWins} of 1,000 simulated games, now on the chart below). Theory says 66.7: your first pick is right only 1 time in 3, and switching wins every time it was wrong.`,
+          };
+        }}
       />
 
       <section className="controls-panel" aria-label="Game settings">

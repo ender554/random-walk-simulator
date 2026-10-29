@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import ToolPage from '../../shared/ToolPage';
 import ToolActions from '../../shared/ToolActions';
 import Faq from '../../shared/Faq';
-import Predict from '../../shared/Predict';
+import Challenge from '../../shared/Challenge';
 import { Legend, LogRangeControl, RangeControl, SeedControl, StatRow } from '../../shared/controls';
 import { useUrlState } from '../../shared/useUrlState';
 import {
@@ -165,6 +165,35 @@ function App() {
       title="Coin Flip Simulator & Law of Large Numbers"
       intro="Flip one coin or a million. Watch the share of heads settle toward 50%, see real streaks in the sequence, check any probability exactly, and test whether you can fake randomness."
     >
+      <Challenge
+        question="Flip a fair coin 100 times. What is the longest run of the same face in a row you would expect?"
+        placeholder="e.g. 4"
+        unit="in a row"
+        min={1}
+        max={100}
+        onTest={(guess) => {
+          const testSeed = randomSeed();
+          set('flips', 100);
+          set('p', 0.5);
+          set('seed', testSeed);
+          setHandsOn(100);
+          const shown = Math.max(...runLengths(simulateRuns({ flips: 100, p: 0.5, runs: 1, seed: testSeed }).sequence));
+          // How often a 100-flip sequence has a streak at least as long as the guess
+          let atLeast = 0;
+          let total = 0;
+          const trials = 4000;
+          for (let t = 0; t < trials; t += 1) {
+            const longest = Math.max(...runLengths(simulateRuns({ flips: 100, p: 0.5, runs: 1, seed: `${testSeed}-${t}` }).sequence));
+            total += longest;
+            if (longest >= guess) atLeast += 1;
+          }
+          const typical = total / trials;
+          return {
+            verdict: Math.abs(guess - typical) <= 1 ? '🎉 Spot on!' : guess < typical ? 'Longer than that! Most people guess too short.' : 'Not quite that long.',
+            detail: `You guessed ${guess}. The 100 flips now shown in "Flip a coin" below have a longest streak of ${shown}. Across ${trials.toLocaleString()} sequences of 100 flips the longest streak averaged ${typical.toFixed(1)}, and ${pct(atLeast / trials, 0)} had a streak of ${guess} or more.`,
+          };
+        }}
+      />
       <section className="panel coin-panel" aria-labelledby="flip-heading">
         <h2 id="flip-heading">Flip a coin</h2>
         <div className="coin-row">
@@ -189,11 +218,6 @@ function App() {
         {handsOn > 0 && <Sequence seq={sequence} count={handsOn} />}
       </section>
 
-      <Predict
-        question="Flip a fair coin 100 times. What is the longest run of the same face in a row you would expect?"
-        answer="Usually 6 or 7. A run of at least 5 shows up in about 97% of 100-flip sequences. Most people guess 3 or 4, which is why invented sequences look too tidy."
-        placeholder="e.g. 4"
-      />
 
       <section className="controls-panel" aria-label="Simulation settings">
         <div className="control-grid">

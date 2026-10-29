@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import ToolPage from '../../shared/ToolPage';
 import ToolActions from '../../shared/ToolActions';
 import Faq from '../../shared/Faq';
-import Predict from '../../shared/Predict';
 import { Legend, LogRangeControl, RangeControl, SeedControl, StatRow } from '../../shared/controls';
 import { useUrlState } from '../../shared/useUrlState';
 import { SPREAD, codeSnippet, dropNeedles, generatePoints, repeatedEstimates } from '../../utils/monteCarloPi';
@@ -211,11 +210,6 @@ function App() {
       title="Monte Carlo π Estimator"
       intro="Throw random points at a square with a circle inside it, and estimate π from the share that lands inside. See how wrong you should expect to be, compare quasi-random points, try Buffon's needle, and get code that reproduces your exact run."
     >
-      <Predict
-        question="Throw 10,000 random points. How close to π (3.14159…) will the estimate usually be?"
-        answer="Usually within about ±0.03 (two standard errors of 0.016). Getting 3.12 or 3.16 is completely normal. For one more correct digit you need about 100 times as many points."
-        placeholder="e.g. within 0.001"
-      />
 
       <section className="controls-panel" aria-label="Simulation settings">
         <div className="mode-tabs" role="group" aria-label="Experiment">

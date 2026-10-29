@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import ToolPage from '../../shared/ToolPage';
 import ToolActions from '../../shared/ToolActions';
 import Faq from '../../shared/Faq';
-import Predict from '../../shared/Predict';
 import { Legend, LogRangeControl, RangeControl, SeedControl, StatRow } from '../../shared/controls';
 import { useUrlState } from '../../shared/useUrlState';
 import { MAX_POINTS, RULES, bounds, displacementStats, generateWalks, returnStats } from '../../utils/randomWalks';
@@ -169,11 +168,6 @@ function App() {
       title="Random Walk Simulator"
       intro="Release one walker or a thousand, watch them diffuse step by step, and check the √n law against live charts. Switch to Lévy flights, self-avoiding walks or drift, then style the paths as art and export PNG, SVG or data."
     >
-      <Predict
-        question="A walker takes 10,000 random unit steps on a grid. About how far from the start will it typically end up?"
-        answer="About 100 steps away (√10,000), even though it walked 10,000 steps in total. Opposite steps cancel, so distance grows like √n. Set 500 walkers and watch the average distance follow the yellow line."
-        placeholder="e.g. 5,000 steps"
-      />
 
       <section className="controls-panel" aria-label="Walk settings">
         <div className="control-grid">

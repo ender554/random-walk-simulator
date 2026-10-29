@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import ToolPage from '../../shared/ToolPage';
 import ToolActions from '../../shared/ToolActions';
 import Faq from '../../shared/Faq';
-import Predict from '../../shared/Predict';
 import { Legend, RangeControl, SeedControl, StatRow } from '../../shared/controls';
 import { useUrlState } from '../../shared/useUrlState';
 import {
@@ -128,11 +127,6 @@ function App() {
       title="Stock Price Simulator (Monte Carlo, Geometric Brownian Motion)"
       intro="Simulate thousands of possible futures for a stock price. See percentile bands, the distribution of final prices, the odds of hitting a target, and why the typical outcome is worse than the average one. Every number is checked against its exact formula."
     >
-      <Predict
-        question="A stock is expected to return 10% a year, with 50% volatility. After 10 years, what share of possible paths end below where they started?"
-        answer="About 56%. Even though the average path grows, the typical (median) path shrinks: it grows at μ − σ²/2 = 10% − 12.5% = −2.5% a year. This is volatility drag."
-        placeholder="e.g. 20%"
-      />
 
       <section className="controls-panel" aria-label="Simulation settings">
         <div className="control-grid">
