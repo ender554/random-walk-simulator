@@ -26,6 +26,8 @@ export function useUrlState(defaults) {
 
   useEffect(() => {
     const params = new URLSearchParams();
+    // Keep page-level flags such as embed mode
+    if (new URLSearchParams(window.location.search).get('embed') === '1') params.set('embed', '1');
     for (const [key, value] of Object.entries(state)) {
       if (value === defaults[key]) continue;
       params.set(key, typeof value === 'boolean' ? (value ? '1' : '0') : String(value));

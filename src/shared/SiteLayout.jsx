@@ -2,7 +2,22 @@ import { categories, tools, toolPath } from '../tools';
 import { SITE_NAME, STUDIO_NAME, STUDIO_URL } from '../site';
 import './site.css';
 
+const isEmbedded = () => typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('embed') === '1';
+
 function SiteLayout({ children }) {
+  // Embedded in a class site or LMS: just the tool, with a link back
+  if (isEmbedded()) {
+    const full = window.location.href.replace(/([?&])embed=1&?/, '$1').replace(/[?&]$/, '');
+    return (
+      <div className="site embed">
+        <main id="main" className="site-main">{children}</main>
+        <p className="footer-line embed-footer">
+          <a href={full} target="_blank" rel="noopener noreferrer">Open in {SITE_NAME} ↗</a>
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="site">
       <a className="skip-link" href="#main">

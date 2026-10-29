@@ -14,6 +14,7 @@ const SIZES = [
 function ToolActions({ image, onCsv, csvLabel = 'Download data (CSV)', onReset, fullscreenRef, children }) {
   const [scale, setScale] = useState(2);
   const [copied, setCopied] = useState(false);
+  const [embedCopied, setEmbedCopied] = useState(false);
 
   const copyLink = async () => {
     try {
@@ -22,6 +23,19 @@ function ToolActions({ image, onCsv, csvLabel = 'Download data (CSV)', onReset, 
       setTimeout(() => setCopied(false), 2000);
     } catch {
       window.prompt('Copy this link:', window.location.href);
+    }
+  };
+
+  const copyEmbed = async () => {
+    const url = new URL(window.location.href);
+    url.searchParams.set('embed', '1');
+    const code = `<iframe src="${url.href}" width="100%" height="900" style="border:0" title="${document.title}" loading="lazy"></iframe>`;
+    try {
+      await navigator.clipboard.writeText(code);
+      setEmbedCopied(true);
+      setTimeout(() => setEmbedCopied(false), 2000);
+    } catch {
+      window.prompt('Copy this embed code:', code);
     }
   };
 
@@ -58,6 +72,7 @@ function ToolActions({ image, onCsv, csvLabel = 'Download data (CSV)', onReset, 
         <button type="button" onClick={copyLink} aria-live="polite">
           {copied ? '✓ Link copied' : '🔗 Copy link'}
         </button>
+        <button type="button" onClick={copyEmbed}>{embedCopied ? '✓ Embed code copied' : '</> Embed'}</button>
         {fullscreenRef && <button type="button" onClick={fullscreen}>⛶ Fullscreen</button>}
         {onReset && <button type="button" onClick={onReset}>Reset settings</button>}
       </div>

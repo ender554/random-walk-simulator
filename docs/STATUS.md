@@ -6,7 +6,7 @@ budget_hours: 16
 hard_max_hours: 20  
 hours_used: 1  
 launch_deadline: unset  
-next_action: Review the more-tools PR; choose the final name and domain, then deploy to Cloudflare.  
+next_action: Review the tool-upgrades PR; choose the final name and domain, then deploy to Cloudflare.  
 blocked_by: name and domain (Josh)
 
 ## Done
