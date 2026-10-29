@@ -26,6 +26,7 @@ function SiteLayout({ children }) {
 
       <header className="site-header">
         <a className="brand" href="/">
+          <img src="/favicon.svg" alt="" width="28" height="28" />
           {SITE_NAME}
         </a>
         <nav aria-label="Site">
