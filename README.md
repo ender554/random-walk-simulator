@@ -1,10 +1,10 @@
-# Chance Lab
+# ChanceScope
 
 Interactive probability simulators by Five54 Precision: random walks, bell curves
 and famous probability puzzles you can run in the browser. It started as the
 Random Walk Simulator.
 
-Chance Lab is a working name, set in `.env`. Where things stand:
+The name and domain (chancescope.com) are set in `.env`. Where things stand:
 [STATUS](docs/STATUS.md). Why it exists and its limits:
 [PROJECT_INTAKE](docs/PROJECT_INTAKE.md).
 

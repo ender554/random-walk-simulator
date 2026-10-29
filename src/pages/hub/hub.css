@@ -18,6 +18,13 @@
   line-height: 1.6;
 }
 
+.hub-hero .hub-tagline {
+  margin-top: 0.6rem;
+  color: #1de5d0;
+  font-size: clamp(1.1rem, 2.4vw, 1.35rem);
+  font-weight: 600;
+}
+
 .hub-categories {
   display: grid;
   gap: 2.5rem;

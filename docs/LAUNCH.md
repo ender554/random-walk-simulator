@@ -1,7 +1,7 @@
 # Launch runbook
 
 Steps to take the suite live on its own domain and hand over the old Vercel site's search ranking.
-Replace `NEW_DOMAIN` with the real domain (for example `chancelab.com`) everywhere below.
+Domain: `chancescope.com` (written as `NEW_DOMAIN` below).
 
 ## 1. Name and domain
 

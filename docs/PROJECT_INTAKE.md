@@ -1,7 +1,7 @@
-# Project Intake - Chance Lab
+# Project Intake - ChanceScope
 
-Working name. The product name lives in `.env` (`VITE_SITE_NAME`) and can change
-before launch without touching code.
+Name chosen 2026-10-29 (was the working name "Chance Lab"; chancelab.com is a parked resale domain).
+Tagline: "See what happens in the long run." The name lives in `.env` (`VITE_SITE_NAME`).
 
 ## Identity
 
@@ -9,12 +9,12 @@ before launch without touching code.
 - Experiment class: `COMMERCIAL-CANDIDATE`
 - Type: static web utility suite
 - Strategic role: second search-driven Five54 product, after the Epoch Lens calibration
-- Owner: Five54 Precision ("Chance Lab by Five54 Precision", same pattern as WinCon)
+- Owner: Five54 Precision ("ChanceScope by Five54 Precision", same pattern as WinCon)
 - Origin: grows out of the Random Walk Simulator (random-walk-simulator.vercel.app, ~10 clicks/month)
 
 ## One sentence
 
-A student, teacher or curious learner uses Chance Lab to see a probability idea
+A student, teacher or curious learner uses ChanceScope to see a probability idea
 happen (random walks, bell curves, famous puzzles) instead of only reading the formula.
 
 ## User and problem

@@ -10,6 +10,7 @@ function Hub() {
         <h1>
           {SITE_NAME}: interactive probability simulators
         </h1>
+        <p className="hub-tagline">See what happens in the long run.</p>
         <p>
           See randomness happen instead of just reading the formula. Run random walks, watch bell curves form,
           and test famous probability puzzles in your browser. Every simulator is free, uses repeatable seeds so a

@@ -14,7 +14,7 @@ const env = Object.fromEntries(
     .filter((line) => /^\w+=/.test(line))
     .map((line) => [line.slice(0, line.indexOf('=')), line.slice(line.indexOf('=') + 1)]),
 );
-const SITE_NAME = env.VITE_SITE_NAME ?? 'Chance Lab';
+const SITE_NAME = env.VITE_SITE_NAME ?? 'ChanceScope';
 
 const W = 1200;
 const H = 630;
@@ -340,7 +340,7 @@ function render(svg, file) {
 
 fs.mkdirSync(outDir, { recursive: true });
 const pages = [
-  { file: 'home.png', title: `${liveTools.length} probability simulators`, subtitle: 'Random walks, bell curves, Monty Hall, the birthday paradox and more.', artSvg: hubArt() },
+  { file: 'home.png', title: `${liveTools.length} probability simulators`, subtitle: 'See what happens in the long run: random walks, bell curves, Monty Hall and more.', artSvg: hubArt() },
   ...liveTools.map((t) => ({ file: `${t.slug}.png`, title: t.name, subtitle: t.short, artSvg: art[t.slug]() })),
 ];
 for (const page of pages) {
