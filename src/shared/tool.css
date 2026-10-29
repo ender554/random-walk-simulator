@@ -532,3 +532,17 @@
   color: #edf3ff;
   font: inherit;
 }
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+.case-table tr.current td {
+  color: #1de5d0;
+  font-weight: 600;
+}
+.case-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.93rem;
+}
