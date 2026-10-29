@@ -21,6 +21,9 @@ blocked_by: name and domain (Josh)
 
 ## Before launch
 
+Full steps: [LAUNCH.md](LAUNCH.md).
+
+- [x] Favicon set, web manifest, and social preview images (`npm run og`)
 - [ ] Final name in `.env` (`VITE_SITE_NAME`) and domain (`VITE_SITE_URL`)
 - [x] Two more tools live
 - [ ] Deploy to Cloudflare; enable Web Analytics
