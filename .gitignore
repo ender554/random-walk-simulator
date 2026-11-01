@@ -24,3 +24,6 @@ dist-ssr
 *.sw?
 
 ROADMAP.md
+
+# Wrangler local state
+.wrangler/

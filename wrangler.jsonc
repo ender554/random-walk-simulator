@@ -1,0 +1,15 @@
+// Cloudflare Worker that serves the built site (static assets only, no server code).
+// Docs: https://developers.cloudflare.com/workers/static-assets/
+{
+  "name": "chancescope",
+  "compatibility_date": "2026-10-29",
+  "assets": {
+    "directory": "./dist/",
+    // Unknown addresses get 404.html with a real 404 status
+    "not_found_handling": "404-page",
+    // /about/ serves about/index.html; /about redirects to /about/
+    "html_handling": "auto-trailing-slash"
+  },
+  // On while we test; turned off once chancescope.com points here
+  "workers_dev": true
+}
