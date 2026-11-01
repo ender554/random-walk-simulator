@@ -11,6 +11,7 @@ const pages = [
   '/',
   ...liveTools.map((t) => toolPath(t.slug)),
   '/about/',
+  '/contact/',
   '/privacy/',
 ]
 

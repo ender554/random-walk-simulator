@@ -68,6 +68,8 @@ function SiteLayout({ children, wide = false }) {
           {' · '}
           <a href="/about/">About</a>
           {' · '}
+          <a href="/contact/">Contact</a>
+          {' · '}
           <a href="/privacy/">Privacy</a>
         </p>
       </footer>
