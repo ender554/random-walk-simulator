@@ -1,15 +1,26 @@
-// Cloudflare Worker that serves the built site (static assets only, no server code).
+// Cloudflare Worker that serves the built site. Static files are served first; worker/index.js only
+// runs for requests that match no file (it records tool-to-tool clicks at /api/hop).
 // Docs: https://developers.cloudflare.com/workers/static-assets/
 {
   "name": "chancescope",
+  "main": "worker/index.js",
   "compatibility_date": "2026-10-29",
   "assets": {
     "directory": "./dist/",
+    "binding": "ASSETS",
     // Unknown addresses get 404.html with a real 404 status
     "not_found_handling": "404-page",
     // /about/ serves about/index.html; /about redirects to /about/
     "html_handling": "auto-trailing-slash"
   },
+  // Tool-to-tool click counts (table in worker/schema.sql)
+  "d1_databases": [
+    {
+      "binding": "HOPS",
+      "database_name": "chancescope-hops",
+      "database_id": "aa2e1588-d924-40cd-a310-c647dc647f26"
+    }
+  ],
   // Only chancescope.com and www serve the site; no *.workers.dev address
   "workers_dev": false
 }

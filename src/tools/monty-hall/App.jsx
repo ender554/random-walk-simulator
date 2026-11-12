@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import ToolPage from '../../shared/ToolPage';
+import NextTools from '../../shared/NextTools';
 import ToolActions from '../../shared/ToolActions';
 import Faq from '../../shared/Faq';
 import Challenge from '../../shared/Challenge';
@@ -283,6 +284,7 @@ function App() {
         </div>
       </section>
 
+      <NextTools />
       <section className="canvas-description prose" aria-labelledby="explain-heading">
         <h2 id="explain-heading">The Monty Hall problem</h2>
         <p>

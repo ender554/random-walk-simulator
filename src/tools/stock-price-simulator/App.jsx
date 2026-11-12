@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import ToolPage from '../../shared/ToolPage';
+import NextTools from '../../shared/NextTools';
 import ToolActions from '../../shared/ToolActions';
 import Faq from '../../shared/Faq';
 import { Legend, RangeControl, SeedControl, StatRow } from '../../shared/controls';
@@ -243,13 +244,14 @@ function App() {
 
       <OptionPanel s0={s0} sigma={sigma} years={years} seed={seed} />
 
+      <NextTools />
       <section className="canvas-description prose" aria-labelledby="explain-heading">
         <h2 id="explain-heading">How stock prices are modeled</h2>
         <p>
           The standard textbook model for a stock price is geometric Brownian motion. Every trading day the price
           is multiplied by a small random factor. The expected return μ sets the average growth rate, and the
           volatility σ sets how large the daily swings are. It is the model behind the Black–Scholes option pricing
-          formula, and a random walk on the logarithm of the price. This simulator steps through {STEPS_PER_YEAR} trading
+          formula, and a <a href="/random-walk/" data-hop="text">random walk</a> on the logarithm of the price. This simulator steps through {STEPS_PER_YEAR} trading
           days a year.
         </p>
 

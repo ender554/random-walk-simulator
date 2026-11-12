@@ -347,3 +347,14 @@ for (const page of pages) {
   const bytes = render(card(page), page.file);
   console.log(`og/${page.file}  ${(bytes / 1024).toFixed(0)} kB`);
 }
+
+// Small square pictures of each tool's art for the next-experiment and related cards (shown at 96 px).
+const THUMB = 192;
+fs.mkdirSync(path.join(outDir, 'thumb'), { recursive: true });
+for (const t of liveTools) {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${ART.size}" height="${ART.size}" viewBox="0 0 ${ART.size} ${ART.size}">`
+    + `<rect width="${ART.size}" height="${ART.size}" fill="${C.panel}"/>${art[t.slug]()}</svg>`;
+  const png = new Resvg(svg, { fitTo: { mode: 'width', value: THUMB } }).render().asPng();
+  fs.writeFileSync(path.join(outDir, 'thumb', `${t.slug}.png`), png);
+  console.log(`og/thumb/${t.slug}.png  ${(png.length / 1024).toFixed(0)} kB`);
+}

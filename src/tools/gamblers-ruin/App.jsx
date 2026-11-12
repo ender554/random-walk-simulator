@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef } from 'react';
 import ToolPage from '../../shared/ToolPage';
+import NextTools from '../../shared/NextTools';
 import ToolActions from '../../shared/ToolActions';
 import Faq from '../../shared/Faq';
 import { Legend, LogRangeControl, RangeControl, SeedControl, StatRow } from '../../shared/controls';
@@ -232,17 +233,18 @@ function App() {
         </div>
       )}
 
+      <NextTools />
       <section className="canvas-description prose" aria-labelledby="explain-heading">
         <h2 id="explain-heading">What is the gambler&apos;s ruin?</h2>
         <p>
           A gambler starts with a bankroll and bets repeatedly, winning each bet with probability p. They stop when
           they reach a target or lose everything. The gambler&apos;s ruin problem, first posed by Pascal in 1656, asks how
-          likely each ending is. With flat $1 bets each game is a one-dimensional random walk that stops at two walls.
+          likely each ending is. With flat $1 bets each game is a one-dimensional <a href="/random-walk/" data-hop="text">random walk</a> that stops at two walls.
         </p>
 
         <h2>A fair game</h2>
         <p>
-          When every bet is a coin flip (p = 50%), the chance of reaching the target is simply your starting
+          When every bet is a <a href="/coin-flip-simulator/" data-hop="text">coin flip</a> (p = 50%), the chance of reaching the target is simply your starting
           bankroll divided by the target. Starting with $20 and stopping at $40 gives a 50% chance either way. The
           expected number of bets is start × (target − start), so the game lasts longer than most people guess.
         </p>

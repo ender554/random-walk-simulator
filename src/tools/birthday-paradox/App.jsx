@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import ToolPage from '../../shared/ToolPage';
+import NextTools from '../../shared/NextTools';
 import ToolActions from '../../shared/ToolActions';
 import Faq from '../../shared/Faq';
 import Challenge from '../../shared/Challenge';
@@ -326,6 +327,7 @@ function App() {
 
       {isCalendar && <ClassBirthdays size={size} />}
 
+      <NextTools />
       <section className="canvas-description prose" aria-labelledby="explain-heading">
         <h2 id="explain-heading">Why 23 people is enough</h2>
         <p>

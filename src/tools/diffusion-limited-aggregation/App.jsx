@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import ToolPage from '../../shared/ToolPage';
+import NextTools from '../../shared/NextTools';
 import ToolActions from '../../shared/ToolActions';
 import Faq from '../../shared/Faq';
 import { Legend, RangeControl, SeedControl, StatRow } from '../../shared/controls';
@@ -263,11 +264,12 @@ function App() {
         </div>
       )}
 
+      <NextTools />
       <section className="canvas-description prose" aria-labelledby="explain-heading">
         <h2 id="explain-heading">What is diffusion-limited aggregation?</h2>
         <p>
           Diffusion-limited aggregation (DLA) starts with a seed. A particle is released some distance away and takes
-          a random walk until it bumps into the seed, where it sticks. Then another, and another. Colors here can show
+          a <a href="/random-walk/" data-hop="text">random walk</a> until it bumps into the seed, where it sticks. Then another, and another. Colors here can show
           the order particles arrived, their distance from the seed, or how many links separate them from it along the
           branch.
         </p>

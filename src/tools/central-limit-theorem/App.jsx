@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import ToolPage from '../../shared/ToolPage';
+import NextTools from '../../shared/NextTools';
 import ToolActions from '../../shared/ToolActions';
 import Faq from '../../shared/Faq';
 import { Legend, RangeControl, SeedControl, StatRow } from '../../shared/controls';
@@ -290,6 +291,7 @@ function App() {
         </p>
       </div>
 
+      <NextTools />
       <section className="canvas-description prose" aria-labelledby="explain-heading">
         <h2 id="explain-heading">What does the central limit theorem say?</h2>
         <p>
@@ -333,7 +335,7 @@ function App() {
         <p>
           The central limit theorem is why the normal distribution shows up everywhere, from measurement errors to
           polling. It is the reason confidence intervals and many statistical tests work even when the underlying
-          data is not normal. It also explains the bell shape on a Galton board, where each ball&apos;s position is
+          data is not normal. It also explains the bell shape on a <a href="/galton-board/" data-hop="text">Galton board</a>, where each ball&apos;s position is
           the sum of many left-or-right bounces.
         </p>
       </section>

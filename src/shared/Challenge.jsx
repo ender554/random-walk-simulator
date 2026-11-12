@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import { useContext, useState } from 'react';
+import { nextTools, toolPath } from '../tools';
+import { ToolSlug } from './toolSlug';
 
 /**
  * Guess, then test it: the guess is a number, and "Test it" sets the tool up for that exact
@@ -9,6 +11,8 @@ function Challenge({ question, unit = '', placeholder, min, max, onTest }) {
   const [text, setText] = useState('');
   const [result, setResult] = useState(null);
   const [history, setHistory] = useState([]);
+  // After the reveal, point to the page's main next pick while the surprise is fresh
+  const next = nextTools(useContext(ToolSlug))[0]?.tool;
 
   const test = (e) => {
     e.preventDefault();
@@ -34,6 +38,11 @@ function Challenge({ question, unit = '', placeholder, min, max, onTest }) {
         <div className="challenge-result" aria-live="polite">
           <p><strong>{result.verdict}</strong></p>
           <p>{result.detail}</p>
+          {next && (
+            <p className="challenge-next">
+              Surprised? <a href={toolPath(next.slug)} data-hop="surprised">Try the {next.name} →</a>
+            </p>
+          )}
         </div>
       )}
       {history.length > 1 && (

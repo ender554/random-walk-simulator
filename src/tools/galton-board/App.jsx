@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import seedrandom from 'seedrandom';
 import ToolPage from '../../shared/ToolPage';
+import NextTools from '../../shared/NextTools';
 import ToolActions from '../../shared/ToolActions';
 import Faq from '../../shared/Faq';
 import { Legend, RangeControl, SeedControl, StatRow } from '../../shared/controls';
@@ -260,13 +261,14 @@ function App() {
         </div>
       </section>
 
+      <NextTools />
       <section className="canvas-description prose" aria-labelledby="explain-heading">
         <h2 id="explain-heading">What is a Galton board?</h2>
         <p>
           A Galton board, also called a bean machine or quincunx, is a vertical board with rows of pegs. Balls
           dropped at the top hit a peg at every row and bounce left or right. Francis Galton built one in the 1870s to
-          show how many small random effects add up to a predictable pattern. Set the rows to 1 and it is just a
-          coin flip; add rows and the bell curve appears.
+          show how many small random effects add up to a predictable pattern. Set the rows to 1 and it is just a{' '}
+          <a href="/coin-flip-simulator/" data-hop="text">coin flip</a>; add rows and the bell curve appears.
         </p>
 
         <h2>Why the balls form a bell curve</h2>
@@ -274,7 +276,7 @@ function App() {
           A ball&apos;s final bin is the number of times it bounced right. With 12 rows there is only one way to end
           in the far left bin (left every time) but 924 ways to end in the middle bin. Turn on Pascal&apos;s triangle
           to see these path counts on every peg. The counts follow the binomial distribution, and as the number of
-          rows grows that distribution looks more and more like the normal curve. This is the central limit theorem
+          rows grows that distribution looks more and more like the normal curve. This is the <a href="/central-limit-theorem/" data-hop="text">central limit theorem</a>{' '}
           at work: each ball&apos;s position is a sum of many independent coin flips.
         </p>
 

@@ -8,7 +8,7 @@ function Privacy() {
     <SiteLayout>
       <article className="prose">
         <h1>Privacy policy</h1>
-        <p>Last updated: October 27, 2026</p>
+        <p>Last updated: November 11, 2026</p>
 
         <h2>The short version</h2>
         <p>
@@ -20,6 +20,11 @@ function Privacy() {
         <p>
           We use Cloudflare Web Analytics to count page views. It does not use cookies or track you across sites, and
           we only see totals such as how many people visited a page.
+        </p>
+        <p>
+          When you follow a link from one simulator to another, we record the two simulators, which link you used
+          and the date, so we can tell which suggestions help. Nothing else is stored with it: no IP address, cookie
+          or device details.
         </p>
 
         <h2>Contact</h2>

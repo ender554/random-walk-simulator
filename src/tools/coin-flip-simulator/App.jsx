@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import ToolPage from '../../shared/ToolPage';
+import NextTools from '../../shared/NextTools';
 import ToolActions from '../../shared/ToolActions';
 import Faq from '../../shared/Faq';
 import Challenge from '../../shared/Challenge';
@@ -306,6 +307,7 @@ function App() {
 
       <RealOrFake />
 
+      <NextTools />
       <section className="canvas-description prose" aria-labelledby="explain-heading">
         <h2 id="explain-heading">The law of large numbers</h2>
         <p>
@@ -334,8 +336,8 @@ function App() {
         <h2>From coin flips to the bell curve</h2>
         <p>
           Count the heads in 100 flips and repeat that thousands of times, and the counts form a binomial
-          distribution, which looks like a bell curve. That is the central limit theorem at work, and the same idea as
-          a Galton board.
+          distribution, which looks like a bell curve. That is the <a href="/central-limit-theorem/" data-hop="text">central limit theorem</a> at work, and the same idea as
+          a <a href="/galton-board/" data-hop="text">Galton board</a>.
         </p>
       </section>
 
