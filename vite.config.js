@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url'
 import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 import { liveTools, toolPath } from './src/tools.js'
+import { prerender } from './scripts/prerender.js'
 
 const root = fileURLToPath(new URL('.', import.meta.url))
 
@@ -19,7 +20,8 @@ const pages = [
 function seoFiles(siteUrl) {
   return {
     name: 'seo-files',
-    apply: 'build',
+    // Not in the prerender's server build (scripts/prerender.js)
+    apply: (_, env) => env.command === 'build' && !env.isSsrBuild,
     generateBundle() {
       const today = new Date().toISOString().slice(0, 10)
       const urls = pages
@@ -45,7 +47,7 @@ export default defineConfig(({ mode }) => {
   const siteUrl = env.VITE_SITE_URL.replace(/\/$/, '')
 
   return {
-    plugins: [react(), seoFiles(siteUrl)],
+    plugins: [react(), seoFiles(siteUrl), prerender()],
     build: {
       rollupOptions: {
         input: {

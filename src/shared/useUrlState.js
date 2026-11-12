@@ -12,6 +12,8 @@ function parse(raw, fallback) {
 }
 
 function readUrl(defaults) {
+  // The build-time prerender has no URL: it renders the defaults
+  if (typeof window === 'undefined') return { ...defaults };
   const params = new URLSearchParams(window.location.search);
   return Object.fromEntries(Object.entries(defaults).map(([key, value]) => [key, parse(params.get(key), value)]));
 }
