@@ -1,7 +1,7 @@
 .monty-play {
   width: min(960px, 100%);
-  background: #101522;
-  border: 1px solid #1f2836;
+  background: var(--surface);
+  border: 1px solid var(--line);
   border-radius: 18px;
   padding: 1.5rem;
 }
@@ -13,7 +13,7 @@
 
 .monty-message {
   margin: 0 0 1rem;
-  color: #c8d8ff;
+  color: var(--text-label);
   min-height: 1.5em;
 }
 
@@ -29,10 +29,10 @@
   align-items: center;
   gap: 0.35rem;
   padding: 1rem 0.5rem;
-  background: #161f30;
-  border: 2px solid #2c3850;
+  background: var(--button);
+  border: 2px solid var(--control-line);
   border-radius: 12px;
-  color: #edf3ff;
+  color: var(--text);
   cursor: pointer;
   font: inherit;
 }
@@ -42,15 +42,15 @@
 }
 
 .door:not(:disabled):hover {
-  border-color: #1de5d0;
+  border-color: var(--accent);
 }
 
 .door.chosen {
-  border-color: #ffd166;
+  border-color: var(--predict);
 }
 
 .door.final {
-  border-color: #1de5d0;
+  border-color: var(--accent);
   box-shadow: 0 0 0 3px rgba(29, 229, 208, 0.25);
 }
 
@@ -61,7 +61,7 @@
 
 .door-number {
   font-weight: 700;
-  color: #aab6d4;
+  color: var(--text-2);
 }
 
 .tally {
@@ -72,11 +72,12 @@
 }
 
 .door-row.many {
-  grid-template-columns: repeat(auto-fill, minmax(42px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(var(--target), 1fr));
   gap: 0.35rem;
 }
 
 .door-row.many .door {
+  min-height: var(--target);
   padding: 0.35rem 0.1rem;
 }
 
@@ -94,7 +95,7 @@
 
 .door-chance {
   font-size: 0.8rem;
-  color: #ffd166;
+  color: var(--predict);
   font-weight: 700;
 }
 
@@ -107,24 +108,26 @@
 
 .mode-tabs button {
   background: transparent;
-  border: 1px solid #2c3850;
-  color: #c8d8ff;
+  border: 1px solid var(--control-line);
+  color: var(--text-label);
   border-radius: 999px;
+  min-height: var(--target);
   padding: 0.35rem 0.9rem;
   font: inherit;
   cursor: pointer;
 }
 
 .mode-tabs button[aria-pressed='true'] {
-  border-color: #1de5d0;
-  color: #1de5d0;
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .race select {
-  background: #161f30;
-  color: #edf3ff;
-  border: 1px solid #2c3850;
+  background: var(--button);
+  color: var(--text);
+  border: 1px solid var(--control-line);
   border-radius: 10px;
+  min-height: var(--target);
   padding: 0 0.6rem;
   font: inherit;
 }
@@ -139,12 +142,12 @@
 
 .race-label {
   font-weight: 600;
-  color: #c8d8ff;
+  color: var(--text-label);
 }
 
 .race-track {
   height: 1rem;
-  background: #161f30;
+  background: var(--button);
   border-radius: 999px;
   overflow: hidden;
 }
@@ -157,7 +160,8 @@
 }
 
 .race-value {
-  color: #c3cde3;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-prose);
   font-size: 0.9rem;
 }
 
@@ -171,15 +175,15 @@
 .case-table td {
   text-align: left;
   padding: 0.5rem 0.4rem;
-  border-bottom: 1px solid #1f2836;
+  border-bottom: 1px solid var(--line);
 }
 
 .case-table th {
-  color: #c8d8ff;
+  color: var(--text-label);
 }
 
 .case-table td {
-  color: #c3cde3;
+  color: var(--text-prose);
 }
 
 @media (max-width: 560px) {

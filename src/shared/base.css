@@ -1,9 +1,33 @@
+/* Design tokens. Contrast ratios are WCAG, on the page background unless noted. */
 :root {
-  font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --bg: #0b0f14; /* page */
+  --bg-deep: #080c11; /* footer, article boxes */
+  --surface: #101522; /* cards, panels, stage */
+  --surface-2: #121a2b; /* predict and other highlighted cards */
+  --field: #141a28; /* inputs, selects */
+  --button: #161f30; /* secondary buttons */
+  --line: #1f2836; /* dividers and card edges (decoration only) */
+  --line-strong: #2c3850; /* badge and highlighted-card edges (decoration only) */
+  --control-line: #5b6a8a; /* edges of anything you can press or type in: 3.36:1 on --surface */
+
+  --text-strong: #ffffff; /* headings */
+  --text: #edf3ff; /* body, 17.3:1 */
+  --text-prose: #c3cde3; /* article and card text */
+  --text-label: #c8d8ff; /* control labels, nav, 12.8:1 */
+  --text-2: #aab6d4; /* secondary text, 9.5:1 */
+  --text-muted: #8a96b3; /* meta and placeholders, 5.9:1 on --field */
+
+  --accent: #1de5d0; /* links, Run, first series, 12.1:1 */
+  --predict: #ffd166; /* the predict step only, 12.1:1 */
+  --series-2: #ff6b8b; /* second series, 7.1:1 */
+
+  --target: 44px; /* smallest tap target */
+
+  font-family: 'Segoe UI', system-ui, -apple-system, Roboto, sans-serif;
   line-height: 1.4;
   font-weight: 400;
-  color: #edf3ff;
-  background-color: #0b0f14;
+  color: var(--text);
+  background-color: var(--bg);
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
 }
@@ -17,7 +41,7 @@
 body {
   margin: 0;
   min-height: 100vh;
-  background: #0b0f14;
+  background: var(--bg);
 }
 
 #root {

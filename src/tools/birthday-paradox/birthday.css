@@ -13,13 +13,13 @@
 
 .month-name {
   font-size: 0.75rem;
-  color: #aab6d4;
+  color: var(--text-2);
 }
 
 .day {
   aspect-ratio: 1;
   border-radius: 2px;
-  background: #161f30;
+  background: var(--button);
 }
 
 .day.blank {
@@ -27,32 +27,33 @@
 }
 
 .day.taken {
-  background: #1de5d0;
+  background: var(--accent);
 }
 
 .day.shared {
-  background: #ffd166;
+  background: var(--predict);
   box-shadow: 0 0 0 2px rgba(255, 209, 102, 0.35);
 }
 
 .class-input {
   width: 100%;
   margin-top: 0.5rem;
-  background: #141a28;
-  border: 1px solid #1d2535;
+  background: var(--field);
+  border: 1px solid var(--control-line);
   border-radius: 8px;
   padding: 0.6rem 0.75rem;
-  color: #edf3ff;
+  color: var(--text);
   font: inherit;
   resize: vertical;
 }
 
 .control-row input[type='number'] {
   width: 100%;
-  background: #141a28;
-  border: 1px solid #1d2535;
+  min-height: var(--target);
+  background: var(--field);
+  border: 1px solid var(--control-line);
   border-radius: 8px;
   padding: 0.65rem 0.75rem;
-  color: #edf3ff;
+  color: var(--text);
   font: inherit;
 }

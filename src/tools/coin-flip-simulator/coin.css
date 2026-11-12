@@ -13,7 +13,7 @@
   place-items: center;
   font-size: 2.2rem;
   font-weight: 800;
-  color: #0b0f14;
+  color: var(--bg);
   background: radial-gradient(circle at 35% 30%, #fff1c2, #ffd166 55%, #c99a2e);
   box-shadow: inset 0 0 0 4px rgba(0, 0, 0, 0.12), 0 8px 20px rgba(0, 0, 0, 0.4);
   flex-shrink: 0;
@@ -43,8 +43,8 @@
 }
 
 .button-row button.primary {
-  background: #1de5d0;
-  color: #0b0f14;
+  background: var(--accent);
+  color: var(--bg);
 }
 
 .sequence {
@@ -69,16 +69,16 @@
 
 .flip.heads {
   background: rgba(255, 209, 102, 0.2);
-  color: #ffd166;
+  color: var(--predict);
 }
 
 .flip.tails {
   background: rgba(159, 180, 212, 0.15);
-  color: #c8d8ff;
+  color: var(--text-label);
 }
 
 .flip.best {
-  outline: 2px solid #ff6b8b;
+  outline: 2px solid var(--series-2);
 }
 
 .panel-canvas {
@@ -91,11 +91,11 @@
 .class-input {
   width: 100%;
   margin-top: 0.5rem;
-  background: #141a28;
-  border: 1px solid #1d2535;
+  background: var(--field);
+  border: 1px solid var(--control-line);
   border-radius: 8px;
   padding: 0.6rem 0.75rem;
-  color: #edf3ff;
+  color: var(--text);
   font: inherit;
   font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
   resize: vertical;
