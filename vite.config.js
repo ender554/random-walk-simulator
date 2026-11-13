@@ -7,14 +7,29 @@ import { prerender } from './scripts/prerender.js'
 
 const root = fileURLToPath(new URL('.', import.meta.url))
 
-// Every page that gets its own HTML file, keyed by URL path.
+// Every page that gets its own HTML file, by URL path, with the day of its last significant change
+// (content, links, title, description or structured data): the sitemap's lastmod. Tools keep theirs in
+// src/tools.js. Change a date whenever its page changes.
 const pages = [
-  '/',
-  ...liveTools.map((t) => toolPath(t.slug)),
-  '/about/',
-  '/contact/',
-  '/privacy/',
+  { path: '/', updated: '2026-11-13' },
+  ...liveTools.map((t) => ({ path: toolPath(t.slug), updated: t.updated })),
+  { path: '/about/', updated: '2026-11-13' },
+  { path: '/contact/', updated: '2026-11-12' },
+  { path: '/privacy/', updated: '2026-11-12' },
 ]
+
+// Fills __PAGE_UPDATED__ in a page's HTML (the dateModified in its structured data) with its date.
+function pageDates() {
+  return {
+    name: 'page-dates',
+    transformIndexHtml(html, ctx) {
+      if (!html.includes('__PAGE_UPDATED__')) return html
+      const page = pages.find((p) => ctx.path === p.path || ctx.path === `${p.path}index.html`)
+      if (!page?.updated) throw new Error(`No updated date for ${ctx.path}`)
+      return html.replaceAll('__PAGE_UPDATED__', page.updated)
+    },
+  }
+}
 
 // Emits sitemap.xml and robots.txt from the same page list the build uses.
 function seoFiles(siteUrl) {
@@ -23,9 +38,8 @@ function seoFiles(siteUrl) {
     // Not in the prerender's server build (scripts/prerender.js)
     apply: (_, env) => env.command === 'build' && !env.isSsrBuild,
     generateBundle() {
-      const today = new Date().toISOString().slice(0, 10)
       const urls = pages
-        .map((p) => `  <url><loc>${siteUrl}${p}</loc><lastmod>${today}</lastmod></url>`)
+        .map((p) => `  <url><loc>${siteUrl}${p.path}</loc><lastmod>${p.updated}</lastmod></url>`)
         .join('\n')
       this.emitFile({
         type: 'asset',
@@ -47,12 +61,12 @@ export default defineConfig(({ mode }) => {
   const siteUrl = env.VITE_SITE_URL.replace(/\/$/, '')
 
   return {
-    plugins: [react(), seoFiles(siteUrl), prerender()],
+    plugins: [react(), pageDates(), seoFiles(siteUrl), prerender()],
     build: {
       rollupOptions: {
         input: {
           ...Object.fromEntries(
-            pages.map((p) => [p === '/' ? 'index' : p.slice(1, -1), resolve(root, `.${p}index.html`)]),
+            pages.map(({ path }) => [path === '/' ? 'index' : path.slice(1, -1), resolve(root, `.${path}index.html`)]),
           ),
           // Not in the sitemap; Cloudflare Pages serves it for unknown addresses
           404: resolve(root, '404.html'),
