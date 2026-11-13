@@ -1,5 +1,6 @@
 import { categories, tools, toolPath } from '../tools';
 import { SITE_NAME, STUDIO_NAME, STUDIO_URL } from '../site';
+import SimulatorsMenu from './SimulatorsMenu';
 import './site.css';
 
 const isEmbedded = () => typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('embed') === '1';
@@ -29,10 +30,11 @@ function SiteLayout({ children, wide = false }) {
           <img src="/favicon.svg" alt="" width="28" height="28" />
           {SITE_NAME}
         </a>
-        <nav aria-label="Site">
-          <a href="/#tools">Tools</a>
-          <a href="/about/">About</a>
-        </nav>
+        <SimulatorsMenu>
+          <a href="/about/" className="header-about">
+            About
+          </a>
+        </SimulatorsMenu>
       </header>
 
       <main id="main" className={wide ? 'site-main site-main-wide' : 'site-main'}>

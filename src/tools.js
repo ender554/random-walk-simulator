@@ -2,6 +2,8 @@
 // Used by the hub page, the related-tools links, and the build (page inputs + sitemap),
 // so it must stay plain data with no JSX or browser-only imports.
 //
+// label: the short name used in the Simulators menu.
+//
 // status: 'live' tools get their own page and sitemap entry; 'soon' tools only
 // appear on the hub so we don't publish thin placeholder pages.
 
@@ -27,6 +29,7 @@ export const tools = [
   {
     slug: 'random-walk',
     name: 'Random Walk Simulator',
+    label: 'Random walk',
     short: 'Draw 2D random walks with seeds, compare distance to √n, and export PNGs.',
     category: 'random-paths',
     status: 'live',
@@ -34,6 +37,7 @@ export const tools = [
   {
     slug: 'gamblers-ruin',
     name: "Gambler's Ruin Simulator",
+    label: "Gambler's ruin",
     short: 'Bet repeatedly from a starting bankroll and see how often you go broke.',
     category: 'random-paths',
     status: 'live',
@@ -41,6 +45,7 @@ export const tools = [
   {
     slug: 'stock-price-simulator',
     name: 'Stock Price Path Simulator',
+    label: 'Stock price paths',
     short: 'Geometric Brownian motion with drift and volatility controls.',
     category: 'random-paths',
     status: 'live',
@@ -48,6 +53,7 @@ export const tools = [
   {
     slug: 'diffusion-limited-aggregation',
     name: 'Diffusion-Limited Aggregation',
+    label: 'Diffusion-limited aggregation',
     short: 'Random walkers stick together and grow coral-like fractals.',
     category: 'random-paths',
     status: 'live',
@@ -55,6 +61,7 @@ export const tools = [
   {
     slug: 'central-limit-theorem',
     name: 'Central Limit Theorem Simulator',
+    label: 'Central limit theorem',
     short: 'Average random samples and watch any distribution become a bell curve.',
     category: 'distributions',
     status: 'live',
@@ -62,6 +69,7 @@ export const tools = [
   {
     slug: 'galton-board',
     name: 'Galton Board',
+    label: 'Galton board',
     short: 'Balls bounce through pegs and stack into a normal distribution.',
     category: 'distributions',
     status: 'live',
@@ -69,6 +77,7 @@ export const tools = [
   {
     slug: 'coin-flip-simulator',
     name: 'Coin Flip & Law of Large Numbers',
+    label: 'Coin flip',
     short: 'Flip thousands of coins and watch the running average settle at 50%.',
     category: 'distributions',
     status: 'live',
@@ -76,6 +85,7 @@ export const tools = [
   {
     slug: 'monty-hall',
     name: 'Monty Hall Problem Simulator',
+    label: 'Monty Hall problem',
     short: 'Play the game or run thousands of trials to see why switching wins.',
     category: 'puzzles',
     status: 'live',
@@ -83,6 +93,7 @@ export const tools = [
   {
     slug: 'birthday-paradox',
     name: 'Birthday Paradox Calculator',
+    label: 'Birthday paradox',
     short: 'How many people until two share a birthday? Fewer than you think.',
     category: 'puzzles',
     status: 'live',
@@ -90,6 +101,7 @@ export const tools = [
   {
     slug: 'monte-carlo-pi',
     name: 'Monte Carlo π Estimator',
+    label: 'Monte Carlo π',
     short: 'Throw random points at a circle and estimate π from where they land.',
     category: 'puzzles',
     status: 'live',
