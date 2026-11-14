@@ -16,8 +16,9 @@ if (offPath.length) throw new Error(`Live tools on no path in src/tools.js: ${of
 // (content, links, title, description or structured data): the sitemap's lastmod. Tools keep theirs in
 // src/tools.js. Change a date whenever its page changes.
 const pages = [
-  { path: '/', updated: '2026-11-13' },
+  { path: '/', updated: '2026-11-14' },
   ...liveTools.map((t) => ({ path: toolPath(t.slug), updated: t.updated })),
+  { path: '/teachers/', updated: '2026-11-14' },
   { path: '/about/', updated: '2026-11-13' },
   { path: '/contact/', updated: '2026-11-12' },
   { path: '/privacy/', updated: '2026-11-12' },

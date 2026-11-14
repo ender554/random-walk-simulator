@@ -41,6 +41,9 @@ function SiteLayout({ children, wide = false }) {
           {SITE_NAME}
         </a>
         <SimulatorsMenu>
+          <a href="/teachers/" className="header-teachers">
+            For teachers
+          </a>
           <a href="/about/" className="header-about">
             About
           </a>
@@ -77,6 +80,8 @@ function SiteLayout({ children, wide = false }) {
           </a>
           {' · '}
           <a href="/about/">About</a>
+          {' · '}
+          <a href="/teachers/">For teachers</a>
           {' · '}
           <a href="/contact/">Contact</a>
           {' · '}

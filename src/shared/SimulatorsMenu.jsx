@@ -89,10 +89,13 @@ function SimulatorsMenu({ children }) {
             </div>
             <ul className="sim-menu-more">
               <li>
-                <a href="/">Home: the three paths</a>
+                <a href="/teachers/">For teachers</a>
               </li>
               <li>
                 <a href="/about/">About</a>
+              </li>
+              <li>
+                <a href="/">Home: the three paths</a>
               </li>
             </ul>
           </nav>

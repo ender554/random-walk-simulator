@@ -1,0 +1,62 @@
+/* "For teachers" on a tool page (#teach) and the /teachers/ page (C2) */
+.teach {
+  scroll-margin-top: 1rem;
+}
+
+.teach h3 {
+  margin: 1.1rem 0 0.4rem;
+  color: var(--text-strong);
+  font-size: 1.05rem;
+}
+
+.teach p,
+.teach li {
+  color: var(--text-prose);
+  line-height: 1.55;
+}
+
+.teach ul,
+.teach ol {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.teach li + li {
+  margin-top: 0.35rem;
+}
+
+.teach-lede {
+  margin: 0.25rem 0 0;
+}
+
+.teach-grid {
+  display: grid;
+  gap: 0 2rem;
+}
+
+@media (min-width: 760px) {
+  .teach-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.teach-standards {
+  list-style: none;
+  padding-left: 0 !important;
+}
+
+.teach-standards strong {
+  color: var(--text-label);
+  font-weight: 600;
+}
+
+.teach-source {
+  margin: 0.6rem 0 0;
+  color: var(--text-2) !important;
+  font-size: 0.875rem;
+}
+
+.teach a,
+.teachers a {
+  color: var(--accent);
+}

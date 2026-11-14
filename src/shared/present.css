@@ -321,13 +321,41 @@ html.present body {
   gap: calc(var(--pu) * 1.4);
 }
 
-/* Settings and sharing stay on the normal page; the seed is in the class link */
+/* One row the height of the window, so a long rail scrolls its settings instead of growing the page */
+.present .wb {
+  grid-template-rows: minmax(0, 1fr);
+}
+
+/* The main settings, so a teacher can change one live (the CLT's sample size, Monty Hall's doors). They
+   scroll inside the rail when they don't fit; Run and Next stay in view. */
+.present .wb-rail > * {
+  flex: none;
+}
+
+/* Only the first settings group (the main one); Next goes to the foot of the rail */
+.present .wb-rail > .wb-settings ~ .wb-settings {
+  display: none;
+}
+
+.present .wb-rail > .rail-next {
+  order: 10;
+}
+
+.present .wb-rail > .wb-settings {
+  flex: 0 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* Sharing and the rarer settings stay on the normal page; the seed is in the class link */
 .present .share-menu,
 .present .tool-actions,
-.present .wb-settings,
+.present .wb-settings > h2,
 .present .chart-title,
 .present .chart-caption:not(.keep-in-present),
 .present .wb-rail details,
+.present .wb-settings .setting-note,
 .present .challenge-next,
 .present .challenge-history {
   display: none;

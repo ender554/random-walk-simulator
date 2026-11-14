@@ -66,9 +66,15 @@
   color: var(--accent);
 }
 
-/* About stays in the Simulators menu; in the header only where it fits beside the button */
+/* For teachers and About stay in the Simulators menu; in the header only where they fit beside the button */
 @media (max-width: 419px) {
   .site-header > nav .header-about {
+    display: none;
+  }
+}
+
+@media (max-width: 599px) {
+  .site-header > nav .header-teachers {
     display: none;
   }
 }

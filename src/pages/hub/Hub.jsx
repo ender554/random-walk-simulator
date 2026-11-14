@@ -77,6 +77,10 @@ function Hub() {
           Every simulator is free, uses repeatable seeds so a whole class can run the same experiment, and exports
           images for notes and slides.
         </p>
+        <p>
+          Teaching with them? <a href="/teachers/">For teachers</a> sorts the simulators by course topic, with a
+          question to ask first, the AP Statistics and Common Core standards they fit, and a 10-minute class demo.
+        </p>
       </section>
     </SiteLayout>
   );

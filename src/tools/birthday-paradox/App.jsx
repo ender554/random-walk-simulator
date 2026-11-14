@@ -5,6 +5,7 @@ import ViewSwitch from '../../shared/ViewSwitch';
 import { useScreenCanvas } from '../../shared/useScreenCanvas';
 import ToolActions from '../../shared/ToolActions';
 import Faq from '../../shared/Faq';
+import TeachSection from '../../shared/TeachSection';
 import Challenge from '../../shared/Challenge';
 import { Legend, LogRangeControl, RangeControl, SeedControl } from '../../shared/controls';
 import { useUrlState } from '../../shared/useUrlState';
@@ -469,6 +470,8 @@ function App() {
           birthdays; real birthdays are slightly uneven, which makes matches a little more likely, not less.
         </p>
       </section>
+
+      <TeachSection slug="birthday-paradox" />
 
       <Faq items={FAQ} />
     </ToolPage>

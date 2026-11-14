@@ -1,0 +1,179 @@
+/* /teachers/ (C2): topics on the left, how to run a demo on the right (desktop); stacked on phones */
+.teachers {
+  width: min(1180px, 100%);
+  margin: 0 auto;
+}
+
+.teachers-head h1 {
+  margin: 0 0 0.5rem;
+  font-size: 1.75rem;
+}
+
+.teachers-head p {
+  max-width: 760px;
+  margin: 0;
+  color: var(--text-prose);
+  font-size: 1.0625rem;
+  line-height: 1.55;
+}
+
+.teachers-grid {
+  display: grid;
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+@media (min-width: 1000px) {
+  .teachers-grid {
+    grid-template-columns: minmax(0, 1fr) 360px;
+    gap: 2rem;
+    align-items: start;
+  }
+}
+
+.teachers h2 {
+  margin: 0 0 0.6rem;
+  color: var(--text-strong);
+  font-size: 1.25rem;
+}
+
+.topic-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.topic-row {
+  padding: 0.9rem 1rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+}
+
+.topic-row p {
+  margin: 0;
+}
+
+.topic-name {
+  color: var(--text-2);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.topic-tools {
+  margin-top: 0.15rem !important;
+  font-size: 1.0625rem;
+  font-weight: 600;
+}
+
+.topic-tools a {
+  display: inline-block;
+  min-height: var(--target);
+  line-height: var(--target);
+  text-decoration: none;
+}
+
+.topic-tools a:hover {
+  text-decoration: underline;
+}
+
+.topic-question {
+  color: var(--text-prose);
+  line-height: 1.5;
+}
+
+.topic-standards {
+  margin-top: 0.35rem;
+}
+
+.topic-standards summary {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  list-style: none;
+  min-height: var(--target);
+  color: var(--text-label);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.topic-standards summary::-webkit-details-marker {
+  display: none;
+}
+
+.topic-standards summary::before {
+  content: '';
+  width: 0.45rem;
+  height: 0.45rem;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(-45deg);
+}
+
+.topic-standards[open] summary::before {
+  transform: rotate(45deg);
+}
+
+.topic-standards ul {
+  margin: 0 0 0.4rem;
+  color: var(--text-prose);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}
+
+.topic-plan a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--target);
+  font-weight: 600;
+}
+
+.teachers .teach-source {
+  margin-top: 0.9rem;
+}
+
+.teachers-side {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.teachers-card {
+  padding: 1.1rem 1.2rem;
+  background: var(--surface-2);
+  border: 1px solid var(--line-strong);
+  border-radius: 14px;
+}
+
+.teachers-card h2 {
+  font-size: 1.125rem;
+}
+
+.teachers-card p,
+.teachers-card li {
+  color: var(--text-prose);
+  line-height: 1.55;
+}
+
+.teachers-card p {
+  margin: 0;
+}
+
+.teachers-card ol {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.teachers-card li + li {
+  margin-top: 0.4rem;
+}
+
+.teachers code {
+  color: var(--text);
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 0.875em;
+}

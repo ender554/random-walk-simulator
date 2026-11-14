@@ -3,6 +3,7 @@ import ToolPage from '../../shared/ToolPage';
 import NextTools, { RailNext } from '../../shared/NextTools';
 import ToolActions from '../../shared/ToolActions';
 import Faq from '../../shared/Faq';
+import TeachSection from '../../shared/TeachSection';
 import { Legend, RangeControl, SeedControl, StatRow } from '../../shared/controls';
 import { useUrlState } from '../../shared/useUrlState';
 import { useScreenCanvas } from '../../shared/useScreenCanvas';
@@ -358,6 +359,8 @@ function App() {
           the sum of many left-or-right bounces.
         </p>
       </section>
+
+      <TeachSection slug="central-limit-theorem" />
 
       <Faq items={FAQ} />
     </ToolPage>

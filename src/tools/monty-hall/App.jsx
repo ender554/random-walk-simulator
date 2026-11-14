@@ -5,6 +5,7 @@ import ViewSwitch from '../../shared/ViewSwitch';
 import { useScreenCanvas } from '../../shared/useScreenCanvas';
 import ToolActions from '../../shared/ToolActions';
 import Faq from '../../shared/Faq';
+import TeachSection from '../../shared/TeachSection';
 import Challenge from '../../shared/Challenge';
 import { LogRangeControl, RangeControl, SeedControl, StatRow } from '../../shared/controls';
 import { useUrlState } from '../../shared/useUrlState';
@@ -389,6 +390,8 @@ function App() {
           simulation to play thousands.
         </p>
       </section>
+
+      <TeachSection slug="monty-hall" />
 
       <Faq items={FAQ} />
     </ToolPage>

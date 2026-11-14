@@ -7,6 +7,7 @@ import Hub from './pages/hub/Hub';
 import About from './pages/about/About';
 import Contact from './pages/contact/Contact';
 import Privacy from './pages/privacy/Privacy';
+import Teachers from './pages/teachers/Teachers';
 import NotFound from './pages/not-found/NotFound';
 
 // src/tools/<slug>/App.jsx is served at /<slug>/
@@ -17,6 +18,7 @@ const pages = {
   'about/index.html': About,
   'contact/index.html': Contact,
   'privacy/index.html': Privacy,
+  'teachers/index.html': Teachers,
   '404.html': NotFound,
   ...Object.fromEntries(Object.entries(tools).map(([path, App]) => [`${path.split('/')[2]}/index.html`, App])),
 };
