@@ -1,15 +1,17 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useMemo, useRef } from 'react';
 import ToolPage from '../../shared/ToolPage';
-import NextTools from '../../shared/NextTools';
+import NextTools, { RailNext } from '../../shared/NextTools';
 import ToolActions from '../../shared/ToolActions';
 import Faq from '../../shared/Faq';
 import { Legend, LogRangeControl, RangeControl, SeedControl, StatRow } from '../../shared/controls';
 import { useUrlState } from '../../shared/useUrlState';
+import { useScreenCanvas } from '../../shared/useScreenCanvas';
 import { STRATEGIES, gamblersRuinTheory, simulateGames, summarize } from '../../utils/gamblersRuin';
 import { PALETTE } from '../../utils/chart';
 import { downloadCSV } from '../../utils/export';
 import { randomSeed } from '../../utils/seed';
 import { COLORS, drawGames, drawLengths, drawRuinCurve } from './drawGames';
+import './ruin.css';
 
 const DEFAULTS = { start: 20, target: 40, open: false, p: 18 / 37, payout: 1, games: 1000, strategy: 'flat', unit: 1, limit: 500, seed: 'casino' };
 const CHART_SIZE = { width: 800, height: 450 };
@@ -47,11 +49,11 @@ const FAQ = [
   },
 ];
 
+
+// The workbench (docs/redesign-2026-11-10/B3-LOGIC.md): the bankroll paths on the stage with the share that went broke
+// against the exact formula on top; the rail has Run, the next step, Share & export and the settings.
 function App() {
-  const canvasRef = useRef(null);
-  const lengthsRef = useRef(null);
-  const curveRef = useRef(null);
-  const chartWrapRef = useRef(null);
+  const stageRef = useRef(null);
   const [settings, set, reset] = useUrlState(DEFAULTS);
   const { start, open, p, payout, games, strategy, unit, limit, seed } = settings;
   const target = open ? Infinity : Math.max(settings.target, start + 1);
@@ -84,11 +86,11 @@ function App() {
   }), [games, seed, rules, payout, p]);
 
   const draw = (canvas) => drawGames(canvas, { results, start, target });
-  useEffect(() => {
-    draw(canvasRef.current);
-    drawLengths(lengthsRef.current, { results, expectedBets: theory?.expectedBets });
-    if (curveRef.current) drawRuinCurve(curveRef.current, { target, theoryAt, simulated: curvePoints, start });
-  });
+  const gamesRef = useScreenCanvas(draw);
+  const lengthsRef = useScreenCanvas((canvas) => drawLengths(canvas, { results, expectedBets: theory?.expectedBets }));
+  const curveRef = useScreenCanvas((canvas) => drawRuinCurve(canvas, { target, theoryAt, simulated: curvePoints, start }));
+
+  const preset = PRESETS.findIndex((g) => Math.abs(p - g.p) < 1e-9 && payout === g.payout);
 
   const exportCsv = () => {
     downloadCSV(`gamblers-ruin-${strategy}.csv`, ['game', 'outcome', 'bets', 'total_wagered', 'final_bankroll', 'peak_bankroll'],
@@ -98,79 +100,100 @@ function App() {
   return (
     <ToolPage
       slug="gamblers-ruin"
+      workbench
       title="Gambler's Ruin Simulator"
-      intro="Start with a bankroll and bet until you reach a target or go broke. Compare flat betting, bold play, the Martingale and other systems on the same coin flips, check every result against the exact formula, and see why no staking plan beats a house edge."
+      intro="Start with a bankroll and bet until you reach a target or go broke, then see why no betting system beats a house edge."
     >
+      <div className="wb">
+        <div className="wb-stage pinned" ref={stageRef}>
+          <div className="stage-headline">
+            <p><span>Went broke</span> <strong className="s2">{pct(s.ruined / s.count)}</strong></p>
+            <p><span>Exact formula</span> <strong>{theory ? pct(theory.ruinProbability) : 'none here'}</strong></p>
+            <p className="stage-meta">
+              <span>{s.count.toLocaleString()} games, {money(start)} {open ? 'with no target' : `to ${money(target)}`}</span>{' '}
+              <span>{num(s.meanBets)} bets on average · seed {seed}</span>
+            </p>
+          </div>
+          <div className="stage-chart">
+            <canvas ref={gamesRef} role="img"
+              aria-label={`Bankroll over time: ${s.reached} of ${s.count} games reached the target, ${s.ruined} went broke.`} />
+          </div>
+          <Legend
+            items={[
+              ...(open ? [] : [{ color: COLORS.target, label: `Reached ${money(target)}` }]),
+              { color: COLORS.ruin, label: 'Went broke' },
+              ...(s.unfinished ? [{ color: COLORS.unfinished, label: 'Still playing at the bet limit' }] : []),
+            ]}
+          />
+          <p className="chart-caption">
+            Bankroll after each bet{s.count > 200 ? `, for the first 200 of ${s.count.toLocaleString()} games` : ''}.
+            {s.count < games ? ` Stopped after ${s.count.toLocaleString()} games to keep the page fast.` : ''}
+          </p>
+        </div>
 
-      <div className="workbench">
-        <div className="workbench-controls">
-          <section className="controls-panel" aria-label="Simulation settings">
-            <div className="control-grid">
-              <RangeControl id="start-range" label="Starting bankroll" display={money(start)} value={start} min={1} max={500}
-                onChange={(v) => { set('start', v); if (settings.target <= v) set('target', v + 1); }} />
-              <RangeControl id="target-range" label="Stop when you reach" display={open ? 'no target' : money(target)} value={Math.max(settings.target, start + 1)}
-                min={start + 1} max={1000} onChange={(v) => set('target', v)} />
-              <RangeControl id="p-range" label="Chance of winning each bet" display={pct(p)} value={p}
-                min={0.01} max={0.7} step={0.001} onChange={(v) => set('p', v)} />
-              <div className="control-row">
-                <label htmlFor="payout-input">Wins pay (to 1)</label>
-                <input id="payout-input" type="number" min="0.1" step="any" value={payout} onChange={(e) => set('payout', Math.max(0.1, Number(e.target.value) || 1))} />
-              </div>
-              <div className="control-row">
-                <label htmlFor="strategy-select">Betting strategy</label>
-                <select id="strategy-select" value={strategy} onChange={(e) => set('strategy', e.target.value)}>
-                  {Object.entries(STRATEGIES).map(([key, value]) => <option key={key} value={key}>{value.label}</option>)}
-                </select>
-              </div>
-              <RangeControl id="unit-range" label="Base bet" display={money(unit)} value={unit} min={1} max={50} onChange={(v) => set('unit', v)} />
-              {strategy === 'martingale' && (
-                <RangeControl id="limit-range" label="Table limit (largest bet allowed)" display={money(limit)} value={limit} min={10} max={5000} step={10} onChange={(v) => set('limit', v)} />
-              )}
-              <LogRangeControl id="games-range" label="Games" value={games} minExp={1} maxExp={5} onChange={(v) => set('games', v)} />
-              <SeedControl value={seed} onChange={(v) => set('seed', v)} />
+        <div className="wb-rail">
+          <button type="button" className="run-button" onClick={() => set('seed', randomSeed())}>New games</button>
+
+          <RailNext />
+
+          <ToolActions
+            menu
+            image={{ draw, size: CHART_SIZE, filename: 'gamblers-ruin.png' }}
+            onCsv={exportCsv}
+            csvLabel="Download every game (CSV)"
+            onReset={reset}
+            fullscreenRef={stageRef}
+          />
+
+          <section className="wb-settings" aria-labelledby="settings-heading">
+            <h2 id="settings-heading">Game settings</h2>
+            <div className="control-row">
+              <label htmlFor="game-select">Game</label>
+              <select id="game-select" value={preset} onChange={(e) => {
+                const chosen = PRESETS[Number(e.target.value)];
+                if (chosen) { set('p', chosen.p); set('payout', chosen.payout); }
+              }}>
+                {preset < 0 && <option value={-1}>Your own odds</option>}
+                {PRESETS.map((g, i) => <option key={g.label} value={i}>{g.label}</option>)}
+              </select>
             </div>
-            <div className="preset-row" role="group" aria-label="Game presets">
-              {PRESETS.map((preset) => (
-                <button key={preset.label} type="button" aria-pressed={Math.abs(p - preset.p) < 1e-9 && payout === preset.payout}
-                  onClick={() => { set('p', preset.p); set('payout', preset.payout); }}>
-                  {preset.label}
-                </button>
-              ))}
-            </div>
+            <RangeControl id="start-range" label="Starting bankroll" display={money(start)} value={start} min={1} max={500}
+              onChange={(v) => { set('start', v); if (settings.target <= v) set('target', v + 1); }} />
+            <RangeControl id="target-range" label="Stop when you reach" display={open ? 'no target' : money(target)} value={Math.max(settings.target, start + 1)}
+              min={start + 1} max={1000} onChange={(v) => set('target', v)} />
             <label className="check-row" htmlFor="open-check">
               <input id="open-check" type="checkbox" checked={open} onChange={(e) => set('open', e.target.checked)} />
               Play with no target: keep betting until broke (or 10,000 bets)
             </label>
-            <p className="chart-caption">Strategy: {STRATEGIES[strategy].short}.</p>
-            <ToolActions
-              image={{ draw, size: CHART_SIZE, filename: 'gamblers-ruin.png' }}
-              onCsv={exportCsv}
-              csvLabel="Download every game (CSV)"
-              onReset={reset}
-              fullscreenRef={chartWrapRef}
-            >
-              <button type="button" onClick={() => set('seed', randomSeed())}>🎲 New games</button>
-            </ToolActions>
+            <div className="control-row">
+              <label htmlFor="strategy-select">Betting strategy</label>
+              <select id="strategy-select" value={strategy} onChange={(e) => set('strategy', e.target.value)}>
+                {Object.entries(STRATEGIES).map(([key, value]) => <option key={key} value={key}>{value.label}</option>)}
+              </select>
+              <p className="setting-note">Strategy: {STRATEGIES[strategy].short}.</p>
+            </div>
+            <details className="more-settings">
+              <summary>More settings</summary>
+              <div>
+                <RangeControl id="p-range" label="Chance of winning each bet" display={pct(p)} value={p}
+                  min={0.01} max={0.7} step={0.001} onChange={(v) => set('p', v)} />
+                <div className="control-row">
+                  <label htmlFor="payout-input">Wins pay (to 1)</label>
+                  <input id="payout-input" type="number" min="0.1" step="any" value={payout} onChange={(e) => set('payout', Math.max(0.1, Number(e.target.value) || 1))} />
+                </div>
+                <RangeControl id="unit-range" label="Base bet" display={money(unit)} value={unit} min={1} max={50} onChange={(v) => set('unit', v)} />
+                {strategy === 'martingale' && (
+                  <RangeControl id="limit-range" label="Table limit (largest bet allowed)" display={money(limit)} value={limit} min={10} max={5000} step={10} onChange={(v) => set('limit', v)} />
+                )}
+                <LogRangeControl id="games-range" label="Games" value={games} minExp={1} maxExp={5} onChange={(v) => set('games', v)} />
+                <SeedControl value={seed} onChange={(v) => set('seed', v)} />
+              </div>
+            </details>
           </section>
         </div>
-        <div className="workbench-stage">
-          <div className="canvas-wrapper chart-wrapper" ref={chartWrapRef}>
-            <canvas ref={canvasRef} width={CHART_SIZE.width} height={CHART_SIZE.height} role="img"
-              aria-label={`Bankroll over time: ${s.reached} of ${s.count} games reached the target, ${s.ruined} went broke.`} />
-            <Legend
-              items={[
-                ...(open ? [] : [{ color: COLORS.target, label: `Reached ${money(target)}` }]),
-                { color: COLORS.ruin, label: 'Went broke' },
-                ...(s.unfinished ? [{ color: COLORS.unfinished, label: 'Still playing at the bet limit' }] : []),
-              ]}
-            />
-            <p className="chart-caption">
-              Bankroll after each bet{s.count > 200 ? `, for the first 200 of ${s.count.toLocaleString()} games` : ''}.
-              {s.count < games ? ` Stopped after ${s.count.toLocaleString()} games to keep the page fast.` : ''}
-            </p>
-          </div>
-        </div>
       </div>
+
+      <NextTools />
 
       <section className="stats-panel">
         <h2>Results from {s.count.toLocaleString()} games</h2>
@@ -221,19 +244,22 @@ function App() {
 
       <div className="canvas-wrapper chart-wrapper">
         <h2 className="chart-title">How long the games lasted</h2>
-        <canvas ref={lengthsRef} width={800} height={300} role="img" aria-label="Histogram of game lengths, split by outcome." />
+        <div className="ruin-chart">
+          <canvas ref={lengthsRef} role="img" aria-label="Histogram of game lengths, split by outcome." />
+        </div>
         <Legend items={[{ color: COLORS.target, label: 'Reached the target' }, { color: COLORS.ruin, label: 'Went broke' }, ...(theory && Number.isFinite(theory.expectedBets) ? [{ color: PALETTE.yellow, label: 'Theoretical average' }] : [])]} />
       </div>
 
       {!open && (
         <div className="canvas-wrapper chart-wrapper">
           <h2 className="chart-title">Chance of ruin for every starting bankroll (target {money(target)})</h2>
-          <canvas ref={curveRef} width={800} height={320} role="img" aria-label="Chance of going broke against starting bankroll, exact curve and simulated points." />
+          <div className="ruin-chart">
+            <canvas ref={curveRef} role="img" aria-label="Chance of going broke against starting bankroll, exact curve and simulated points." />
+          </div>
           <Legend items={[...(theoryAt ? [{ color: PALETTE.yellow, label: 'Exact formula' }] : []), { color: PALETTE.cyan, label: 'Simulated (400 games each)' }, { color: PALETTE.pink, label: 'Your starting bankroll' }]} />
         </div>
       )}
 
-      <NextTools />
       <section className="canvas-description prose" aria-labelledby="explain-heading">
         <h2 id="explain-heading">What is the gambler&apos;s ruin?</h2>
         <p>

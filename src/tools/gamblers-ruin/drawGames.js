@@ -14,12 +14,16 @@ export function drawGames(canvas, { results, start, target }) {
   const longest = Math.max(1, ...shown.map((r) => r.path.length - 1));
   const peak = Math.max(start * 1.1, ...shown.map((r) => r.peak));
   const top = Number.isFinite(target) ? Math.max(target, Math.min(peak, target * 1.6)) : peak * 1.05;
+  // A short chart (the phone's pinned stage) drops the axis title and names the unit on the last tick
+  const compact = canvas.height < 220;
   const frame = chartFrame(canvas, {
     xMin: 0, xMax: longest, yMin: 0, yMax: top,
     xTicks: [0, longest],
-    yTicks: Number.isFinite(target) ? [0, start, target] : evenTicks(0, top, 4),
+    yTicks: Number.isFinite(target) ? [0, start, target] : evenTicks(0, top, compact ? 3 : 4),
+    formatX: (v) => (compact && v === longest ? `${v.toLocaleString()} bets` : v.toLocaleString()),
     formatY: money,
-    xLabel: 'Bets placed',
+    xLabel: compact ? '' : 'Bets placed',
+    pad: compact ? { left: 50, right: 14, top: 10, bottom: 26 } : undefined,
   });
   const { ctx, x, y, pad, plotW } = frame;
   clipToPlot(frame);
