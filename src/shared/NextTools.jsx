@@ -33,4 +33,23 @@ function NextTools() {
   );
 }
 
+/**
+ * The workbench rail's link to the main pick, so the next step is on a laptop's first screen (DESIGN.md:
+ * "Next: Birthday Paradox →" in the rail). It sits under Run, not at the foot: with the predict card and the
+ * settings, the foot falls below 650 px (B2-LOGIC.md). Desktop only; phones reach the Next experiment
+ * block straight after the settings.
+ */
+export function RailNext() {
+  const main = nextTools(useContext(ToolSlug))[0];
+  if (!main) return null;
+  return (
+    <p className="rail-next">
+      <a href={toolPath(main.tool.slug)} data-hop="rail">
+        <span>{main.step ? `Next · step ${main.step.step} of ${main.step.of}` : 'Next experiment'}</span>
+        {main.tool.name} →
+      </a>
+    </p>
+  );
+}
+
 export default NextTools;

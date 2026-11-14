@@ -46,7 +46,7 @@ function PlayGame({ doors, rule, onResult }) {
 
   const goats = doors - 2 === 1 ? 'a door with a goat' : `${doors - 2} doors with goats`;
   const message = {
-    pick: `Pick a door. One of the ${doors} hides a car; the rest hide goats. Each door has a 1 in ${doors} chance.`,
+    pick: `Pick a door: one of the ${doors} hides a car. The host then opens ${doors - 2 === 1 ? 'another' : `${doors - 2} others`} and offers you a switch.`,
     decide:
       rule === 'random'
         ? `The host opened ${goats} by luck. Since he didn't know, your door and door ${game.other + 1} are now equally likely: 1/2 each.`

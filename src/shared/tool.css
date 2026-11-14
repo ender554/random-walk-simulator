@@ -834,3 +834,461 @@
   color: var(--accent);
   font-weight: 600;
 }
+
+/* Workbench layout (B2: Monty Hall and Birthday; docs/redesign-2026-11-10/B2-LOGIC.md).
+   The stage comes first on every width: phones stack the rail under it, laptops put a 380 px rail
+   on its right. Classes are new (wb-*) so the other tools keep today's layout until B3. */
+
+.page-header.title-row {
+  width: 100%;
+  text-align: left;
+}
+
+.page-header.title-row h1 {
+  font-size: 1.75rem;
+  letter-spacing: 0;
+}
+
+.page-header.title-row .page-step {
+  margin: 0 0 0.25rem;
+}
+
+.page-lede {
+  width: 100%;
+}
+
+.page-lede p {
+  margin: 0;
+  max-width: 760px;
+  color: var(--text-2);
+}
+
+.page-lede .page-updated {
+  margin-top: 0.25rem;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+.wb {
+  width: 100%;
+  display: grid;
+  gap: 1rem;
+  align-items: start;
+}
+
+.wb-stage {
+  min-width: 0;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 0.75rem;
+}
+
+.wb-stage:fullscreen {
+  overflow: auto;
+  padding: 1.5rem;
+  background: var(--bg);
+}
+
+.wb-rail {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.wb-rail > * {
+  width: 100%;
+  margin: 0;
+}
+
+/* The view switch: one row of up to three, 44 px tall */
+.view-switch {
+  display: flex;
+  margin-bottom: 0.75rem;
+  border: 1px solid var(--control-line);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.view-switch button {
+  flex: 1 1 0;
+  min-height: var(--target);
+  padding: 0.35rem 0.5rem;
+  background: transparent;
+  border: 0;
+  color: var(--text-label);
+  font: inherit;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.view-switch button + button {
+  border-left: 1px solid var(--control-line);
+}
+
+.view-switch button[aria-pressed='true'] {
+  background: var(--accent);
+  color: var(--bg);
+}
+
+.view-switch button:focus-visible {
+  outline: 2px solid var(--text-strong);
+  outline-offset: -4px;
+}
+
+/* The headline result, on the stage above the chart */
+.stage-headline {
+  display: flex;
+  align-items: flex-end;
+  gap: 1.25rem;
+  margin: 0 0 0.4rem;
+}
+
+.stage-headline p {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  color: var(--text-label);
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.stage-headline strong {
+  font-size: 1.375rem;
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+}
+
+.stage-headline .s1 {
+  color: var(--accent);
+}
+
+.stage-headline .s2 {
+  color: var(--series-2);
+}
+
+.control-label {
+  margin: 0;
+  color: var(--text-label);
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.wb-stage .tally {
+  margin-top: 0.75rem;
+}
+
+.stage-headline .stage-meta {
+  margin-left: auto;
+  color: var(--text-2);
+  font-weight: 400;
+  text-align: right;
+}
+
+/* Charts drawn at screen size (useScreenCanvas): the box sets the size. On phones the pinned stage
+   (switch, headline, chart) stays near 40% of the small viewport height. */
+.stage-chart {
+  height: 160px;
+  height: clamp(130px, calc(40svh - 150px), 200px);
+}
+
+.stage-chart canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 12px;
+}
+
+.wb-stage .chart-title {
+  margin: 0 0 0.35rem;
+  font-size: 0.9375rem;
+}
+
+.wb-stage .chart-caption {
+  font-size: 0.875rem;
+}
+
+/* The answer held back until a guess or Skip */
+.stage-held {
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 0.5rem;
+  min-height: 180px;
+  padding: 1rem;
+  border: 1px dashed var(--line-strong);
+  border-radius: 12px;
+  color: var(--text-prose);
+  text-align: center;
+}
+
+.stage-held p {
+  margin: 0;
+  max-width: 34rem;
+}
+
+/* One primary Run button */
+.run-button {
+  min-height: 48px;
+  padding: 0.6rem 1.2rem;
+  background: var(--accent);
+  border: 0;
+  border-radius: 10px;
+  color: var(--bg);
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.run-button:hover {
+  box-shadow: 0 0 0 3px rgba(29, 229, 208, 0.3);
+}
+
+.run-button:focus-visible {
+  outline: 2px solid var(--text-strong);
+  outline-offset: 2px;
+}
+
+.text-button {
+  min-height: var(--target);
+  padding: 0 0.5rem;
+  background: transparent;
+  border: 0;
+  color: var(--accent);
+  font: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+/* The predict card: a whole card in the predict colour, not a left border */
+.challenge.predict-card {
+  width: 100%;
+  border: 1px solid var(--predict);
+  padding: 0.75rem 1rem 1rem;
+}
+
+.challenge-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.challenge-head h2 {
+  margin: 0;
+}
+
+.challenge .text-button {
+  padding: 0 0.5rem;
+  background: transparent;
+  color: var(--text-label);
+  font-weight: 600;
+}
+
+.predict-card .challenge-result {
+  margin-top: 0.4rem;
+}
+
+.predict-card .challenge-result p {
+  margin: 0 0 0.4rem;
+}
+
+.predict-card .challenge-result:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Share & export, and More settings: native disclosures with 44 px summaries */
+.share-menu,
+.more-settings {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.share-menu > summary,
+.more-settings > summary {
+  padding: 0.7rem 1rem;
+  color: var(--text-label);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.share-menu[open],
+.more-settings[open] {
+  padding-bottom: 0.75rem;
+}
+
+.share-menu .button-row {
+  margin: 0.25rem 0.75rem 0;
+}
+
+.share-menu .trust-note {
+  margin: 0.75rem 1rem 0;
+}
+
+.more-settings > div {
+  padding: 0.25rem 1rem 0;
+}
+
+.wb-settings {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 1rem 1rem 0.25rem;
+}
+
+.wb-settings h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+  color: var(--text-strong);
+}
+
+.wb-settings .more-settings {
+  margin: 0 0 0.75rem;
+}
+
+.setting-note {
+  margin: 0;
+  color: var(--text-2);
+  font-size: 0.875rem;
+}
+
+.control-row .preset-row {
+  margin: 0;
+}
+
+/* The rail's foot: the next step, on a laptop's first screen */
+.rail-next a {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-height: var(--target);
+  padding: 0.6rem 0.9rem;
+  background: var(--surface-2);
+  border: 1px solid var(--accent);
+  border-radius: 12px;
+  color: var(--accent);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.rail-next span {
+  color: var(--text-2);
+  font-size: 0.8125rem;
+}
+
+@media (max-width: 999px) {
+  /* Phones: title, then the stage, then the intro (DOM order is title, intro, workbench) */
+  .has-workbench > .title-row {
+    order: -2;
+  }
+
+  .has-workbench > .wb {
+    order: -1;
+  }
+
+  .tool-main.has-workbench {
+    gap: 1rem;
+  }
+
+  .wb {
+    gap: 0.75rem;
+  }
+
+  .wb-stage {
+    margin: 0 -1rem;
+    padding: 0.5rem 1rem 0.6rem;
+    background: var(--bg);
+    border-width: 1px 0;
+    border-radius: 0;
+  }
+
+  /* The run's details get their own line under the big numbers */
+  .stage-headline {
+    flex-wrap: wrap;
+    row-gap: 0.15rem;
+  }
+
+  .stage-headline .stage-meta {
+    flex: 1 0 100%;
+    flex-direction: row;
+    flex-wrap: wrap;
+    column-gap: 0.75rem;
+    margin-left: 0;
+    text-align: left;
+  }
+
+  /* Pinned while its chart shows, so the settings below can be changed in view of it */
+  .wb-stage.pinned {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+  }
+
+  .wb-stage .chart-title,
+  .wb-stage > .chart-caption {
+    display: none;
+  }
+
+  /* Smaller doors keep the predict card on the first screen */
+  .wb-stage .door {
+    padding: 0.55rem 0.5rem;
+  }
+
+  .wb-stage .door-face {
+    font-size: 1.9rem;
+  }
+
+  .rail-next {
+    display: none;
+  }
+}
+
+@media (min-width: 1000px) {
+  .has-workbench > .page-lede {
+    margin-top: -0.9rem;
+  }
+
+  .page-lede p {
+    max-width: none;
+  }
+
+  .wb {
+    grid-template-columns: minmax(0, 1fr) 380px;
+    gap: 1.25rem;
+  }
+
+  .wb-stage {
+    position: sticky;
+    top: 1rem;
+  }
+
+  .view-switch {
+    display: inline-flex;
+  }
+
+  .view-switch button {
+    flex: none;
+    padding: 0.35rem 1.1rem;
+  }
+
+  .stage-headline strong {
+    font-size: 2.125rem;
+  }
+
+  /* Fills what the window has left under the title row and the stage's own lines (1366 × 650: 237 px) */
+  .stage-chart {
+    height: 260px;
+    height: clamp(220px, calc(100svh - 413px), 560px);
+  }
+
+  .stage-held {
+    min-height: 300px;
+  }
+}

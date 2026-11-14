@@ -1,13 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import ToolPage from '../../shared/ToolPage';
-import NextTools from '../../shared/NextTools';
+import NextTools, { RailNext } from '../../shared/NextTools';
+import ViewSwitch from '../../shared/ViewSwitch';
+import { useScreenCanvas } from '../../shared/useScreenCanvas';
 import ToolActions from '../../shared/ToolActions';
 import Faq from '../../shared/Faq';
 import Challenge from '../../shared/Challenge';
-import { Legend, LogRangeControl, RangeControl, SeedControl, StatRow } from '../../shared/controls';
+import { Legend, LogRangeControl, RangeControl, SeedControl } from '../../shared/controls';
 import { useUrlState } from '../../shared/useUrlState';
 import {
-  QUESTIONS, SPACES, canSimulate, parseBirthdays, peopleNeeded, probability, simulateRooms,
+  QUESTIONS, SPACES, canSimulate, firstMatch, parseBirthdays, peopleNeeded, probability, roomPool, simulateRooms,
 } from '../../utils/birthdays';
 import { PALETTE, chartFrame, clipToPlot, evenTicks, powersOfTen } from '../../utils/chart';
 import { downloadCSV } from '../../utils/export';
@@ -18,7 +20,9 @@ import './birthday.css';
 
 const DEFAULTS = { q: 'anyTwo', space: 'birthdays', custom: 1000, people: 23, window: 1, trials: 2000, seed: 'birthday' };
 const CHART_SIZE = { width: 800, height: 380 };
+const VIEWS = [['room', 'Fill a room'], ['curve', 'Chance curve']];
 const pct = (v) => (v > 0 && v < 0.001 ? '<0.1%' : v > 0.999 && v < 1 ? '>99.9%' : `${(v * 100).toFixed(1)}%`);
+
 const oneIn = (v) => (v > 0 && v < 0.5 ? ` (1 in ${Math.round(1 / v).toLocaleString()})` : '');
 
 const FAQ = [
@@ -48,15 +52,23 @@ const FAQ = [
   },
 ];
 
-function drawChart(canvas, { question, size, window, people, maxPeople, simulated }) {
+
+// Drawn at screen size on the stage and at 800 × 380 for the saved image. A short chart (the phone's
+// pinned stage) drops the axis title and names the unit on the last tick instead.
+function drawChart(canvas, { question, size, window, people, maxPeople, simulated, unit }) {
   if (!canvas) return;
   const logX = maxPeople > 1000;
+  const compact = canvas.height < 220;
+  const xTicks = logX ? powersOfTen(maxPeople) : evenTicks(1, maxPeople, compact ? 3 : 5).map(Math.round);
+  const last = xTicks[xTicks.length - 1];
   const frame = chartFrame(canvas, {
     xMin: 1, xMax: maxPeople, yMin: 0, yMax: 1, logX,
-    xTicks: logX ? powersOfTen(maxPeople) : evenTicks(1, maxPeople, 5).map(Math.round),
-    yTicks: evenTicks(0, 1, 5),
+    xTicks,
+    yTicks: evenTicks(0, 1, compact ? 3 : 5),
+    formatX: (v) => (compact && v === last ? `${v.toLocaleString()} ${unit}` : v.toLocaleString()),
     formatY: (v) => `${Math.round(v * 100)}%`,
-    xLabel: logX ? 'Group size (log scale)' : 'Group size',
+    xLabel: compact ? '' : logX ? 'Group size (log scale)' : 'Group size',
+    pad: compact ? { left: 46, right: 14, top: 10, bottom: 26 } : undefined,
   });
   const { ctx, x, y } = frame;
   clipToPlot(frame);
@@ -93,7 +105,7 @@ function drawChart(canvas, { question, size, window, people, maxPeople, simulate
   if (Number.isFinite(simulated)) {
     ctx.fillStyle = PALETTE.yellow;
     ctx.beginPath();
-    ctx.arc(x(people), y(simulated), 6, 0, Math.PI * 2);
+    ctx.arc(x(people), y(simulated), compact ? 4.5 : 6, 0, Math.PI * 2);
     ctx.fill();
   }
   ctx.restore();
@@ -134,15 +146,26 @@ function ClassBirthdays({ size }) {
   );
 }
 
+
+// The workbench (docs/redesign-2026-11-10/B2-LOGIC.md): the stage with a room to fill one person at a time and
+// the chance curve, then the rail with the predict card, Run, Share & export, the settings and the next step.
+// The curve stays hidden until a guess or Skip; the guess keeps the page's seed, so a class sees the same rooms.
 function App() {
-  const chartRef = useRef(null);
-  const roomRef = useRef(null);
-  const chartWrapRef = useRef(null);
+  const stageRef = useRef(null);
+  const runRef = useRef(null);
   const [settings, set, reset] = useUrlState(DEFAULTS);
   const { q: question, people, window, trials, seed } = settings;
   const space = SPACES.find((s) => s.key === settings.space);
   const size = space ? space.size : Math.max(2, Math.round(settings.custom));
   const isCalendar = size === 365 || size === 366;
+  const unit = isCalendar ? 'birthday' : 'value';
+  const persons = isCalendar ? 'people' : 'items';
+
+  const [view, setView] = useState('room');
+  const [reveal, setReveal] = useState(null); // null until a guess ('guess') or Skip ('skip')
+  const [roomNo, setRoomNo] = useState(0);
+  const [roomSize, setRoomSize] = useState(0);
+  const [firsts, setFirsts] = useState([]); // people in each room when its first match appeared
 
   const maxPeople = useMemo(() => {
     const needed = peopleNeeded(question, 0.999, size, window);
@@ -157,18 +180,40 @@ function App() {
     [question, n, size, window, trials, seed],
   );
   const simulated = simulatable ? sim.hits / trials : NaN;
-  const [roomSize, setRoomSize] = useState(null); // null = whole room
-  const roomPeople = sim.sampleRoom.slice(0, roomSize ?? Math.min(n, 120));
+
+  const pool = useMemo(() => roomPool({ seed: `${seed}:${roomNo}`, size }), [seed, roomNo, size]);
+  const room = pool.slice(0, roomSize);
+  const match = firstMatch(room);
 
   const [target, setTarget] = useState('50');
   const targetValue = Math.min(99.999, Math.max(0.001, Number(target) || 50)) / 100;
   const needed = peopleNeeded(question, targetValue, size, window);
 
-  const draw = (canvas) => drawChart(canvas, { question, size, window, people: n, maxPeople, simulated });
+  const draw = (canvas) => drawChart(canvas, { question, size, window, people: n, maxPeople, simulated, unit: persons });
+  const chartRef = useScreenCanvas(draw);
+  const roomRef = useScreenCanvas((canvas) => drawRoom(canvas, room));
+
+  // Skip from the predict card removes the card, so focus moves on to Run
   useEffect(() => {
-    draw(chartRef.current);
-    if (sim.sampleRoom.length) drawRoom(roomRef.current, roomPeople);
-  });
+    if (reveal === 'skip') runRef.current?.focus({ preventScroll: true });
+  }, [reveal]);
+
+  const show = (how) => {
+    setReveal(how);
+    setView('curve');
+  };
+
+  const addPeople = (k) => {
+    const next = Math.min(pool.length, roomSize + k);
+    const m = firstMatch(pool.slice(0, next));
+    if (m && !match) setFirsts((f) => [...f, m]);
+    setRoomSize(next);
+  };
+
+  const newRoom = () => {
+    setRoomNo((r) => r + 1);
+    setRoomSize(0);
+  };
 
   const exportCsv = () => {
     const limit = Math.min(maxPeople, 2000);
@@ -185,114 +230,188 @@ function App() {
     downloadCSV(`birthday-paradox-${size}.csv`, ['people', 'any_two_share', 'someone_shares_mine', 'three_share', `within_${window}_days`], rows);
   };
 
-  const unit = isCalendar ? 'birthday' : 'value';
   const GENERIC = { anyTwo: 'two items share a value (a collision)', mine: 'another item matches one specific value', three: 'three items share a value', near: 'two values fall within the window' };
   const shortText = isCalendar ? QUESTIONS[question].short : GENERIC[question];
+  const pairs = (k) => (k > 1 ? ((k * (k - 1)) / 2).toLocaleString() : '0');
+  const roomMatches = room.length - new Set(room).size;
+
   return (
     <ToolPage
       slug="birthday-paradox"
+      workbench
       title="Birthday Paradox Calculator"
-      intro="How many people need to be in a room before two of them probably share a birthday? Fewer than you think. Get exact odds for any group, for your own birthday, for three people or near-birthdays, and for hash collisions, then check them against thousands of random rooms or your own class."
+      intro="Exact odds for any group, your own birthday, three people, near-birthdays and hash collisions, checked against thousands of random rooms or your class."
     >
-      <Challenge
-        question="How many people need to be in a room for a better than even chance that two of them share a birthday?"
-        placeholder="e.g. 180"
-        unit="people"
-        min={2}
-        max={400}
-        onTest={(guess) => {
-          const people = Math.round(guess);
-          set('q', 'anyTwo');
-          set('space', 'birthdays');
-          set('people', Math.min(people, 100));
-          set('seed', randomSeed());
-          setRoomSize(null);
-          const chance = probability('anyTwo', people, 365);
-          return {
-            verdict: people === 23 ? '🎉 Exactly right!' : Math.abs(people - 23) <= 3 ? 'Very close!' : people > 23 ? 'Fewer than that!' : 'A few more than that.',
-            detail: `With ${people} people the chance is ${chance >= 0.999 && people < 366 ? "over 99.9%" : pct(chance)}${people <= 100 ? ' (the calculator below is now set to your guess)' : ''}. The answer is 23 people, for 50.7%: 23 people make 253 pairs, and each pair is a 1 in 365 chance.`,
-          };
-        }}
-      />
+      <div className="wb">
+        <div className={reveal && view === 'curve' ? 'wb-stage pinned' : 'wb-stage'} ref={stageRef}>
+          <ViewSwitch label="View" options={VIEWS} value={view} onChange={setView} />
 
-      <div className="workbench">
-        <div className="workbench-controls">
-          <section className="controls-panel" aria-label="Calculator settings">
-            <div className="control-grid">
-              <div className="control-row">
-                <label htmlFor="question-select">Question</label>
-                <select id="question-select" value={question} onChange={(e) => set('q', e.target.value)}>
-                  {Object.entries(QUESTIONS).map(([key, value]) => <option key={key} value={key}>{value.label}</option>)}
-                </select>
-              </div>
-              <div className="control-row">
-                <label htmlFor="space-select">Possible values</label>
-                <select id="space-select" value={settings.space} onChange={(e) => set('space', e.target.value)}>
-                  {SPACES.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
-                  <option value="custom">Custom number…</option>
-                </select>
-              </div>
-              {settings.space === 'custom' && (
-                <div className="control-row">
-                  <label htmlFor="custom-size">Number of possible values</label>
-                  <input id="custom-size" type="number" min="2" value={settings.custom} onChange={(e) => set('custom', Number(e.target.value))} />
+          {view === 'room' && (
+            pool.length ? (
+              <>
+                <p className="room-message">
+                  Add {persons} until two share a {unit}.
+                </p>
+                <div className="room-view">
+                  <div className="room-canvas">
+                    <canvas
+                      ref={roomRef}
+                      role="img"
+                      aria-label={`${room.length} ${persons} in a circle with ${pairs(room.length)} pair lines; ${roomMatches} share a ${unit} with someone before them.`}
+                    />
+                  </div>
+                  <div className="room-side">
+                    <p className="room-status" aria-live="polite">
+                      <strong>{room.length} {room.length === 1 ? (isCalendar ? 'person' : 'item') : persons}</strong> · {pairs(room.length)} pairs
+                      <br />
+                      {match ? `First match: ${isCalendar ? 'person' : 'item'} ${match}` : room.length ? `No shared ${unit} yet` : 'The room is empty'}
+                    </p>
+                    <div className="room-buttons">
+                      <button type="button" onClick={() => addPeople(1)} disabled={roomSize >= pool.length}>+1 {isCalendar ? 'person' : 'item'}</button>
+                      <button type="button" onClick={() => addPeople(5)} disabled={roomSize >= pool.length}>+5 {persons}</button>
+                    </div>
+                    {roomSize > 0 && <button type="button" className="text-button" onClick={newRoom}>New room</button>}
+                  </div>
+                  {roomSize > 0 && (
+                    <div className="room-calendar">
+                      {isCalendar && <Calendar days={room} emptyText="Nobody in this room shares a birthday yet." />}
+                      {firsts.length > 1 && (
+                        <p className="chart-caption">First match in each room so far: {firsts.join(', ')} {persons}.</p>
+                      )}
+                    </div>
+                  )}
                 </div>
-              )}
-              {maxPeople > 1000 ? (
-                <LogRangeControl id="people-range" label="People (or items)" value={Math.max(2, n)} minExp={0.31}
-                  maxExp={Math.log10(maxPeople)} onChange={(v) => { set('people', Math.max(2, v)); setRoomSize(null); }} />
-              ) : (
-                <RangeControl id="people-range" label="People in the room" value={n} min={2} max={maxPeople}
-                  onChange={(v) => { set('people', v); setRoomSize(null); }} />
-              )}
-              {question === 'near' && (
-                <RangeControl id="window-range" label="Within how many days" value={window} min={0} max={7}
-                  display={window === 0 ? 'same day' : `±${window} day${window > 1 ? 's' : ''}`} onChange={(v) => set('window', v)} />
-              )}
-              <RangeControl id="trials-range" label="Random rooms to simulate" display={trials.toLocaleString()} value={trials}
-                min={100} max={10000} step={100} onChange={(v) => set('trials', v)} />
-              <SeedControl value={seed} onChange={(v) => set('seed', v)} />
+              </>
+            ) : (
+              <p className="stage-held">
+                With {size.toLocaleString()} possible values there are too many to draw a room. The chance curve has the exact
+                odds.
+              </p>
+            )
+          )}
+
+          {view === 'curve' && !reveal && (
+            <div className="stage-held">
+              <p>
+                Guess first: how many people make a better than even chance that two share a birthday? The curve stays
+                hidden until you do.
+              </p>
+              <button type="button" className="text-button" onClick={() => show('skip')}>Skip and show the curve</button>
             </div>
-            <ToolActions
-              image={{ draw, size: CHART_SIZE, filename: 'birthday-paradox.png' }}
-              onCsv={exportCsv}
-              csvLabel="Download probability table (CSV)"
-              onReset={() => { reset(); setRoomSize(null); }}
-              fullscreenRef={chartWrapRef}
-            >
-              <button type="button" onClick={() => set('seed', randomSeed())}>🎲 New rooms</button>
-            </ToolActions>
-          </section>
+          )}
+
+          {view === 'curve' && reveal && (
+            <>
+              <div className="stage-headline">
+                <p><span>Exact chance{oneIn(exact)}</span> <strong className="s1">{pct(exact)}</strong></p>
+                {simulatable && <p><span>Simulated rooms</span> <strong>{pct(simulated)}</strong></p>}
+                <p className="stage-meta">
+                  <span>{n.toLocaleString()} {persons} · {pairs(n)} pairs</span>{' '}
+                  <span>{simulatable ? `${trials.toLocaleString()} rooms · seed ${seed}` : 'exact math only'}</span>
+                </p>
+              </div>
+              <h2 className="chart-title">Chance by group size: {QUESTIONS[question].label.toLowerCase()}</h2>
+              <div className="stage-chart">
+                <canvas ref={chartRef} role="img" aria-label={`Probability curve; with ${n} ${persons} the chance is ${pct(exact)}.`} />
+              </div>
+              <Legend
+                items={[
+                  { color: PALETTE.cyan, label: 'Exact chance' },
+                  ...(question !== 'anyTwo' ? [{ color: PALETTE.muted, label: 'Any two share (for comparison)' }] : []),
+                  ...(simulatable ? [{ color: PALETTE.yellow, label: 'Your simulated rooms' }] : []),
+                ]}
+              />
+            </>
+          )}
         </div>
-        <div className="workbench-stage">
-          <div className="canvas-wrapper chart-wrapper" ref={chartWrapRef}>
-            <h2 className="chart-title">Chance by group size: {QUESTIONS[question].label.toLowerCase()}</h2>
-            <canvas ref={chartRef} width={CHART_SIZE.width} height={CHART_SIZE.height} role="img"
-              aria-label={`Probability curve; with ${n} people the chance is ${pct(exact)}.`} />
-            <Legend
-              items={[
-                { color: PALETTE.cyan, label: 'Exact chance' },
-                ...(question !== 'anyTwo' ? [{ color: PALETTE.muted, label: 'Any two share (for comparison)' }] : []),
-                ...(simulatable ? [{ color: PALETTE.yellow, label: 'Your simulated rooms' }] : []),
-              ]}
+
+        <div className="wb-rail">
+          {reveal !== 'skip' && (
+            <Challenge
+              title="Predict first"
+              onSkip={() => show('skip')}
+              question="How many people make a better than even chance that two of them share a birthday?"
+              placeholder="e.g. 180"
+              unit="people"
+              min={2}
+              max={400}
+              onTest={(guess) => {
+                const guessed = Math.round(guess);
+                set('q', 'anyTwo');
+                set('space', 'birthdays');
+                set('people', Math.min(guessed, 100));
+                show('guess');
+                const chance = probability('anyTwo', guessed, 365);
+                return {
+                  verdict: guessed === 23 ? 'Exactly right!' : Math.abs(guessed - 23) <= 3 ? 'Very close!' : guessed > 23 ? 'Fewer than that!' : 'A few more than that.',
+                  detail: `With ${guessed} people the chance is ${chance >= 0.999 && guessed < 366 ? 'over 99.9%' : pct(chance)}${guessed <= 100 ? ' (the curve now marks your guess)' : ''}. The answer is 23 people, for 50.7%: 23 people make 253 pairs, and each pair is a 1 in 365 chance.`,
+                };
+              }}
             />
-          </div>
+          )}
+
+          {reveal && (
+            <button type="button" className="run-button" ref={runRef} onClick={() => set('seed', randomSeed())}>
+              New rooms
+            </button>
+          )}
+
+          <RailNext />
+
+          <ToolActions
+            menu
+            image={{ draw, size: CHART_SIZE, filename: 'birthday-paradox.png' }}
+            onCsv={exportCsv}
+            csvLabel="Download probability table (CSV)"
+            onReset={() => { reset(); setRoomSize(0); setFirsts([]); }}
+            fullscreenRef={stageRef}
+          />
+
+          <section className="wb-settings" aria-labelledby="settings-heading">
+            <h2 id="settings-heading">Calculator settings</h2>
+            <div className="control-row">
+              <label htmlFor="question-select">Question</label>
+              <select id="question-select" value={question} onChange={(e) => set('q', e.target.value)}>
+                {Object.entries(QUESTIONS).map(([key, value]) => <option key={key} value={key}>{value.label}</option>)}
+              </select>
+            </div>
+            {maxPeople > 1000 ? (
+              <LogRangeControl id="people-range" label="People (or items)" value={Math.max(2, n)} minExp={0.31}
+                maxExp={Math.log10(maxPeople)} onChange={(v) => set('people', Math.max(2, v))} />
+            ) : (
+              <RangeControl id="people-range" label="People in the room" value={n} min={2} max={maxPeople}
+                onChange={(v) => set('people', v)} />
+            )}
+            {question === 'near' && (
+              <RangeControl id="window-range" label="Within how many days" value={window} min={0} max={7}
+                display={window === 0 ? 'same day' : `±${window} day${window > 1 ? 's' : ''}`} onChange={(v) => set('window', v)} />
+            )}
+            <details className="more-settings" open={settings.space !== 'birthdays'}>
+              <summary>More settings</summary>
+              <div>
+                <div className="control-row">
+                  <label htmlFor="space-select">Possible values</label>
+                  <select id="space-select" value={settings.space} onChange={(e) => set('space', e.target.value)}>
+                    {SPACES.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
+                    <option value="custom">Custom number…</option>
+                  </select>
+                </div>
+                {settings.space === 'custom' && (
+                  <div className="control-row">
+                    <label htmlFor="custom-size">Number of possible values</label>
+                    <input id="custom-size" type="number" min="2" value={settings.custom} onChange={(e) => set('custom', Number(e.target.value))} />
+                  </div>
+                )}
+                <RangeControl id="trials-range" label="Random rooms to simulate" display={trials.toLocaleString()} value={trials}
+                  min={100} max={10000} step={100} onChange={(v) => set('trials', v)} />
+                <SeedControl value={seed} onChange={(v) => set('seed', v)} />
+              </div>
+            </details>
+          </section>
         </div>
       </div>
 
-      <section className="stats-panel" aria-live="polite">
-        <h2>With {n.toLocaleString()} {isCalendar ? 'people' : 'items'}</h2>
-        <div className="stats-grid">
-          <StatRow label={`Exact chance that ${shortText}:`} value={`${pct(exact)}${oneIn(exact)}`} />
-          <StatRow
-            label={`Simulated rooms with a match (of ${trials.toLocaleString()}):`}
-            value={simulatable ? `${sim.hits.toLocaleString()} (${pct(simulated)})` : 'exact math only above a million values'}
-          />
-          <StatRow label="Pairs of people:" value={((n * (n - 1)) / 2).toLocaleString()} />
-          {question !== 'anyTwo' && <StatRow label="For comparison, any two share:" value={pct(probability('anyTwo', n, size))} />}
-          {question !== 'mine' && <StatRow label="Someone shares a specific one:" value={pct(probability('mine', n, size))} />}
-        </div>
-      </section>
+      <NextTools />
 
       <section className="panel" aria-labelledby="reverse-heading">
         <h2 id="reverse-heading">How many people do I need?</h2>
@@ -304,30 +423,13 @@ function App() {
         </div>
         <p className="result-line" aria-live="polite">
           You need <strong>{Number.isFinite(needed) ? needed.toLocaleString() : 'more than 10 trillion'}</strong>{' '}
-          {isCalendar ? 'people' : 'items'} for a {pct(targetValue)} chance that {shortText}
+          {persons} for a {pct(targetValue)} chance that {shortText}
           {question === 'mine' ? ' (counting you)' : ''}, with {size.toLocaleString()} possible {unit}s.
         </p>
       </section>
 
-      {sim.sampleRoom.length > 0 && (
-        <div className="canvas-wrapper chart-wrapper square-chart">
-          <h2 className="chart-title">One random room: every line is a pair that could match</h2>
-          <div className="button-row">
-            <button type="button" onClick={() => setRoomSize(0)}>Empty the room</button>
-            <button type="button" onClick={() => setRoomSize((k) => Math.min(sim.sampleRoom.length, (k ?? 0) + 1))}>+1 person</button>
-            <button type="button" onClick={() => setRoomSize((k) => Math.min(sim.sampleRoom.length, (k ?? 0) + 5))}>+5 people</button>
-            <button type="button" onClick={() => setRoomSize(null)}>Fill to {Math.min(n, 120)}</button>
-          </div>
-          <canvas ref={roomRef} width={600} height={600} role="img"
-            aria-label={`${roomPeople.length} people in a circle with ${(roomPeople.length * (roomPeople.length - 1)) / 2} pair lines; matching pairs highlighted.`} />
-          <Legend items={[{ color: PALETTE.yellow, label: `Pairs that share a ${unit}` }, { color: PALETTE.muted, label: 'Every other pair' }]} />
-          {isCalendar && <Calendar days={roomPeople} emptyText="Nobody in this room shares a birthday yet." />}
-        </div>
-      )}
-
       {isCalendar && <ClassBirthdays size={size} />}
 
-      <NextTools />
       <section className="canvas-description prose" aria-labelledby="explain-heading">
         <h2 id="explain-heading">Why 23 people is enough</h2>
         <p>

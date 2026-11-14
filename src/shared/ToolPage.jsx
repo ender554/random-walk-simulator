@@ -36,24 +36,34 @@ function useHopCount(slug) {
 // Common frame for a tool page: "Step n of 3" and the path above the heading, the page's date under it
 // (it matches dateModified and the sitemap),
 // the tool itself (which places its own Next experiment block), related tools, then further reading.
-function ToolPage({ slug, title, intro, children }) {
+//
+// `workbench`: the B2 layout (docs/redesign-2026-11-10/B2-LOGIC.md). A left-aligned title row; the intro and
+// date sit in their own block, which tool.css moves under the workbench on phones so the stage comes first.
+function ToolPage({ slug, title, intro, workbench = false, children }) {
   useHopCount(slug);
   const updated = liveTools.find((t) => t.slug === slug)?.updated;
   const step = pathLabel(slug);
+  const date = updated && (
+    <p className="page-updated">
+      Last updated <time dateTime={updated}>{longDate(updated)}</time>
+    </p>
+  );
   return (
     <ToolSlug.Provider value={slug}>
       <SiteLayout wide>
-        <div className="tool-main">
-          <header className="page-header">
+        <div className={workbench ? 'tool-main has-workbench' : 'tool-main'}>
+          <header className={workbench ? 'page-header title-row' : 'page-header'}>
             {step && <p className="page-step">{step}</p>}
             <h1>{title}</h1>
-            <p>{intro}</p>
-            {updated && (
-              <p className="page-updated">
-                Last updated <time dateTime={updated}>{longDate(updated)}</time>
-              </p>
-            )}
+            {!workbench && <p>{intro}</p>}
+            {!workbench && date}
           </header>
+          {workbench && (
+            <div className="page-lede">
+              <p>{intro}</p>
+              {date}
+            </div>
+          )}
           {children}
           <RelatedTools slug={slug} />
           <FurtherReading slug={slug} />

@@ -124,9 +124,25 @@ export function simulateRooms({ question, people, size, window, trials, seed }) 
       if (roomMatches(question, values, size, window, counts)) hits += 1;
     }
   }
-  // A sample room to show, as long as the largest group we draw
-  const sampleRoom = size <= 1e6 ? Array.from({ length: Math.min(people, 400) }, draw) : [];
-  return { hits, sampleRoom };
+  return { hits };
+}
+
+// One room to fill a person at a time: its own random stream from the seed, so adding people never
+// depends on the other settings. Empty when there are too many values to draw.
+export function roomPool({ seed, size, count = 120 }) {
+  if (size > 1e6) return [];
+  const rng = seedrandom(`${seed ?? ''}:room`);
+  return Array.from({ length: count }, () => Math.floor(rng() * size));
+}
+
+// How many people the room held when the first two shared a value (null if none yet in the pool).
+export function firstMatch(days) {
+  const seen = new Set();
+  for (let i = 0; i < days.length; i += 1) {
+    if (seen.has(days[i])) return i + 1;
+    seen.add(days[i]);
+  }
+  return null;
 }
 
 export function dayLabel(day) {

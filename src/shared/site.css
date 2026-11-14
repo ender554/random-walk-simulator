@@ -553,7 +553,9 @@ html:has(.sim-menu[open]) {
 .embed .faq,
 .embed .further-reading,
 .embed .related,
-.embed .page-header p {
+.embed .page-header p,
+.embed .page-lede,
+.embed .rail-next {
   display: none;
 }
 

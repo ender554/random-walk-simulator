@@ -4,23 +4,33 @@ import { PALETTE } from '../../utils/chart';
 /**
  * People sitting in a circle with a faint line for every pair: the number of lines is the
  * number of chances for a match, which is why the probability climbs so fast.
- * Pairs that share a birthday are drawn bright.
+ * Pairs that share a birthday are drawn bright. Drawn at screen size; the stage prints the
+ * count of people and pairs beside it.
  */
 export function drawRoom(canvas, days) {
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
   clearCanvas(ctx, canvas);
   const n = days.length;
+  const side = Math.min(canvas.width, canvas.height);
   const cx = canvas.width / 2;
   const cy = canvas.height / 2;
-  const r = Math.min(cx, cy) - 28;
+  const r = side / 2 - Math.max(10, side * 0.06);
   const pos = (i) => {
     const angle = (i / Math.max(n, 1)) * Math.PI * 2 - Math.PI / 2;
     return [cx + r * Math.cos(angle), cy + r * Math.sin(angle)];
   };
 
-  const matched = new Set();
+  // The empty room: the circle people will sit on
+  ctx.strokeStyle = 'rgba(138, 150, 179, 0.35)';
   ctx.lineWidth = 1;
+  ctx.setLineDash([3, 5]);
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  const matched = new Set();
   ctx.strokeStyle = n > 40 ? 'rgba(138, 150, 179, 0.12)' : 'rgba(138, 150, 179, 0.3)';
   ctx.beginPath();
   for (let i = 0; i < n; i += 1) {
@@ -51,7 +61,7 @@ export function drawRoom(canvas, days) {
     }
   }
 
-  const dot = n > 60 ? 4 : 7;
+  const dot = side < 200 ? (n > 40 ? 2.5 : 4) : n > 60 ? 4 : 7;
   for (let i = 0; i < n; i += 1) {
     const [x, y] = pos(i);
     ctx.fillStyle = matched.has(i) ? PALETTE.yellow : PALETTE.cyan;
@@ -59,10 +69,4 @@ export function drawRoom(canvas, days) {
     ctx.arc(x, y, dot, 0, Math.PI * 2);
     ctx.fill();
   }
-
-  ctx.fillStyle = PALETTE.label;
-  ctx.font = '600 15px system-ui, sans-serif';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(`${n} people · ${((n * (n - 1)) / 2).toLocaleString()} pairs`, cx, cy);
 }

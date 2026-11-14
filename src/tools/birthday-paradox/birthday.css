@@ -57,3 +57,103 @@
   color: var(--text);
   font: inherit;
 }
+
+/* Fill a room (the stage's first view): the circle beside its count and buttons, the calendar under them */
+.room-message {
+  margin: 0 0 0.6rem;
+  color: var(--text-label);
+}
+
+.room-view {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-areas:
+    'canvas side'
+    'cal cal';
+  gap: 0.6rem 0.9rem;
+  align-items: start;
+}
+
+.room-canvas {
+  grid-area: canvas;
+  width: 150px;
+  height: 150px;
+}
+
+.room-canvas canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.room-side {
+  grid-area: side;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.45rem;
+}
+
+.room-status {
+  margin: 0;
+  color: var(--text-prose);
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.room-status strong {
+  color: var(--text-strong);
+  font-variant-numeric: tabular-nums;
+}
+
+.room-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  width: 100%;
+}
+
+.room-buttons button {
+  min-height: var(--target);
+  padding: 0.4rem 1rem;
+  background: var(--button);
+  border: 1px solid var(--control-line);
+  border-radius: 10px;
+  color: var(--text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.room-buttons button:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.room-buttons button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.room-calendar {
+  grid-area: cal;
+}
+
+@media (min-width: 1000px) {
+  .room-view {
+    grid-template-areas:
+      'canvas side'
+      'canvas cal';
+    grid-template-rows: auto 1fr;
+  }
+
+  .room-canvas {
+    width: 300px;
+    height: 300px;
+  }
+
+  .room-buttons {
+    flex-direction: row;
+    width: auto;
+  }
+}

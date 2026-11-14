@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import ToolPage from '../../shared/ToolPage';
-import NextTools from '../../shared/NextTools';
+import NextTools, { RailNext } from '../../shared/NextTools';
+import ViewSwitch from '../../shared/ViewSwitch';
+import { useScreenCanvas } from '../../shared/useScreenCanvas';
 import ToolActions from '../../shared/ToolActions';
 import Faq from '../../shared/Faq';
 import Challenge from '../../shared/Challenge';
-import { Legend, LogRangeControl, RangeControl, SeedControl, StatRow } from '../../shared/controls';
+import { LogRangeControl, RangeControl, SeedControl, StatRow } from '../../shared/controls';
 import { useUrlState } from '../../shared/useUrlState';
 import { HOST_RULES, simulateGames, theory } from '../../utils/montyHall';
 import { PALETTE, chartFrame, clipToPlot, evenTicks, powersOfTen } from '../../utils/chart';
@@ -42,15 +44,22 @@ const FAQ = [
   },
 ];
 
+// Drawn at screen size on the stage and at 800 × 380 for the saved image. A short chart (the phone's
+// pinned stage) drops the axis title and puts "games" on the last tick instead.
 function drawChart(canvas, running, games, rule, doors) {
   if (!canvas || !running.length) return;
   const t = theory(rule, doors);
+  const compact = canvas.height < 220;
+  const xTicks = powersOfTen(games);
+  const last = xTicks[xTicks.length - 1];
   const frame = chartFrame(canvas, {
     xMin: 1, xMax: games, yMin: 0, yMax: 1, logX: true,
-    xTicks: powersOfTen(games),
-    yTicks: evenTicks(0, 1, 5),
+    xTicks,
+    yTicks: evenTicks(0, 1, compact ? 3 : 5),
+    formatX: (v) => (compact && v === last ? `${v.toLocaleString()} games` : v.toLocaleString()),
     formatY: (v) => `${Math.round(v * 100)}%`,
-    xLabel: 'Games played (log scale)',
+    xLabel: compact ? '' : 'Games played (log scale)',
+    pad: compact ? { left: 46, right: 14, top: 10, bottom: 26 } : undefined,
   });
   const { ctx, x, y } = frame;
   clipToPlot(frame);
@@ -83,6 +92,9 @@ function plausibleRange({ plays, wins }) {
   return `${Math.max(0, Math.round((p - margin) * 100))}% to ${Math.min(100, Math.round((p + margin) * 100))}%`;
 }
 
+const VIEWS = [['play', 'Play a round'], ['sim', 'Simulate'], ['host', 'Be the host']];
+const EMPTY = { stay: { plays: 0, wins: 0 }, switch: { plays: 0, wins: 0 }, voided: 0 };
+
 function TallyRow({ label, tally }) {
   if (!tally.plays) return <StatRow label={label} value="not played yet" />;
   const rate = tally.wins / tally.plays;
@@ -97,22 +109,32 @@ function TallyRow({ label, tally }) {
   );
 }
 
+// The workbench (docs/redesign-2026-11-10/B2-LOGIC.md): the stage with its three views, then the rail with
+// the predict card, Run, Share & export, the settings and the next step. The chart stays hidden until a guess
+// or Skip; the guess runs on the page's seed, so a class on the same link sees the same result.
 function App() {
-  const canvasRef = useRef(null);
-  const chartRef = useRef(null);
+  const stageRef = useRef(null);
+  const runRef = useRef(null);
   const [settings, set, reset] = useUrlState(DEFAULTS);
   const { doors, host, games, seed } = settings;
-  const [mode, setMode] = useState('play');
-  const empty = { stay: { plays: 0, wins: 0 }, switch: { plays: 0, wins: 0 }, voided: 0 };
-  const [tally, setTally] = useState(empty);
+  const [view, setView] = useState('play');
+  const [reveal, setReveal] = useState(null); // null until a guess ('guess') or Skip ('skip')
+  const [tally, setTally] = useState(EMPTY);
 
   const sim = useMemo(() => simulateGames({ games, doors, rule: host, seed }), [games, doors, host, seed]);
   const t = theory(host, doors);
   const draw = (canvas) => drawChart(canvas, sim.running, games, host, doors);
+  const chartRef = useScreenCanvas(draw);
 
+  // Skip from the predict card removes the card, so focus moves on to Run
   useEffect(() => {
-    draw(canvasRef.current);
-  });
+    if (reveal === 'skip') runRef.current?.focus({ preventScroll: true });
+  }, [reveal]);
+
+  const show = (how) => {
+    setReveal(how);
+    setView('sim');
+  };
 
   const recordResult = (switched, won) => {
     if (switched === null) {
@@ -134,135 +156,178 @@ function App() {
   };
 
   const playKey = `${doors}-${host}`;
+  const played = tally.stay.plays + tally.switch.plays + tally.voided;
+  const switchRate = sim.switchWins / sim.counted;
+  const stayRate = sim.stayWins / sim.counted;
 
   return (
     <ToolPage
       slug="monty-hall"
+      workbench
       title="Monty Hall Problem Simulator"
-      intro="Three doors, one car, two goats. You pick a door, the host opens another to show a goat, and offers you the switch. Play it, play the host, race the two strategies, and change the host's rules to see exactly when switching stops helping."
+      intro="Three doors, one car, two goats. You pick a door, the host opens another to show a goat, and offers you the switch."
     >
-      <Challenge
-        question="You pick a door, the host opens a goat door, and offers a switch. Out of 100 games, how many would you win by always switching?"
-        placeholder="e.g. 50"
-        unit="of 100"
-        min={0}
-        max={100}
-        onTest={(guess) => {
-          const testSeed = randomSeed();
-          set('doors', 3);
-          set('host', 'knows');
-          set('games', 1000);
-          set('seed', testSeed);
-          const run = simulateGames({ games: 1000, doors: 3, rule: 'knows', seed: testSeed });
-          const actual = (run.switchWins / run.counted) * 100;
-          const off = Math.abs(guess - actual);
-          return {
-            verdict: off <= 5 ? '🎉 Spot on!' : off <= 15 ? 'Close!' : 'Not quite. Most people guess 50.',
-            detail: `You guessed ${guess}. Always switching won ${actual.toFixed(1)} of every 100 games (${run.switchWins} of 1,000 simulated games, now on the chart below). Theory says 66.7: your first pick is right only 1 time in 3, and switching wins every time it was wrong.`,
-          };
-        }}
-      />
+      <div className="wb">
+        <div className={reveal && view === 'sim' ? 'wb-stage pinned' : 'wb-stage'} ref={stageRef}>
+          <ViewSwitch label="View" options={VIEWS} value={view} onChange={setView} />
 
-      <div className="workbench">
-        <div className="workbench-controls">
-          <section className="controls-panel" aria-label="Game settings">
-            <div className="control-grid">
-              <div className="control-row">
-                <label htmlFor="host-select">Host rules</label>
-                <select id="host-select" value={host} onChange={(e) => set('host', e.target.value)}>
-                  {Object.entries(HOST_RULES).map(([key, rule]) => <option key={key} value={key}>{rule.label}</option>)}
-                </select>
+          {view === 'play' && (
+            <>
+              <PlayGame key={playKey} doors={doors} rule={host} onResult={recordResult} />
+              {played > 0 && (
+                <div className="tally">
+                  <TallyRow label="When you stayed:" tally={tally.stay} />
+                  <TallyRow label="When you switched:" tally={tally.switch} />
+                  {tally.voided > 0 && <StatRow label="Thrown out (host showed the car):" value={tally.voided} />}
+                </div>
+              )}
+            </>
+          )}
+
+          {view === 'host' && <PlayAsHost key={doors} doors={doors} />}
+
+          {view === 'sim' && !reveal && (
+            <div className="stage-held">
+              <p>
+                Guess first: out of 100 games, how many would you win by always switching? The chart stays hidden
+                until you do.
+              </p>
+              <button type="button" className="text-button" onClick={() => show('skip')}>Skip and show the results</button>
+            </div>
+          )}
+
+          {view === 'sim' && reveal && (
+            <>
+              <div className="stage-headline">
+                <p><span>Always switch</span> <strong className="s1">{pct(switchRate)}</strong></p>
+                <p><span>Always stay</span> <strong className="s2">{pct(stayRate)}</strong></p>
+                <p className="stage-meta">
+                  <span>
+                    {games.toLocaleString()} games
+                    {host === 'random' ? ` (${sim.voidedCount.toLocaleString()} thrown out)` : ''}
+                  </span>{' '}
+                  <span>seed {seed}</span>
+                </p>
               </div>
-              <RangeControl id="doors-range" label="Doors" value={doors} min={3} max={100} onChange={(v) => set('doors', v)} />
-              <LogRangeControl id="games-range" label="Games to simulate" value={games} minExp={1} maxExp={5} onChange={(v) => set('games', v)} />
-              <SeedControl value={seed} onChange={(v) => set('seed', v)} />
-            </div>
-            <div className="preset-row" role="group" aria-label="Door presets">
-              {[3, 10, 100].map((d) => (
-                <button key={d} type="button" aria-pressed={doors === d} onClick={() => set('doors', d)}>{d} doors</button>
-              ))}
-            </div>
-            <p className="chart-caption">The host {HOST_RULES[host].short}.</p>
-            <ToolActions
-              image={{ draw, size: CHART_SIZE, filename: 'monty-hall.png' }}
-              onCsv={exportCsv}
-              csvLabel="Download games (CSV)"
-              onReset={() => { reset(); setTally(empty); }}
-              fullscreenRef={chartRef}
-            >
-              <button type="button" onClick={() => set('seed', randomSeed())}>🎲 New simulation</button>
-            </ToolActions>
-          </section>
+              <h2 className="chart-title">Win rate over {games.toLocaleString()} simulated games with {doors} doors</h2>
+              <div className="stage-chart">
+                <canvas
+                  ref={chartRef}
+                  role="img"
+                  aria-label={`Switching won ${pct(switchRate)} and staying won ${pct(stayRate)} of ${sim.counted} counted games.`}
+                />
+              </div>
+              <p className="chart-caption">
+                Dashed lines: theory, {pct(t.switch)} and {pct(t.stay)}. Games on a log scale.
+              </p>
+            </>
+          )}
         </div>
-        <div className="workbench-stage">
-          <div className="canvas-wrapper chart-wrapper" ref={chartRef}>
-            <h2 className="chart-title">Win rate over {games.toLocaleString()} simulated games with {doors} doors</h2>
-            <canvas
-              ref={canvasRef}
-              width={CHART_SIZE.width}
-              height={CHART_SIZE.height}
-              role="img"
-              aria-label={`Switching won ${pct(sim.switchWins / sim.counted)} and staying won ${pct(sim.stayWins / sim.counted)} of ${sim.counted} counted games.`}
+
+        <div className="wb-rail">
+          {reveal !== 'skip' && (
+            <Challenge
+              title="Predict first"
+              onSkip={() => show('skip')}
+              question="Out of 100 games, how many would you win by always switching?"
+              placeholder="e.g. 50"
+              unit="of 100"
+              min={0}
+              max={100}
+              onTest={(guess) => {
+                set('doors', 3);
+                set('host', 'knows');
+                set('games', 1000);
+                const run = simulateGames({ games: 1000, doors: 3, rule: 'knows', seed });
+                show('guess');
+                const actual = (run.switchWins / run.counted) * 100;
+                const off = Math.abs(guess - actual);
+                return {
+                  verdict: off <= 5 ? 'Spot on!' : off <= 15 ? 'Close!' : 'Not quite. Most people guess 50.',
+                  detail: `You guessed ${guess}. Always switching won ${actual.toFixed(1)} of every 100 games (${run.switchWins} of 1,000 simulated games, now on the chart). Theory says 66.7: your first pick is right only 1 time in 3, and switching wins every time it was wrong.`,
+                };
+              }}
             />
-            <Legend items={[{ color: PALETTE.cyan, label: 'Always switch' }, { color: PALETTE.pink, label: 'Always stay' }]} />
-            <p className="chart-caption">Dashed lines show the theoretical win rates for these host rules.</p>
-          </div>
+          )}
+
+          {reveal && (
+            <button type="button" className="run-button" ref={runRef} onClick={() => { set('seed', randomSeed()); setView('sim'); }}>
+              New simulation
+            </button>
+          )}
+
+          <RailNext />
+
+          <ToolActions
+            menu
+            image={{ draw, size: CHART_SIZE, filename: 'monty-hall.png' }}
+            onCsv={exportCsv}
+            csvLabel="Download games (CSV)"
+            onReset={() => { reset(); setTally(EMPTY); }}
+            fullscreenRef={stageRef}
+          />
+
+          <section className="wb-settings" aria-labelledby="settings-heading">
+            <h2 id="settings-heading">Game settings</h2>
+            <div className="control-row">
+              <label htmlFor="host-select">Host rules</label>
+              <select id="host-select" value={host} onChange={(e) => set('host', e.target.value)}>
+                {Object.entries(HOST_RULES).map(([key, rule]) => <option key={key} value={key}>{rule.label}</option>)}
+              </select>
+              <p className="setting-note">The host {HOST_RULES[host].short}.</p>
+            </div>
+            <div className="control-row">
+              <p className="control-label" id="doors-label">Doors</p>
+              <div className="preset-row" role="group" aria-labelledby="doors-label">
+                {[3, 10, 100].map((d) => (
+                  <button key={d} type="button" aria-pressed={doors === d} onClick={() => set('doors', d)}>{d} doors</button>
+                ))}
+              </div>
+            </div>
+            <LogRangeControl id="games-range" label="Games to simulate" value={games} minExp={1} maxExp={5} onChange={(v) => set('games', v)} />
+            <details className="more-settings">
+              <summary>More settings</summary>
+              <div>
+                <RangeControl id="doors-range" label="Exact number of doors" value={doors} min={3} max={100} onChange={(v) => set('doors', v)} />
+                <SeedControl value={seed} onChange={(v) => set('seed', v)} />
+              </div>
+            </details>
+          </section>
         </div>
       </div>
 
-      <section className="monty-play" aria-labelledby="play-heading">
-        <h2 id="play-heading">Play it yourself</h2>
-        <div className="mode-tabs" role="group" aria-label="Play mode">
-          <button type="button" aria-pressed={mode === 'play'} onClick={() => setMode('play')}>Be the contestant</button>
-          <button type="button" aria-pressed={mode === 'host'} onClick={() => setMode('host')}>Be the host</button>
-        </div>
-        {mode === 'play' ? (
-          <>
-            <PlayGame key={playKey} doors={doors} rule={host} onResult={recordResult} />
-            <div className="tally">
-              <TallyRow label="When you stayed:" tally={tally.stay} />
-              <TallyRow label="When you switched:" tally={tally.switch} />
-              {tally.voided > 0 && <StatRow label="Thrown out (host showed the car):" value={tally.voided} />}
-            </div>
-          </>
-        ) : (
-          <PlayAsHost key={doors} doors={doors} />
-        )}
-      </section>
-
-      <section className="panel" aria-labelledby="race-heading">
-        <h2 id="race-heading">Race: always stay vs. always switch</h2>
-        <Race key={`${playKey}-${games}-${seed}`} sim={sim} games={games} />
-      </section>
+      <NextTools />
 
       <section className="panel" aria-labelledby="cases-heading">
         <h2 id="cases-heading">Why: every simulated game, sorted by your first pick</h2>
-        <table className="case-table">
-          <thead>
-            <tr><th>Your first pick was…</th><th>Games</th><th>Staying wins</th><th>Switching wins</th></tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>the car (should be about 1 in {doors})</td>
-              <td>{sim.pickedCar.toLocaleString()} ({pct(sim.pickedCar / sim.counted)})</td>
-              <td>all of them</td>
-              <td>none</td>
-            </tr>
-            <tr>
-              <td>a goat (about {doors - 1} in {doors})</td>
-              <td>{sim.pickedGoat.toLocaleString()} ({pct(sim.pickedGoat / sim.counted)})</td>
-              <td>none</td>
-              <td>{host === 'random' ? 'all of them (the host was lucky not to show the car)' : 'all of them: the host had to leave the car closed'}</td>
-            </tr>
-            {sim.voidedCount > 0 && (
+        <div className="table-scroll">
+          <table className="case-table">
+            <thead>
+              <tr><th>Your first pick was…</th><th>Games</th><th>Staying wins</th><th>Switching wins</th></tr>
+            </thead>
+            <tbody>
               <tr>
-                <td>any door, but the host showed the car</td>
-                <td>{sim.voidedCount.toLocaleString()} thrown out</td>
-                <td colSpan={2}>Throwing these out removes mostly &quot;picked a goat&quot; games, which is why the odds even out.</td>
+                <td>the car (should be about 1 in {doors})</td>
+                <td>{sim.pickedCar.toLocaleString()} ({pct(sim.pickedCar / sim.counted)})</td>
+                <td>all of them</td>
+                <td>none</td>
               </tr>
-            )}
-          </tbody>
-        </table>
+              <tr>
+                <td>a goat (about {doors - 1} in {doors})</td>
+                <td>{sim.pickedGoat.toLocaleString()} ({pct(sim.pickedGoat / sim.counted)})</td>
+                <td>none</td>
+                <td>{host === 'random' ? 'all of them (the host was lucky not to show the car)' : 'all of them: the host had to leave the car closed'}</td>
+              </tr>
+              {sim.voidedCount > 0 && (
+                <tr>
+                  <td>any door, but the host showed the car</td>
+                  <td>{sim.voidedCount.toLocaleString()} thrown out</td>
+                  <td colSpan={2}>Throwing these out removes mostly &quot;picked a goat&quot; games, which is why the odds even out.</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
         {host === 'lazy' && doors === 3 && sim.passedOver > 0 && (
           <p className="result-line">
             When the lazy host skipped the lower door and opened the higher one ({sim.passedOver.toLocaleString()} games),
@@ -273,18 +338,11 @@ function App() {
         )}
       </section>
 
-      <section className="stats-panel">
-        <h2>Simulation results</h2>
-        <div className="stats-grid">
-          <StatRow label="Switching won:" value={`${sim.switchWins.toLocaleString()} (${pct(sim.switchWins / sim.counted)})`} />
-          <StatRow label="Theory, switching:" value={pct(t.switch)} />
-          <StatRow label="Staying won:" value={`${sim.stayWins.toLocaleString()} (${pct(sim.stayWins / sim.counted)})`} />
-          <StatRow label="Theory, staying:" value={pct(t.stay)} />
-          {host === 'random' && <StatRow label="Thrown out (car shown):" value={`${sim.voidedCount.toLocaleString()} (theory ${pct(t.voided)})`} />}
-        </div>
+      <section className="panel" aria-labelledby="race-heading">
+        <h2 id="race-heading">Race: always stay vs. always switch</h2>
+        <Race key={`${playKey}-${games}-${seed}`} sim={sim} games={games} />
       </section>
 
-      <NextTools />
       <section className="canvas-description prose" aria-labelledby="explain-heading">
         <h2 id="explain-heading">The Monty Hall problem</h2>
         <p>

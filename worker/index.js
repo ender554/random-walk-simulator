@@ -4,7 +4,7 @@
 import { liveTools } from '../src/tools.js';
 
 const SLUGS = new Set(liveTools.map((t) => t.slug));
-const VIA = new Set(['next-1', 'next-2', 'next-3', 'surprised', 'related', 'text', 'menu', 'other']);
+const VIA = new Set(['next-1', 'next-2', 'next-3', 'rail', 'surprised', 'related', 'text', 'menu', 'other']);
 
 async function recordHop(request, env) {
   if (request.method !== 'POST') return new Response(null, { status: 405, headers: { Allow: 'POST' } });
