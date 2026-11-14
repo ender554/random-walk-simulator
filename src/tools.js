@@ -8,8 +8,9 @@
 // or structured data (Google's sitemap guide). Shown as "Last updated", and used as `dateModified` and
 // the sitemap's lastmod, so change it whenever the page changes.
 //
-// status: 'live' tools get their own page and sitemap entry; 'soon' tools only
-// appear on the hub so we don't publish thin placeholder pages.
+// status: 'live' tools get their own page and sitemap entry, and must be on a path (below). 'soon'
+// tools get no page, so we don't publish thin placeholders; list one in a path's `also` to show it on
+// the hub as "Coming soon".
 
 export const categories = [
   {
@@ -134,6 +135,17 @@ export const paths = [
   { category: 'random-paths', steps: ['random-walk', 'gamblers-ruin', 'stock-price-simulator'], also: ['diffusion-limited-aggregation'] },
 ];
 
+const bySlug = (slug) => tools.find((t) => t.slug === slug);
+
+// The paths with their category and tools, for the hub, the Simulators menu and the footer.
+// The build checks that every live tool is on a path (vite.config.js).
+export const pathGroups = paths.map((path) => ({
+  path,
+  category: categories.find((c) => c.id === path.category),
+  steps: path.steps.map(bySlug),
+  also: (path.also ?? []).map(bySlug),
+}));
+
 // Where a tool sits on its path: { path, step (1-based), of }, or null for tools that aren't a step.
 export function pathStep(slug) {
   for (const path of paths) {
@@ -141,6 +153,15 @@ export function pathStep(slug) {
     if (i >= 0) return { path, step: i + 1, of: path.steps.length };
   }
   return null;
+}
+
+// The line above a tool page's H1: "Step 2 of 3 · Distributions & averages", or the category for a tool
+// that isn't a step (DLA).
+export function pathLabel(slug) {
+  const here = pathStep(slug);
+  const category = categories.find((c) => c.id === (here?.path.category ?? bySlug(slug)?.category));
+  if (!category) return null;
+  return here ? `Step ${here.step} of ${here.of} · ${category.name}` : category.name;
 }
 
 // Hand-picked next experiments: [slug, one-line reason]. The first is the main pick.

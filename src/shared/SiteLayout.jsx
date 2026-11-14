@@ -1,4 +1,4 @@
-import { categories, tools, toolPath } from '../tools';
+import { pathGroups, toolPath } from '../tools';
 import { SITE_NAME, STUDIO_NAME, STUDIO_URL } from '../site';
 import SimulatorsMenu from './SimulatorsMenu';
 import './site.css';
@@ -43,21 +43,19 @@ function SiteLayout({ children, wide = false }) {
 
       <footer className="site-footer">
         <nav aria-label="All tools" className="footer-tools">
-          {categories.map((category) => (
+          {pathGroups.map(({ category, steps, also }) => (
             <div key={category.id}>
               <h2>{category.name}</h2>
               <ul>
-                {tools
-                  .filter((t) => t.category === category.id)
-                  .map((t) => (
-                    <li key={t.slug}>
-                      {t.status === 'live' ? (
-                        <a href={toolPath(t.slug)}>{t.name}</a>
-                      ) : (
-                        <span className="muted">{t.name} (soon)</span>
-                      )}
-                    </li>
-                  ))}
+                {[...steps, ...also].map((t) => (
+                  <li key={t.slug}>
+                    {t.status === 'live' ? (
+                      <a href={toolPath(t.slug)}>{t.name}</a>
+                    ) : (
+                      <span className="muted">{t.name} (soon)</span>
+                    )}
+                  </li>
+                ))}
               </ul>
             </div>
           ))}

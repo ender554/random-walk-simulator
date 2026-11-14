@@ -3,7 +3,7 @@ import SiteLayout from './SiteLayout';
 import RelatedTools from './RelatedTools';
 import FurtherReading from './FurtherReading';
 import { ToolSlug } from './toolSlug';
-import { liveTools } from '../tools';
+import { liveTools, pathLabel } from '../tools';
 import './tool.css';
 
 const SLUGS = new Set(liveTools.map((t) => t.slug));
@@ -33,16 +33,19 @@ function useHopCount(slug) {
   }, [slug]);
 }
 
-// Common frame for a tool page: heading with the page's date (it matches dateModified and the sitemap),
+// Common frame for a tool page: "Step n of 3" and the path above the heading, the page's date under it
+// (it matches dateModified and the sitemap),
 // the tool itself (which places its own Next experiment block), related tools, then further reading.
 function ToolPage({ slug, title, intro, children }) {
   useHopCount(slug);
   const updated = liveTools.find((t) => t.slug === slug)?.updated;
+  const step = pathLabel(slug);
   return (
     <ToolSlug.Provider value={slug}>
       <SiteLayout wide>
         <div className="tool-main">
           <header className="page-header">
+            {step && <p className="page-step">{step}</p>}
             <h1>{title}</h1>
             <p>{intro}</p>
             {updated && (

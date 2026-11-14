@@ -25,6 +25,14 @@
   font-size: 1rem;
 }
 
+/* "Step 2 of 3 · Distributions & averages" above the H1 */
+.page-header .page-step {
+  margin: 0 auto 0.25rem;
+  color: var(--accent);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
 .page-header .page-updated {
   margin-top: 0.25rem;
   color: var(--text-muted);

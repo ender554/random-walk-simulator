@@ -2,10 +2,15 @@ import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
-import { liveTools, toolPath } from './src/tools.js'
+import { liveTools, paths, toolPath } from './src/tools.js'
 import { prerender } from './scripts/prerender.js'
 
 const root = fileURLToPath(new URL('.', import.meta.url))
+
+// The hub, the Simulators menu and the footer list tools by path, so a live tool on no path would vanish.
+const onAPath = new Set(paths.flatMap((p) => [...p.steps, ...(p.also ?? [])]))
+const offPath = liveTools.filter((t) => !onAPath.has(t.slug)).map((t) => t.slug)
+if (offPath.length) throw new Error(`Live tools on no path in src/tools.js: ${offPath.join(', ')}`)
 
 // Every page that gets its own HTML file, by URL path, with the day of its last significant change
 // (content, links, title, description or structured data): the sitemap's lastmod. Tools keep theirs in

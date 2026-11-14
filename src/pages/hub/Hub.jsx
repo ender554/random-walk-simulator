@@ -1,49 +1,69 @@
 import SiteLayout from '../../shared/SiteLayout';
-import { categories, tools, toolPath } from '../../tools';
-import { SITE_NAME } from '../../site';
+import { pathGroups, toolPath } from '../../tools';
 import './hub.css';
 
+// One tool in a path: picture, step label, name (the link; the whole row is clickable) and its one-line hook.
+function PathTool({ tool, label, eager }) {
+  const live = tool.status === 'live';
+  return (
+    <>
+      {live && (
+        <img src={`/og/thumb/${tool.slug}.png`} alt="" width="64" height="64" loading={eager ? undefined : 'lazy'} />
+      )}
+      <div>
+        <p className="path-label">{label}</p>
+        <p className="path-name">
+          {live ? <a href={toolPath(tool.slug)}>{tool.name}</a> : tool.name}
+          {!live && <span className="badge">Coming soon</span>}
+        </p>
+        <p>{tool.short}</p>
+      </div>
+    </>
+  );
+}
+
+// The hub: a short hero, then the three paths (each tool listed once, in path order; logic in
+// docs/redesign-2026-11-10/B1-LOGIC.md), then why simulate.
 function Hub() {
   return (
-    <SiteLayout>
+    <SiteLayout wide>
       <header className="hub-hero">
-        <h1>
-          {SITE_NAME}: interactive probability simulators
-        </h1>
+        <h1>Probability simulators online, free for class</h1>
         <p className="hub-tagline">See what happens in the long run.</p>
-        <p>
-          See randomness happen instead of just reading the formula. Run random walks, watch bell curves form,
-          and test famous probability puzzles in your browser. Every simulator is free, uses repeatable seeds so a
-          whole class can run the same experiment, and exports images for notes and slides.
-        </p>
       </header>
 
-      <div id="tools" className="hub-categories">
-        {categories.map((category) => (
-          <section key={category.id} aria-labelledby={`cat-${category.id}`}>
-            <h2 id={`cat-${category.id}`}>{category.name}</h2>
-            <p className="category-blurb">{category.blurb}</p>
-            <ul className="tool-grid">
-              {tools
-                .filter((t) => t.category === category.id)
-                .map((t) => (
-                  <li key={t.slug} className="tool-card">
-                    {t.status === 'live' ? (
-                      <a href={toolPath(t.slug)}>
-                        <h3>{t.name}</h3>
-                      </a>
-                    ) : (
-                      <h3>
-                        {t.name} <span className="badge">Coming soon</span>
-                      </h3>
-                    )}
-                    <p>{t.short}</p>
+      <section id="tools" className="hub-paths" aria-labelledby="paths-heading">
+        <h2 id="paths-heading">Follow a path</h2>
+        <p className="hub-paths-intro">
+          Each step links to the next.
+        </p>
+        {pathGroups.map(({ category, steps, also }, p) => (
+          <section key={category.id} className="path" aria-labelledby={`path-${category.id}`}>
+            <div className="path-head">
+              <h3 id={`path-${category.id}`}>{category.name}</h3>
+              <p>{category.blurb}</p>
+            </div>
+            <div className="path-body">
+              <ol className="path-steps">
+                {steps.map((tool, i) => (
+                  <li key={tool.slug} className="path-tool">
+                    <PathTool tool={tool} label={`Step ${i + 1}`} eager={p === 0} />
                   </li>
                 ))}
-            </ul>
+              </ol>
+              {also.length > 0 && (
+                <ul className="path-also">
+                  {also.map((tool) => (
+                    <li key={tool.slug} className="path-tool">
+                      <PathTool tool={tool} label="Also" />
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           </section>
         ))}
-      </div>
+      </section>
 
       <section className="prose hub-about" aria-labelledby="why-heading">
         <h2 id="why-heading">Why simulate probability?</h2>
@@ -54,8 +74,8 @@ function Hub() {
           something you can see.
         </p>
         <p>
-          The simulators are grouped so you can follow an idea: random walks lead to gambler&apos;s ruin and stock
-          price models, coin flips lead to the law of large numbers and the central limit theorem.
+          Every simulator is free, uses repeatable seeds so a whole class can run the same experiment, and exports
+          images for notes and slides.
         </p>
       </section>
     </SiteLayout>

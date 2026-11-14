@@ -1,13 +1,11 @@
 import { useContext, useEffect, useRef } from 'react';
-import { categories, paths, tools, toolPath } from '../tools';
+import { pathGroups, toolPath } from '../tools';
 import { ToolSlug } from './toolSlug';
 
 // Groups in path order (puzzles first), each tool in its path's order, extras last.
-const groups = paths.map((path) => ({
-  category: categories.find((c) => c.id === path.category),
-  tools: [...path.steps, ...(path.also ?? [])]
-    .map((slug) => tools.find((t) => t.slug === slug))
-    .filter((t) => t?.status === 'live'),
+const groups = pathGroups.map(({ category, steps, also }) => ({
+  category,
+  tools: [...steps, ...also].filter((t) => t.status === 'live'),
 }));
 
 // The header's site nav (the Simulators button, then `children`) and the menu the button opens: a native
@@ -91,7 +89,7 @@ function SimulatorsMenu({ children }) {
             </div>
             <ul className="sim-menu-more">
               <li>
-                <a href="/">Home: all simulators</a>
+                <a href="/">Home: the three paths</a>
               </li>
               <li>
                 <a href="/about/">About</a>
