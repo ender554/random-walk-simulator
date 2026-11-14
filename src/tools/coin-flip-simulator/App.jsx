@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import ToolPage from '../../shared/ToolPage';
-import NextTools from '../../shared/NextTools';
+import NextTools, { RailNext } from '../../shared/NextTools';
 import ToolActions from '../../shared/ToolActions';
+import ViewSwitch from '../../shared/ViewSwitch';
 import Faq from '../../shared/Faq';
 import Challenge from '../../shared/Challenge';
 import { Legend, LogRangeControl, RangeControl, SeedControl, StatRow } from '../../shared/controls';
 import { useUrlState } from '../../shared/useUrlState';
+import { useScreenCanvas } from '../../shared/useScreenCanvas';
 import {
   expectedRunsOfLength, headsCounts, runLengths, scoreSequence, simulateRuns, typicalLongestStreak,
 } from '../../utils/coinFlips';
@@ -20,6 +22,7 @@ import './coin.css';
 const DEFAULTS = { flips: 10000, p: 0.5, runs: 5, seed: 'heads', mode: 'share', expN: 100 };
 const CHART_SIZE = { width: 800, height: 420 };
 const EXPERIMENTS = 2000;
+const VIEWS = [['flip', 'Flip a coin'], ['runs', 'Run thousands']];
 const pct = (v, d = 2) => `${(v * 100).toFixed(d)}%`;
 
 const FAQ = [
@@ -49,6 +52,7 @@ const FAQ = [
   },
 ];
 
+
 function parseFlips(text) {
   return [...text.toUpperCase()].filter((c) => 'HT10'.includes(c)).map((c) => (c === 'H' || c === '1' ? 1 : 0));
 }
@@ -69,8 +73,8 @@ function RealOrFake() {
     const tooFewStreaks = score.shareWithStreakAtLeast > 0.9;
     const tooManySwitches = score.shareWithSwitchesAtMost > 0.95;
     verdict = tooFewStreaks || tooManySwitches
-      ? '🕵️ Looks made up. Real random sequences usually have a longer streak and switch faces less often.'
-      : '🎲 Looks genuinely random. This could easily have come from a real coin.';
+      ? 'Looks made up. Real random sequences usually have a longer streak and switch faces less often.'
+      : 'Looks genuinely random. This could easily have come from a real coin.';
   }
 
   return (
@@ -102,13 +106,17 @@ function RealOrFake() {
   );
 }
 
+
+// The workbench (docs/redesign-2026-11-10/B3-LOGIC.md): the stage lands on a coin to flip, then runs of thousands;
+// the rail has the streak challenge, Run, the next step, Share & export and the settings. The challenge holds
+// nothing back (REPORT.md keeps that to Monty Hall and Birthday) and can be dismissed.
 function App() {
-  const canvasRef = useRef(null);
-  const chartRef = useRef(null);
-  const binomialRef = useRef(null);
-  const runLengthRef = useRef(null);
+  const stageRef = useRef(null);
+  const runRef = useRef(null);
   const [settings, set, reset] = useUrlState(DEFAULTS);
   const { flips, p, runs: runCount, seed, mode, expN } = settings;
+  const [view, setView] = useState('flip');
+  const [challengeOpen, setChallengeOpen] = useState(true);
   const [handsOn, setHandsOn] = useState(0);
   const [flipKey, setFlipKey] = useState(0);
   const [calc, setCalc] = useState({ op: 'eq', k: '' });
@@ -130,11 +138,14 @@ function App() {
   for (let i = range[0]; i <= range[1]; i += 1) simHits += counts[i];
 
   const draw = (canvas) => drawRuns(canvas, { runs, flips, p, mode });
+  const runsRef = useScreenCanvas(draw);
+  const binomialRef = useScreenCanvas((canvas) => drawBinomial(canvas, { counts, n: expN, p, experiments: EXPERIMENTS, highlight: range }));
+  const runLengthRef = useScreenCanvas((canvas) => drawRunLengths(canvas, { observed, expected }));
+
+  // Dismissing the challenge removes it, so focus moves on to Run
   useEffect(() => {
-    draw(canvasRef.current);
-    drawBinomial(binomialRef.current, { counts, n: expN, p, experiments: EXPERIMENTS, highlight: range });
-    drawRunLengths(runLengthRef.current, { observed, expected });
-  });
+    if (!challengeOpen) runRef.current?.focus({ preventScroll: true });
+  }, [challengeOpen]);
 
   const avgGap = runs.reduce((sum, r) => sum + Math.abs(r.heads / flips - p), 0) / runs.length;
   const expectedGap = Math.sqrt((p * (1 - p)) / flips) * Math.sqrt(2 / Math.PI);
@@ -160,102 +171,141 @@ function App() {
     downloadCSV(`coin-flips-${limit}.csv`, ['flip', 'outcome', 'heads_so_far', 'share_heads'], rows);
   };
 
+  const share = mode === 'share';
+
   return (
     <ToolPage
       slug="coin-flip-simulator"
+      workbench
       title="Coin Flip Simulator & Law of Large Numbers"
-      intro="Flip one coin or a million. Watch the share of heads settle toward 50%, see real streaks in the sequence, check any probability exactly, and test whether you can fake randomness."
+      intro="Flip one coin or a million, and watch the share of heads settle toward 50% while the streaks run longer than you'd guess."
     >
-      <Challenge
-        question="Flip a fair coin 100 times. What is the longest run of the same face in a row you would expect?"
-        placeholder="e.g. 4"
-        unit="in a row"
-        min={1}
-        max={100}
-        onTest={(guess) => {
-          const testSeed = randomSeed();
-          set('flips', 100);
-          set('p', 0.5);
-          set('seed', testSeed);
-          setHandsOn(100);
-          const shown = Math.max(...runLengths(simulateRuns({ flips: 100, p: 0.5, runs: 1, seed: testSeed }).sequence));
-          // How often a 100-flip sequence has a streak at least as long as the guess
-          let atLeast = 0;
-          let total = 0;
-          const trials = 4000;
-          for (let t = 0; t < trials; t += 1) {
-            const longest = Math.max(...runLengths(simulateRuns({ flips: 100, p: 0.5, runs: 1, seed: `${testSeed}-${t}` }).sequence));
-            total += longest;
-            if (longest >= guess) atLeast += 1;
-          }
-          const typical = total / trials;
-          return {
-            verdict: Math.abs(guess - typical) <= 1 ? '🎉 Spot on!' : guess < typical ? 'Longer than that! Most people guess too short.' : 'Not quite that long.',
-            detail: `You guessed ${guess}. The 100 flips now shown in "Flip a coin" below have a longest streak of ${shown}. Across ${trials.toLocaleString()} sequences of 100 flips the longest streak averaged ${typical.toFixed(1)}, and ${pct(atLeast / trials, 0)} had a streak of ${guess} or more.`,
-          };
-        }}
-      />
-      <section className="panel coin-panel" aria-labelledby="flip-heading">
-        <h2 id="flip-heading">Flip a coin</h2>
-        <div className="coin-row">
-          <div key={flipKey} className={`coin ${last === null ? '' : last ? 'heads' : 'tails'} ${handsOn ? 'spin' : ''}`} aria-live="polite">
-            {last === null ? '?' : last ? 'H' : 'T'}
-          </div>
-          <div>
-            <div className="button-row">
-              <button type="button" className="primary" onClick={() => flip(1)}>Flip</button>
-              <button type="button" onClick={() => flip(10)}>Flip 10</button>
-              <button type="button" onClick={() => flip(100)}>Flip 100</button>
-              <button type="button" onClick={() => setHandsOn(0)} disabled={!handsOn}>Start over</button>
-            </div>
-            <p className="result-line">
-              {handsOn
-                ? <>{handsOn.toLocaleString()} flips: <strong>{handHeads}</strong> heads ({pct(handHeads / handsOn, 1)}),{' '}
-                  {handsOn - handHeads} tails. Current streak: {currentStreak}. Longest streak: {Math.max(...handLengths)}.</>
-                : 'Press Flip to start.'}
-            </p>
-          </div>
-        </div>
-        {handsOn > 0 && <Sequence seq={sequence} count={handsOn} />}
-      </section>
+      <div className="wb">
+        <div className={view === 'runs' ? 'wb-stage pinned' : 'wb-stage'} ref={stageRef}>
+          <ViewSwitch label="View" options={VIEWS} value={view} onChange={setView} />
 
-      <div className="workbench">
-        <div className="workbench-controls">
-          <section className="controls-panel" aria-label="Simulation settings">
-            <div className="control-grid">
-              <LogRangeControl id="flips-range" label="Flips per run" value={flips} minExp={1} maxExp={6} onChange={(v) => { set('flips', v); setHandsOn(0); }} />
-              <RangeControl id="p-range" label="Chance of heads" display={`${Math.round(p * 100)}%`} value={p}
-                min={0.05} max={0.95} step={0.01} onChange={(v) => set('p', v)} />
-              <RangeControl id="runs-range" label="Runs" value={runCount} min={1} max={8} onChange={(v) => set('runs', v)} />
-              <SeedControl value={seed} onChange={(v) => { set('seed', v); setHandsOn(0); }} />
+          {view === 'flip' && (
+            <div className="coin-view">
+              <div className="coin-row">
+                <div key={flipKey} className={`coin ${last === null ? '' : last ? 'heads' : 'tails'} ${handsOn ? 'spin' : ''}`} aria-live="polite">
+                  {last === null ? '?' : last ? 'H' : 'T'}
+                </div>
+                <div className="coin-buttons">
+                  <button type="button" className="coin-flip" onClick={() => flip(1)}>Flip</button>
+                  <button type="button" onClick={() => flip(10)}>Flip 10</button>
+                  <button type="button" onClick={() => flip(100)}>Flip 100</button>
+                  <button type="button" onClick={() => setHandsOn(0)} disabled={!handsOn}>Start over</button>
+                </div>
+              </div>
+              <p className="result-line">
+                {handsOn
+                  ? <>{handsOn.toLocaleString()} flips: <strong>{handHeads}</strong> heads ({pct(handHeads / handsOn, 1)}),{' '}
+                    {handsOn - handHeads} tails. Current streak: {currentStreak}. Longest streak: {Math.max(...handLengths)}.</>
+                  : 'Press Flip to start.'}
+              </p>
+              {handsOn > 0 && <Sequence seq={sequence} count={handsOn} />}
             </div>
-            <div className="preset-row" role="group" aria-label="Chart view">
-              <button type="button" aria-pressed={mode === 'share'} onClick={() => set('mode', 'share')}>Share of heads</button>
-              <button type="button" aria-pressed={mode === 'diff'} onClick={() => set('mode', 'diff')}>Heads minus tails</button>
+          )}
+
+          {view === 'runs' && (
+            <>
+              <div className="stage-headline">
+                <p><span>Average gap from {share ? `${Math.round(p * 100)}%` : `${Math.round(p * flips).toLocaleString()} heads`}</span> <strong className="s1">{share ? pct(avgGap) : Math.round(avgGap * flips).toLocaleString()}</strong></p>
+                <p><span>Theory</span> <strong>{share ? pct(expectedGap) : Math.round(expectedGap * flips).toLocaleString()}</strong></p>
+                <p className="stage-meta">
+                  <span>{runCount} run{runCount > 1 ? 's' : ''} × {flips.toLocaleString()} flips</span>{' '}
+                  <span>{share ? 'share of heads' : 'gap in heads count'} · seed {seed}</span>
+                </p>
+              </div>
+              <div className="stage-chart">
+                <canvas ref={runsRef} role="img"
+                  aria-label={`${share ? 'Running share of heads' : 'Heads minus tails'} for ${runCount} runs of ${flips} flips.`} />
+              </div>
+              <p className="chart-caption">
+                {share
+                  ? 'Each colored line is one run. The dashed line is the true chance of heads, and the shaded band is where the share should be about 95% of the time. The share converges.'
+                  : 'The same runs as heads minus tails. The band widens like √n: the raw gap keeps growing even while the share converges.'}
+              </p>
+            </>
+          )}
+        </div>
+
+        <div className="wb-rail">
+          {challengeOpen && (
+            <Challenge
+              title="Predict first"
+              onSkip={() => setChallengeOpen(false)}
+              question="Flip a fair coin 100 times. What is the longest run of the same face in a row you would expect?"
+              placeholder="e.g. 4"
+              unit="in a row"
+              min={1}
+              max={100}
+              onTest={(guess) => {
+                set('flips', 100);
+                set('p', 0.5);
+                setHandsOn(100);
+                setView('flip');
+                const shown = Math.max(...runLengths(simulateRuns({ flips: 100, p: 0.5, runs: 1, seed }).sequence));
+                // How often a 100-flip sequence has a streak at least as long as the guess
+                let atLeast = 0;
+                let total = 0;
+                const trials = 4000;
+                for (let t = 0; t < trials; t += 1) {
+                  const longest = Math.max(...runLengths(simulateRuns({ flips: 100, p: 0.5, runs: 1, seed: `${seed}-${t}` }).sequence));
+                  total += longest;
+                  if (longest >= guess) atLeast += 1;
+                }
+                const typical = total / trials;
+                return {
+                  verdict: Math.abs(guess - typical) <= 1 ? 'Spot on!' : guess < typical ? 'Longer than that! Most people guess too short.' : 'Not quite that long.',
+                  detail: `You guessed ${guess}. The 100 flips now shown in "Flip a coin" have a longest streak of ${shown}. Across ${trials.toLocaleString()} sequences of 100 flips the longest streak averaged ${typical.toFixed(1)}, and ${pct(atLeast / trials, 0)} had a streak of ${guess} or more.`,
+                };
+              }}
+            />
+          )}
+
+          <button type="button" className="run-button" ref={runRef}
+            onClick={() => { set('seed', randomSeed()); setHandsOn(0); setView('runs'); }}>
+            Flip again
+          </button>
+
+          <RailNext />
+
+          <ToolActions
+            menu
+            image={{ draw, size: CHART_SIZE, filename: 'coin-flips.png' }}
+            onCsv={exportCsv}
+            csvLabel="Download run 1 flips (CSV)"
+            onReset={() => { reset(); setHandsOn(0); }}
+            fullscreenRef={stageRef}
+          />
+
+          <section className="wb-settings" aria-labelledby="settings-heading">
+            <h2 id="settings-heading">Simulation settings</h2>
+            <LogRangeControl id="flips-range" label="Flips per run" value={flips} minExp={1} maxExp={6} onChange={(v) => { set('flips', v); setHandsOn(0); }} />
+            <RangeControl id="p-range" label="Chance of heads" display={`${Math.round(p * 100)}%`} value={p}
+              min={0.05} max={0.95} step={0.01} onChange={(v) => set('p', v)} />
+            <RangeControl id="runs-range" label="Runs" value={runCount} min={1} max={8} onChange={(v) => set('runs', v)} />
+            <div className="control-row">
+              <p className="control-label" id="mode-label">Chart</p>
+              <div className="preset-row" role="group" aria-labelledby="mode-label">
+                <button type="button" aria-pressed={share} onClick={() => { set('mode', 'share'); setView('runs'); }}>Share of heads</button>
+                <button type="button" aria-pressed={!share} onClick={() => { set('mode', 'diff'); setView('runs'); }}>Heads minus tails</button>
+              </div>
             </div>
-            <ToolActions
-              image={{ draw, size: CHART_SIZE, filename: 'coin-flips.png' }}
-              onCsv={exportCsv}
-              csvLabel="Download run 1 flips (CSV)"
-              onReset={() => { reset(); setHandsOn(0); }}
-              fullscreenRef={chartRef}
-            >
-              <button type="button" onClick={() => { set('seed', randomSeed()); setHandsOn(0); }}>🎲 Flip again</button>
-            </ToolActions>
+            <details className="more-settings">
+              <summary>More settings</summary>
+              <div>
+                <SeedControl value={seed} onChange={(v) => { set('seed', v); setHandsOn(0); }} />
+              </div>
+            </details>
           </section>
         </div>
-        <div className="workbench-stage">
-          <div className="canvas-wrapper chart-wrapper" ref={chartRef}>
-            <canvas ref={canvasRef} width={CHART_SIZE.width} height={CHART_SIZE.height} role="img"
-              aria-label={`${mode === 'share' ? 'Running share of heads' : 'Heads minus tails'} for ${runCount} runs of ${flips} flips.`} />
-            <p className="chart-caption">
-              {mode === 'share'
-                ? 'Each colored line is one run. The dashed line is the true chance of heads, and the shaded band is where the share should be about 95% of the time. The share converges.'
-                : 'The same runs as heads minus tails. The band widens like √n: the raw gap keeps growing even while the share converges.'}
-            </p>
-          </div>
-        </div>
       </div>
+
+      <NextTools />
+
+      <RealOrFake />
 
       <section className="stats-panel">
         <h2>Results</h2>
@@ -273,16 +323,20 @@ function App() {
 
       <div className="canvas-wrapper chart-wrapper">
         <h2 className="chart-title">Streaks in run 1: how many of each length</h2>
-        <canvas ref={runLengthRef} width={800} height={300} role="img"
-          aria-label={`Number of streaks of each length in ${flips} flips, compared with the expected number.`} />
+        <div className="coin-chart">
+          <canvas ref={runLengthRef} role="img"
+            aria-label={`Number of streaks of each length in ${flips} flips, compared with the expected number.`} />
+        </div>
         <Legend items={[{ color: PALETTE.cyan, label: 'Streaks found' }, { color: PALETTE.yellow, label: 'Expected' }]} />
       </div>
 
       <section className="panel" aria-labelledby="binomial-heading">
         <h2 id="binomial-heading">Repeat an experiment: heads in {expN} flips, {EXPERIMENTS.toLocaleString()} times</h2>
         <RangeControl id="expn-range" label="Flips per experiment" value={expN} min={10} max={1000} step={10} onChange={(v) => set('expN', v)} />
-        <canvas ref={binomialRef} width={800} height={300} role="img" className="panel-canvas"
-          aria-label={`Histogram of heads in ${expN} flips over ${EXPERIMENTS} experiments, with the exact binomial distribution.`} />
+        <div className="coin-chart">
+          <canvas ref={binomialRef} role="img"
+            aria-label={`Histogram of heads in ${expN} flips over ${EXPERIMENTS} experiments, with the exact binomial distribution.`} />
+        </div>
         <Legend items={[{ color: PALETTE.cyan, label: 'Experiments' }, { color: PALETTE.yellow, label: 'Exact binomial prediction' }, { color: PALETTE.violet, label: 'Your range' }]} />
         <div className="inline-fields">
           <label>
@@ -305,9 +359,6 @@ function App() {
         </p>
       </section>
 
-      <RealOrFake />
-
-      <NextTools />
       <section className="canvas-description prose" aria-labelledby="explain-heading">
         <h2 id="explain-heading">The law of large numbers</h2>
         <p>

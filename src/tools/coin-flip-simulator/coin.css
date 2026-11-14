@@ -100,3 +100,78 @@
   font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
   resize: vertical;
 }
+
+/* The stage's first view: the coin beside its buttons, the count and the sequence under them */
+.coin-view .coin-row {
+  flex-wrap: nowrap;
+  gap: 1rem;
+}
+
+.coin-buttons {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.coin-buttons button {
+  min-height: var(--target);
+  padding: 0.4rem 0.75rem;
+  background: var(--button);
+  border: 1px solid var(--control-line);
+  border-radius: 10px;
+  color: var(--text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.coin-buttons button:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.coin-buttons button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.coin-buttons .coin-flip,
+.coin-buttons .coin-flip:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--bg);
+  font-weight: 700;
+}
+
+.coin-view .result-line {
+  margin-top: 0.75rem;
+}
+
+/* Charts below the workbench, drawn at their shown size */
+.coin-chart {
+  height: 240px;
+}
+
+.coin-chart canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 12px;
+}
+
+.panel .coin-chart {
+  margin: 0.5rem 0;
+}
+
+@media (min-width: 1000px) {
+  .coin-buttons {
+    grid-template-columns: repeat(4, auto);
+    justify-content: start;
+  }
+
+  .coin-chart {
+    height: 300px;
+  }
+}

@@ -15,12 +15,20 @@ export function drawRuns(canvas, { runs, flips, p, mode }) {
     yMin = Math.min(center(flips) - extent, -extent);
     yMax = Math.max(center(flips) + extent, extent);
   }
+  // A short chart (the phone's pinned stage) drops the axis title and names the unit on the last tick
+  // (and keeps every other power of ten, so the labels don't collide)
+  const compact = canvas.height < 220;
+  const allTicks = powersOfTen(flips);
+  const xTicks = compact && allTicks.length > 4 ? allTicks.filter((_, i) => (allTicks.length - 1 - i) % 2 === 0) : allTicks;
+  const last = xTicks.length <= 3 ? xTicks[xTicks.length - 1] : null;
   const frame = chartFrame(canvas, {
     xMin: 1, xMax: flips, yMin, yMax, logX: true,
-    xTicks: powersOfTen(flips),
-    yTicks: evenTicks(yMin, yMax, 5),
+    xTicks,
+    yTicks: evenTicks(yMin, yMax, compact ? 3 : 5),
+    formatX: (v) => (compact && v === last ? `${v.toLocaleString()} flips` : v.toLocaleString()),
     formatY: share ? (v) => `${Math.round(v * 100)}%` : (v) => Math.round(v).toLocaleString(),
-    xLabel: 'Number of flips (log scale)',
+    xLabel: compact ? '' : 'Number of flips (log scale)',
+    pad: compact ? { left: 50, right: 14, top: 10, bottom: 26 } : undefined,
   });
   const { ctx, x, y } = frame;
   clipToPlot(frame);
