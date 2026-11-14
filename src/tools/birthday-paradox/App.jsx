@@ -433,7 +433,7 @@ function App() {
       {isCalendar && <ClassBirthdays size={size} />}
 
       <section className="canvas-description prose" aria-labelledby="explain-heading">
-        <h2 id="explain-heading">Why 23 people is enough</h2>
+        <h2 id="explain-heading">The birthday paradox explained: why 23 people is enough</h2>
         <p>
           Most people guess you would need around 180 people, half of 365. The trick is that the question is about
           any two people matching, not someone matching you. In a room of 23 there are 253 different pairs, and each
@@ -441,7 +441,7 @@ function App() {
           not: about 50.7%. Add people one at a time in the room above and watch the number of pairs grow.
         </p>
 
-        <h2>The exact formula</h2>
+        <h2>The birthday paradox formula</h2>
         <p>
           It is easier to work out the chance that everyone&apos;s birthday is different. The second person must
           miss the first (364/365), the third must miss both (363/365), and so on. Multiply those together and
@@ -449,10 +449,16 @@ function App() {
           and by 70 it is 99.9%.
         </p>
 
-        <h2>My birthday versus any birthday</h2>
+        <h2>How many people share my birthday?</h2>
         <p>
-          The chance that someone shares your particular birthday is far lower: 1 − (364/365)ⁿ⁻¹, about 6% in a room
-          of 23. You would need 253 other people for even odds. Switch the question above to compare the two curves.
+          Worldwide, about 22 million: roughly 8.2 billion people (the UN&apos;s estimate for 2024) spread over 365.25
+          days. Births are not spread perfectly evenly, so some dates have a few more and some a few fewer, and 29
+          February has about a quarter as many.
+        </p>
+        <p>
+          In a room, the chance that someone shares your particular birthday is far lower than the chance of any
+          match: 1 − (364/365)ⁿ⁻¹, about 6% in a room of 23. You would need 253 other people for even odds. Switch the
+          question above to compare the two curves.
         </p>
 
         <h2>Three people, and near-birthdays</h2>

@@ -346,7 +346,7 @@ function App() {
       </section>
 
       <section className="canvas-description prose" aria-labelledby="explain-heading">
-        <h2 id="explain-heading">The Monty Hall problem</h2>
+        <h2 id="explain-heading">The Monty Hall problem explained</h2>
         <p>
           The puzzle comes from the game show Let&apos;s Make a Deal and became famous in 1990, when Marilyn vos Savant
           answered it in Parade magazine and thousands of readers, many with math degrees, wrote in to say she was
@@ -354,7 +354,7 @@ function App() {
           unconvinced until he saw a simulation.
         </p>
 
-        <h2>Why switching wins</h2>
+        <h2>Why switching wins: the solution in two cases</h2>
         <p>
           Your first pick is right 1 time in 3, and nothing the host does changes that. The host knows where the car
           is and always opens a goat door, so when your first pick was wrong (2 times in 3), the one door left closed
@@ -375,7 +375,7 @@ function App() {
           where the contestant should switch.
         </p>
 
-        <h2>The host&apos;s rules matter</h2>
+        <h2>Is the 2/3 answer ever wrong? Only if the host&apos;s rules change</h2>
         <p>
           The 2/3 answer depends on the host knowing where the car is and always revealing a goat. If the host opens a
           door at random and happens to show a goat, switching and staying each win half the time. A lazy host who

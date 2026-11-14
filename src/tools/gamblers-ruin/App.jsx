@@ -268,14 +268,14 @@ function App() {
           likely each ending is. With flat $1 bets each game is a one-dimensional <a href="/random-walk/" data-hop="text">random walk</a> that stops at two walls.
         </p>
 
-        <h2>A fair game</h2>
+        <h2>A fair game: the chance of ruin, and how long it lasts</h2>
         <p>
           When every bet is a <a href="/coin-flip-simulator/" data-hop="text">coin flip</a> (p = 50%), the chance of reaching the target is simply your starting
           bankroll divided by the target. Starting with $20 and stopping at $40 gives a 50% chance either way. The
           expected number of bets is start × (target − start), so the game lasts longer than most people guess.
         </p>
 
-        <h2>Why the house always wins</h2>
+        <h2>The gambler&apos;s ruin formula, and why the house always wins</h2>
         <p>
           Change p to European roulette&apos;s 18/37 (about 48.6%) and the odds collapse. From $20 aiming for $40
           the chance of ruin jumps to about 75%, and from $50 aiming for $100 it is around 94%. A small edge on

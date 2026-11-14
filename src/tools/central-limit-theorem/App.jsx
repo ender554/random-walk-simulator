@@ -337,7 +337,7 @@ function App() {
           for every n, it just gets narrower.
         </p>
 
-        <h2>Why the spread shrinks with √n</h2>
+        <h2>The central limit theorem formula: why the spread shrinks with √n</h2>
         <p>
           Averaging lets high and low draws cancel out. The standard deviation of an average of n draws is σ/√n, so
           averaging 4 draws halves the spread and averaging 100 cuts it to a tenth. The results compare that
@@ -351,7 +351,7 @@ function App() {
           distribution is the classic counterexample: it has no finite mean or variance, and averages never settle.
         </p>
 
-        <h2>Why it matters</h2>
+        <h2>Central limit theorem examples: why it matters</h2>
         <p>
           The central limit theorem is why the normal distribution shows up everywhere, from measurement errors to
           polling. It is the reason confidence intervals and many statistical tests work even when the underlying

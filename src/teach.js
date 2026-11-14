@@ -126,7 +126,7 @@ export const teachNotes = {
     discuss: [
       'A room of 23 has 253 pairs. How many pairs does our class have?',
       'Work out the chance that 3 people all have different birthdays. What is 1 minus that?',
-      'How many people does it take for someone to share your own birthday at even odds? (Switch the question to “Someone shares MY birthday”: 254.)',
+      'How many other people does it take for someone to share your own birthday at even odds? (253. Switch the question to “Someone shares MY birthday”; the calculator counts you too, so it shows 254.)',
     ],
     misconception:
       '“It must take about 183 people, half of 365.” That thinks of matches with one person. A match can come from any of the pairs, and their number grows fast.',

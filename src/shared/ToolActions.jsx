@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { exportScaledPNG } from '../utils/export';
+import { resultsText } from './resultsText';
 
 const SIZES = [
   { label: 'Standard', scale: 1 },
@@ -11,7 +12,8 @@ const TRUST = 'Runs entirely in your browser, including phones and Chromebooks. 
 
 /**
  * The buttons every tool shares: save image (choice of size), optional CSV data,
- * copy a link to these exact settings, reset, and fullscreen for the chart.
+ * copy a link to these exact settings, reset, and fullscreen for the chart. In the workbench menu, Copy my results
+ * comes first: the numbers on the stage, any prediction and the link, as text to hand in (resultsText.js).
  * `menu` folds them into one "Share & export" disclosure, for the workbench layout; extra export buttons
  * (children) go in it too.
  */
@@ -19,6 +21,18 @@ function ToolActions({ image, onCsv, csvLabel = 'Download data (CSV)', onReset, 
   const [scale, setScale] = useState(2);
   const [copied, setCopied] = useState(false);
   const [embedCopied, setEmbedCopied] = useState(false);
+  const [resultsCopied, setResultsCopied] = useState(false);
+
+  const copyResults = async () => {
+    const text = resultsText();
+    try {
+      await navigator.clipboard.writeText(text);
+      setResultsCopied(true);
+      setTimeout(() => setResultsCopied(false), 2000);
+    } catch {
+      window.prompt('Copy your results:', text);
+    }
+  };
 
   const copyLink = async () => {
     try {
@@ -49,6 +63,12 @@ function ToolActions({ image, onCsv, csvLabel = 'Download data (CSV)', onReset, 
     if (document.fullscreenElement) document.exitFullscreen();
     else el.requestFullscreen?.();
   };
+
+  const results = (
+    <button type="button" onClick={copyResults} aria-live="polite">
+      {resultsCopied ? '✓ Results copied' : '📋 Copy my results'}
+    </button>
+  );
 
   const buttons = (
     <>
@@ -84,7 +104,7 @@ function ToolActions({ image, onCsv, csvLabel = 'Download data (CSV)', onReset, 
     return (
       <details className="tool-actions share-menu">
         <summary>Share &amp; export</summary>
-        <div className="button-row">{children}{buttons}</div>
+        <div className="button-row">{results}{children}{buttons}</div>
         <p className="trust-note">{TRUST}</p>
       </details>
     );
