@@ -1,0 +1,25 @@
+/* Charts below the workbench, drawn at their shown size */
+.stock-chart {
+  height: 260px;
+}
+
+.stock-chart.short {
+  height: 220px;
+}
+
+.stock-chart canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 12px;
+}
+
+@media (min-width: 1000px) {
+  .stock-chart {
+    height: 320px;
+  }
+
+  .stock-chart.short {
+    height: 260px;
+  }
+}

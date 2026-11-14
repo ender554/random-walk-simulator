@@ -12,13 +12,21 @@ export function drawPaths(canvas, { sim, bands, s0, theory, years, show, logScal
   const bottoms = bands[0].values;
   const yMaxRaw = Math.max(s0 * 1.5, ...tops, theory.mean, target || 0) * 1.15;
   const yMin = logScale ? Math.min(s0 / 1.5, ...bottoms, target || Infinity) / 1.2 : 0;
+  // A short chart (the phone's pinned stage) keeps fewer price labels and drops the axis title ("y" is on the ticks)
+  const compact = canvas.height < 220;
+  let yTicks = logScale ? logTicks(yMin, yMaxRaw) : evenTicks(0, yMaxRaw, compact ? 3 : 5);
+  if (compact && logScale) {
+    const tens = yTicks.filter((v) => Math.abs(Math.log10(v) - Math.round(Math.log10(v))) < 1e-9);
+    yTicks = tens.length >= 2 ? tens : yTicks.filter((v) => String(v)[0] !== '2');
+  }
   const frame = chartFrame(canvas, {
     xMin: 0, xMax: steps, yMin, yMax: yMaxRaw, logY: logScale,
     xTicks: evenTicks(0, steps, Math.min(years, 5) + 1),
-    yTicks: logScale ? logTicks(yMin, yMaxRaw) : evenTicks(0, yMaxRaw, 5),
+    yTicks,
     formatX: (v) => `${Math.round(v / STEPS_PER_YEAR)}y`,
     formatY: money,
-    xLabel: 'Years',
+    xLabel: compact ? '' : 'Years',
+    pad: compact ? { left: 56, right: 14, top: 10, bottom: 26 } : undefined,
   });
   const { ctx, x, y } = frame;
   clipToPlot(frame);

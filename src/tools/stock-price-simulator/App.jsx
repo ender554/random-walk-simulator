@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import ToolPage from '../../shared/ToolPage';
-import NextTools from '../../shared/NextTools';
+import NextTools, { RailNext } from '../../shared/NextTools';
 import ToolActions from '../../shared/ToolActions';
 import Faq from '../../shared/Faq';
 import { Legend, RangeControl, SeedControl, StatRow } from '../../shared/controls';
 import { useUrlState } from '../../shared/useUrlState';
+import { useScreenCanvas } from '../../shared/useScreenCanvas';
 import {
   STEPS_PER_YEAR, callOption, gbmTheory, percentileBands, simulatePaths, targetProbabilities,
 } from '../../utils/stockPaths';
@@ -13,6 +14,7 @@ import { quantile } from '../../utils/stats';
 import { downloadCSV } from '../../utils/export';
 import { randomSeed } from '../../utils/seed';
 import { drawFinals, drawMeanConvergence, drawPaths, money } from './draw';
+import './stock.css';
 
 const DEFAULTS = { s0: 100, mu: 0.1, sigma: 0.5, years: 10, paths: 1000, seed: 'market', show: 'both', log: true, fat: false, target: 200 };
 const CHART_SIZE = { width: 800, height: 450 };
@@ -76,11 +78,11 @@ function OptionPanel({ s0, sigma, years, seed }) {
   );
 }
 
+
+// The workbench (docs/redesign-2026-11-10/B3-LOGIC.md): the price paths on the stage with the median and average
+// final price on top; the rail has Run, the next step, Share & export and the settings.
 function App() {
-  const canvasRef = useRef(null);
-  const finalsRef = useRef(null);
-  const meanRef = useRef(null);
-  const chartWrapRef = useRef(null);
+  const stageRef = useRef(null);
   const [settings, set, reset] = useUrlState(DEFAULTS);
   const { s0, mu, sigma, years, paths, seed, show, log, fat, target } = settings;
 
@@ -105,11 +107,11 @@ function App() {
   const theoryEnd = up ? tp.endAbove : 1 - tp.endAbove;
 
   const draw = (canvas) => drawPaths(canvas, { sim, bands, s0, theory, years, show, logScale: log, target: targetValue });
-  useEffect(() => {
-    draw(canvasRef.current);
-    drawFinals(finalsRef.current, { finals: sim.finals, s0, mu, sigma, years, theory });
-    drawMeanConvergence(meanRef.current, { finals: sim.finals, theory });
-  });
+  const pathsRef = useScreenCanvas(draw);
+  const finalsRef = useScreenCanvas((canvas) => drawFinals(canvas, { finals: sim.finals, s0, mu, sigma, years, theory }));
+  const meanRef = useScreenCanvas((canvas) => drawMeanConvergence(canvas, { finals: sim.finals, theory }));
+
+  const preset = PRESETS.findIndex((p) => p.mu === mu && p.sigma === sigma);
 
   const exportCsv = () => {
     const exported = Math.min(paths, 200);
@@ -125,75 +127,112 @@ function App() {
   return (
     <ToolPage
       slug="stock-price-simulator"
+      workbench
       title="Stock Price Simulator (Monte Carlo, Geometric Brownian Motion)"
-      intro="Simulate thousands of possible futures for a stock price. See percentile bands, the distribution of final prices, the odds of hitting a target, and why the typical outcome is worse than the average one. Every number is checked against its exact formula."
+      intro="Simulate thousands of possible futures for a stock price, and see why the typical outcome is worse than the average one."
     >
-
-      <div className="workbench">
-        <div className="workbench-controls">
-          <section className="controls-panel" aria-label="Simulation settings">
-            <div className="control-grid">
-              <div className="control-row">
-                <label htmlFor="s0-input">Start price ($)</label>
-                <input id="s0-input" type="number" min="1" step="any" className="number-input" value={s0}
-                  onChange={(e) => set('s0', Math.max(1, Number(e.target.value) || 100))} />
-              </div>
-              <RangeControl id="mu-range" label="Expected annual return (μ)" display={pct(mu)} value={mu}
-                min={-0.1} max={0.3} step={0.005} onChange={(v) => set('mu', v)} />
-              <RangeControl id="sigma-range" label="Annual volatility (σ)" display={pct(sigma, 0)} value={sigma}
-                min={0.01} max={1} step={0.01} onChange={(v) => set('sigma', v)} />
-              <RangeControl id="years-range" label="Years" value={years} min={1} max={30} onChange={(v) => set('years', v)} />
-              <RangeControl id="paths-range" label="Simulated paths" display={paths.toLocaleString()} value={paths}
-                min={10} max={5000} step={10} onChange={(v) => set('paths', v)} />
-              <SeedControl value={seed} onChange={(v) => set('seed', v)} />
-            </div>
-            <div className="preset-row" role="group" aria-label="Example settings (rough long-run figures)">
-              {PRESETS.map((preset) => (
-                <button key={preset.label} type="button" aria-pressed={mu === preset.mu && sigma === preset.sigma}
-                  onClick={() => { set('mu', preset.mu); set('sigma', preset.sigma); }}>
-                  {preset.label}
-                </button>
-              ))}
-            </div>
-            <div className="preset-row" role="group" aria-label="Chart view">
-              {[['both', 'Paths and bands'], ['paths', 'Paths only'], ['bands', 'Bands only']].map(([key, label]) => (
-                <button key={key} type="button" aria-pressed={show === key} onClick={() => set('show', key)}>{label}</button>
-              ))}
-              <button type="button" aria-pressed={log} onClick={() => set('log', !log)}>{log ? 'Log scale' : 'Linear scale'}</button>
-            </div>
-            <label className="check-row" htmlFor="fat-check">
-              <input id="fat-check" type="checkbox" checked={fat} onChange={(e) => set('fat', e.target.checked)} />
-              Fat-tailed daily shocks (Student t, same volatility): extreme days happen more often, like real markets
-            </label>
-            <ToolActions
-              image={{ draw, size: CHART_SIZE, filename: 'stock-price-paths.png' }}
-              onCsv={exportCsv}
-              csvLabel="Download paths, monthly (CSV)"
-              onReset={reset}
-              fullscreenRef={chartWrapRef}
-            >
-              <button type="button" onClick={() => set('seed', randomSeed())}>🎲 New paths</button>
-            </ToolActions>
-          </section>
-        </div>
-        <div className="workbench-stage">
-          <div className="canvas-wrapper chart-wrapper" ref={chartWrapRef}>
-            <canvas ref={canvasRef} width={CHART_SIZE.width} height={CHART_SIZE.height} role="img"
-              aria-label={`${paths} simulated price paths over ${years} years starting at ${money(s0)}; ${belowCount} end below the start.`} />
-            <Legend
-              items={[
-                ...(show !== 'bands' ? [{ color: PALETTE.cyan, label: `Ends above ${money(s0)}` }, { color: PALETTE.pink, label: `Ends below ${money(s0)}` }] : []),
-                ...(show !== 'paths' ? [{ color: 'rgba(29, 229, 208, 0.5)', label: '25–75% and 5–95% of paths' }] : []),
-                { color: PALETTE.yellow, label: 'Median (solid) and mean (dashed) predicted' },
-                { color: PALETTE.violet, label: 'Target' },
-              ]}
-            />
-            <p className="chart-caption">
-              {log ? 'Log price scale: a move from $50 to $100 looks the same size as $100 to $200.' : 'Linear price scale: notice how far the winners stretch to the right.'}
-              {paths > 200 && show !== 'bands' ? ` Showing 200 of ${paths.toLocaleString()} paths; the bands and statistics use all of them.` : ''}
+      <div className="wb">
+        <div className="wb-stage pinned" ref={stageRef}>
+          <div className="stage-headline">
+            <p><span>Median final price</span> <strong className="s1">{money(medianFinal)}</strong></p>
+            <p><span>Average final price</span> <strong>{money(mean)}</strong></p>
+            <p className="stage-meta">
+              <span>{pct(belowCount / paths, 0)} end below {money(s0)} (theory {pct(theory.probBelowStart, 0)})</span>{' '}
+              <span>{paths.toLocaleString()} paths × {years} years · seed {seed}</span>
             </p>
           </div>
+          <div className="stage-chart">
+            <canvas ref={pathsRef} role="img"
+              aria-label={`${paths} simulated price paths over ${years} years starting at ${money(s0)}; ${belowCount} end below the start.`} />
+          </div>
+          <Legend
+            items={[
+              ...(show !== 'bands' ? [{ color: PALETTE.cyan, label: `Ends above ${money(s0)}` }, { color: PALETTE.pink, label: `Ends below ${money(s0)}` }] : []),
+              ...(show !== 'paths' ? [{ color: 'rgba(29, 229, 208, 0.5)', label: '25–75% and 5–95% of paths' }] : []),
+              { color: PALETTE.yellow, label: 'Median (solid) and mean (dashed) predicted' },
+              { color: PALETTE.violet, label: 'Target' },
+            ]}
+          />
+          <p className="chart-caption">
+            {log ? 'Log price scale: a move from $50 to $100 looks the same size as $100 to $200.' : 'Linear price scale: notice how far the winners stretch to the right.'}
+            {paths > 200 && show !== 'bands' ? ` Showing 200 of ${paths.toLocaleString()} paths; the bands and statistics use all of them.` : ''}
+          </p>
         </div>
+
+        <div className="wb-rail">
+          <button type="button" className="run-button" onClick={() => set('seed', randomSeed())}>New paths</button>
+
+          <RailNext />
+
+          <ToolActions
+            menu
+            image={{ draw, size: CHART_SIZE, filename: 'stock-price-paths.png' }}
+            onCsv={exportCsv}
+            csvLabel="Download paths, monthly (CSV)"
+            onReset={reset}
+            fullscreenRef={stageRef}
+          />
+
+          <section className="wb-settings" aria-labelledby="settings-heading">
+            <h2 id="settings-heading">Simulation settings</h2>
+            <div className="control-row">
+              <label htmlFor="preset-select">Example (rough long-run figures)</label>
+              <select id="preset-select" value={preset} onChange={(e) => {
+                const chosen = PRESETS[Number(e.target.value)];
+                if (chosen) { set('mu', chosen.mu); set('sigma', chosen.sigma); }
+              }}>
+                {preset < 0 && <option value={-1}>Your own settings</option>}
+                {PRESETS.map((p, i) => <option key={p.label} value={i}>{p.label}</option>)}
+              </select>
+            </div>
+            <RangeControl id="mu-range" label="Expected annual return (μ)" display={pct(mu)} value={mu}
+              min={-0.1} max={0.3} step={0.005} onChange={(v) => set('mu', v)} />
+            <RangeControl id="sigma-range" label="Annual volatility (σ)" display={pct(sigma, 0)} value={sigma}
+              min={0.01} max={1} step={0.01} onChange={(v) => set('sigma', v)} />
+            <RangeControl id="years-range" label="Years" value={years} min={1} max={30} onChange={(v) => set('years', v)} />
+            <RangeControl id="paths-range" label="Simulated paths" display={paths.toLocaleString()} value={paths}
+              min={10} max={5000} step={10} onChange={(v) => set('paths', v)} />
+            <details className="more-settings">
+              <summary>More settings</summary>
+              <div>
+                <div className="control-row">
+                  <label htmlFor="s0-input">Start price ($)</label>
+                  <input id="s0-input" type="number" min="1" step="any" className="number-input" value={s0}
+                    onChange={(e) => set('s0', Math.max(1, Number(e.target.value) || 100))} />
+                </div>
+                <div className="control-row">
+                  <label htmlFor="show-select">Chart shows</label>
+                  <select id="show-select" value={show} onChange={(e) => set('show', e.target.value)}>
+                    <option value="both">Paths and bands</option>
+                    <option value="paths">Paths only</option>
+                    <option value="bands">Bands only</option>
+                  </select>
+                </div>
+                <label className="check-row" htmlFor="log-check">
+                  <input id="log-check" type="checkbox" checked={log} onChange={(e) => set('log', e.target.checked)} />
+                  Log price scale
+                </label>
+                <label className="check-row" htmlFor="fat-check">
+                  <input id="fat-check" type="checkbox" checked={fat} onChange={(e) => set('fat', e.target.checked)} />
+                  Fat-tailed daily shocks (extreme days more often, like real markets)
+                </label>
+                <SeedControl value={seed} onChange={(v) => set('seed', v)} />
+              </div>
+            </details>
+          </section>
+        </div>
+      </div>
+
+      <NextTools />
+
+      <div className="canvas-wrapper chart-wrapper">
+        <h2 className="chart-title">Where the {paths.toLocaleString()} paths ended</h2>
+        <div className="stock-chart">
+          <canvas ref={finalsRef} role="img"
+            aria-label={`Histogram of final prices with the lognormal curve; median ${money(medianFinal)}, mean ${money(mean)}.`} />
+        </div>
+        <Legend items={[{ color: PALETTE.pink, label: 'Below start' }, { color: PALETTE.cyan, label: 'Above start' }, { color: PALETTE.yellow, label: 'Lognormal prediction, median (solid), mean (dashed)' }]} />
+        <p className="chart-caption">Most paths end left of the mean: the long right tail of a few big winners pulls the average up.</p>
       </div>
 
       <section className="stats-panel">
@@ -225,17 +264,11 @@ function App() {
       </section>
 
       <div className="canvas-wrapper chart-wrapper">
-        <h2 className="chart-title">Where the {paths.toLocaleString()} paths ended</h2>
-        <canvas ref={finalsRef} width={800} height={320} role="img"
-          aria-label={`Histogram of final prices with the lognormal curve; median ${money(medianFinal)}, mean ${money(mean)}.`} />
-        <Legend items={[{ color: PALETTE.pink, label: 'Below start' }, { color: PALETTE.cyan, label: 'Above start' }, { color: PALETTE.yellow, label: 'Lognormal prediction, median (solid), mean (dashed)' }]} />
-        <p className="chart-caption">Most paths end left of the mean: the long right tail of a few big winners pulls the average up.</p>
-      </div>
-
-      <div className="canvas-wrapper chart-wrapper">
         <h2 className="chart-title">How many paths does it take to pin down the average?</h2>
-        <canvas ref={meanRef} width={800} height={260} role="img"
-          aria-label="Running average of final prices as more paths are included, compared with the theoretical mean." />
+        <div className="stock-chart short">
+          <canvas ref={meanRef} role="img"
+            aria-label="Running average of final prices as more paths are included, compared with the theoretical mean." />
+        </div>
         <p className="chart-caption">
           The running average of final prices jumps every time a rare big winner appears. With high volatility it takes
           thousands of paths to settle near the theoretical mean (dashed), because the average depends on the tail.
@@ -244,7 +277,6 @@ function App() {
 
       <OptionPanel s0={s0} sigma={sigma} years={years} seed={seed} />
 
-      <NextTools />
       <section className="canvas-description prose" aria-labelledby="explain-heading">
         <h2 id="explain-heading">How stock prices are modeled</h2>
         <p>
