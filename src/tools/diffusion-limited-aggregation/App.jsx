@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import ToolPage from '../../shared/ToolPage';
-import NextTools from '../../shared/NextTools';
+import NextTools, { RailNext } from '../../shared/NextTools';
 import ToolActions from '../../shared/ToolActions';
 import Faq from '../../shared/Faq';
 import { Legend, RangeControl, SeedControl, StatRow } from '../../shared/controls';
 import { useUrlState } from '../../shared/useUrlState';
+import { useScreenCanvas } from '../../shared/useScreenCanvas';
 import { SEEDS, createAggregation, massRadius } from '../../utils/dla';
 import { BACKGROUNDS, PALETTES } from '../../utils/palettes';
 import { PALETTE } from '../../utils/chart';
@@ -48,11 +49,20 @@ const FAQ = [
   },
 ];
 
+
+// The mass–radius chart, drawn at its shown size once the cluster is finished
+function MassRadiusChart({ mr }) {
+  const ref = useScreenCanvas((canvas) => { if (mr) drawMassRadius(canvas, mr); });
+  return <canvas ref={ref} role="img" aria-label="Log–log plot of the number of particles within each radius, with the fitted slope." />;
+}
+
+// The workbench (docs/redesign-2026-11-10/B3-LOGIC.md): the growing cluster on the stage (on a laptop with the
+// mass–radius chart beside it), and the rail with Run, growth controls, the next step, Share & export, the settings
+// and the style options.
 function App() {
   const canvasRef = useRef(null);
   const overlayRef = useRef(null);
-  const mrRef = useRef(null);
-  const wrapRef = useRef(null);
+  const stageRef = useRef(null);
   const simRef = useRef(null);
   const [settings, set, reset] = useUrlState(DEFAULTS);
   const { particles, stickiness, seed, shape, bias, angle, color, palette, bg, speed } = settings;
@@ -114,9 +124,6 @@ function App() {
 
   // Measured once the cluster is finished
   const mr = progress.done && simRef.current ? massRadius(simRef.current) : null;
-  useEffect(() => {
-    if (mr && mrRef.current) drawMassRadius(mrRef.current, mr);
-  });
 
   const skipToEnd = () => {
     const sim = simRef.current;
@@ -143,102 +150,134 @@ function App() {
   };
 
   const dimension = mr && Number.isFinite(mr.slope) ? mr.slope : null;
+  const status = progress.done ? 'finished' : paused ? 'paused' : 'growing';
+  const mrLegend = <Legend items={[{ color: PALETTE.cyan, label: 'Your cluster' }, { color: PALETTE.yellow, label: `Fitted slope${dimension ? ` ${dimension.toFixed(2)}` : ''}` }, { color: PALETTE.violet, label: 'Slope 1.71 for reference' }]} />;
 
   return (
     <ToolPage
       slug="diffusion-limited-aggregation"
+      workbench
       title="Diffusion-Limited Aggregation Simulator"
-      intro="Release random walkers one at a time; each wanders until it touches the growing cluster and sticks. Grow coral, frost and lightning-like fractals from different seeds, measure the fractal dimension properly, and export the result as high-resolution art, SVG or data."
+      intro="Release random walkers one at a time; each wanders until it touches the growing cluster and sticks, growing coral- and frost-like fractals."
     >
-
-      <div className="workbench">
-        <div className="workbench-controls">
-          <section className="controls-panel" aria-label="Growth settings">
-            <div className="control-grid">
-              <div className="control-row">
-                <label htmlFor="shape-select">Seed</label>
-                <select id="shape-select" value={shape} onChange={(e) => set('shape', e.target.value)}>
-                  {Object.entries(SEEDS).map(([key, label]) => <option key={key} value={key}>{label}</option>)}
-                </select>
-              </div>
-              <RangeControl id="particles-range" label="Particles" display={particles.toLocaleString()} value={particles}
-                min={500} max={20000} step={500} onChange={(v) => set('particles', v)} />
-              <RangeControl id="stick-range" label="Stickiness" display={`${Math.round(stickiness * 100)}%`} value={stickiness}
-                min={0.05} max={1} step={0.05} onChange={(v) => set('stickiness', v)} />
-              <RangeControl id="bias-range" label="Drift (wind)" display={bias === 0 ? 'none' : `${Math.round(bias * 100)}%`} value={bias}
-                min={0} max={0.3} step={0.01} onChange={(v) => set('bias', v)} />
-              {bias > 0 && (
-                <RangeControl id="angle-range" label="Drift direction" display={`${angle}°`} value={angle} min={0} max={345} step={15} onChange={(v) => set('angle', v)} />
-              )}
-              <div className="control-row">
-                <label htmlFor="speed-select">Speed</label>
-                <select id="speed-select" value={speed} onChange={(e) => set('speed', Number(e.target.value))}>
-                  {SPEEDS.map((s, i) => <option key={s.label} value={i}>{s.label}</option>)}
-                </select>
-              </div>
-              <SeedControl value={seed} onChange={(v) => set('seed', v)} />
-            </div>
-
-            <details className="style-panel">
-              <summary>🎨 Style and art options</summary>
-              <div className="control-grid">
-                <div className="control-row">
-                  <label htmlFor="color-select">Color by</label>
-                  <select id="color-select" value={color} onChange={(e) => set('color', e.target.value)}>
-                    <option value="order">Arrival order (age)</option>
-                    <option value="distance">Distance from the seed</option>
-                    <option value="depth">Branch depth (steps from the seed)</option>
-                  </select>
-                </div>
-                <div className="control-row">
-                  <label htmlFor="palette-select">Palette</label>
-                  <select id="palette-select" value={palette} onChange={(e) => set('palette', e.target.value)}>
-                    {Object.keys(PALETTES).map((key) => <option key={key} value={key}>{key[0].toUpperCase() + key.slice(1)}</option>)}
-                  </select>
-                </div>
-                <div className="control-row">
-                  <label htmlFor="bg-select">Background</label>
-                  <select id="bg-select" value={bg} onChange={(e) => set('bg', e.target.value)}>
-                    {Object.keys(BACKGROUNDS).map((key) => <option key={key} value={key}>{key[0].toUpperCase() + key.slice(1)}</option>)}
-                  </select>
-                </div>
-              </div>
-            </details>
-
-            <ToolActions
-              image={{ draw: imageDraw, size: SIZE, filename: 'diffusion-limited-aggregation.png' }}
-              onCsv={exportCsv}
-              csvLabel="Download particles (CSV)"
-              onReset={reset}
-              fullscreenRef={wrapRef}
-            >
-              <button type="button" onClick={() => set('seed', randomSeed())}>🎲 Grow a new one</button>
-              <button type="button" onClick={exportSvg} disabled={!progress.done}>Save SVG</button>
-            </ToolActions>
-          </section>
-
-          <section className="panel" aria-label="Growth controls">
-            <div className="button-row">
-              <button type="button" onClick={() => setPaused((v) => !v)} disabled={progress.done}>{paused ? '▶ Resume' : '⏸ Pause'}</button>
-              <button type="button" onClick={skipToEnd} disabled={progress.done}>Skip to the end</button>
-              <button type="button" onClick={() => { setPaused(false); setRunId((id) => id + 1); }}>Restart</button>
-            </div>
-            <label className="check-row" htmlFor="walkers-check">
-              <input id="walkers-check" type="checkbox" checked={showWalkers} onChange={(e) => setShowWalkers(e.target.checked)} />
-              Show the wandering particle (use the slow speed)
-            </label>
-          </section>
-        </div>
-        <div className="workbench-stage square-stage">
-          <div className="canvas-wrapper dla-stack" ref={wrapRef}>
+      <div className="wb">
+        <div className="wb-stage pinned" ref={stageRef}>
+          <div className="dla-grid">
             <div className="dla-layers">
               <canvas ref={canvasRef} width={SIZE.width} height={SIZE.height} role="img"
                 aria-label={`A branching cluster of ${progress.count} particles grown by diffusion-limited aggregation.`} />
               <canvas ref={overlayRef} className="dla-overlay" width={SIZE.width} height={SIZE.height} aria-hidden="true" />
             </div>
+            <div className="dla-side">
+              <div className="stage-headline">
+                <p><span>Particles stuck</span> <strong className="s1">{progress.count.toLocaleString()}</strong></p>
+                <p><span>Fractal dimension</span> <strong>{dimension ? dimension.toFixed(2) : '…'}</strong></p>
+                <p className="stage-meta">
+                  <span>of {particles.toLocaleString()}, {status}</span>{' '}
+                  <span>{shape === 'point' ? 'theory for 2D DLA ≈ 1.71' : 'dimension needs the single center seed'} · seed {seed}</span>
+                </p>
+              </div>
+              {shape === 'point' && (
+                <div className="dla-mr">
+                  {mr ? (
+                    <>
+                      <div className="dla-mr-chart"><MassRadiusChart mr={mr} /></div>
+                      {mrLegend}
+                    </>
+                  ) : (
+                    <p className="setting-note">The mass–radius fit appears when the cluster is finished.</p>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
+
+        <div className="wb-rail">
+          <button type="button" className="run-button" onClick={() => set('seed', randomSeed())}>Grow a new one</button>
+          <div className="growth-row">
+            <button type="button" onClick={() => setPaused((v) => !v)} disabled={progress.done}>{paused ? 'Resume' : 'Pause'}</button>
+            <button type="button" onClick={skipToEnd} disabled={progress.done}>Skip to the end</button>
+            <button type="button" onClick={() => { setPaused(false); setRunId((id) => id + 1); }}>Restart</button>
+          </div>
+
+          <RailNext />
+
+          <ToolActions
+            menu
+            image={{ draw: imageDraw, size: SIZE, filename: 'diffusion-limited-aggregation.png' }}
+            onCsv={exportCsv}
+            csvLabel="Download particles (CSV)"
+            onReset={reset}
+            fullscreenRef={stageRef}
+          >
+            <button type="button" onClick={exportSvg} disabled={!progress.done}>Save SVG</button>
+          </ToolActions>
+
+          <section className="wb-settings" aria-labelledby="settings-heading">
+            <h2 id="settings-heading">Growth settings</h2>
+            <div className="control-row">
+              <label htmlFor="shape-select">Seed</label>
+              <select id="shape-select" value={shape} onChange={(e) => set('shape', e.target.value)}>
+                {Object.entries(SEEDS).map(([key, label]) => <option key={key} value={key}>{label}</option>)}
+              </select>
+            </div>
+            <RangeControl id="particles-range" label="Particles" display={particles.toLocaleString()} value={particles}
+              min={500} max={20000} step={500} onChange={(v) => set('particles', v)} />
+            <RangeControl id="stick-range" label="Stickiness" display={`${Math.round(stickiness * 100)}%`} value={stickiness}
+              min={0.05} max={1} step={0.05} onChange={(v) => set('stickiness', v)} />
+            <RangeControl id="bias-range" label="Drift (wind)" display={bias === 0 ? 'none' : `${Math.round(bias * 100)}%`} value={bias}
+              min={0} max={0.3} step={0.01} onChange={(v) => set('bias', v)} />
+            {bias > 0 && (
+              <RangeControl id="angle-range" label="Drift direction" display={`${angle}°`} value={angle} min={0} max={345} step={15} onChange={(v) => set('angle', v)} />
+            )}
+            <div className="control-row">
+              <label htmlFor="speed-select">Speed</label>
+              <select id="speed-select" value={speed} onChange={(e) => set('speed', Number(e.target.value))}>
+                {SPEEDS.map((s, i) => <option key={s.label} value={i}>{s.label}</option>)}
+              </select>
+            </div>
+            <label className="check-row" htmlFor="walkers-check">
+              <input id="walkers-check" type="checkbox" checked={showWalkers} onChange={(e) => setShowWalkers(e.target.checked)} />
+              Show the wandering particle (use the slow speed)
+            </label>
+            <details className="more-settings">
+              <summary>More settings</summary>
+              <div>
+                <SeedControl value={seed} onChange={(v) => set('seed', v)} />
+              </div>
+            </details>
+          </section>
+
+          <details className="more-settings">
+            <summary>Style and art options</summary>
+            <div>
+              <div className="control-row">
+                <label htmlFor="color-select">Color by</label>
+                <select id="color-select" value={color} onChange={(e) => set('color', e.target.value)}>
+                  <option value="order">Arrival order (age)</option>
+                  <option value="distance">Distance from the seed</option>
+                  <option value="depth">Branch depth (steps from the seed)</option>
+                </select>
+              </div>
+              <div className="control-row">
+                <label htmlFor="palette-select">Palette</label>
+                <select id="palette-select" value={palette} onChange={(e) => set('palette', e.target.value)}>
+                  {Object.keys(PALETTES).map((key) => <option key={key} value={key}>{key[0].toUpperCase() + key.slice(1)}</option>)}
+                </select>
+              </div>
+              <div className="control-row">
+                <label htmlFor="bg-select">Background</label>
+                <select id="bg-select" value={bg} onChange={(e) => set('bg', e.target.value)}>
+                  {Object.keys(BACKGROUNDS).map((key) => <option key={key} value={key}>{key[0].toUpperCase() + key.slice(1)}</option>)}
+                </select>
+              </div>
+            </div>
+          </details>
+        </div>
       </div>
+
+      <NextTools />
 
       <section className="stats-panel" aria-live="off">
         <h2>Cluster</h2>
@@ -252,11 +291,11 @@ function App() {
         </div>
       </section>
 
-      {shape === 'point' && (
-        <div className="canvas-wrapper chart-wrapper">
+      {shape === 'point' && mr && (
+        <div className="canvas-wrapper chart-wrapper dla-below">
           <h2 className="chart-title">Mass–radius: particles within radius r</h2>
-          <canvas ref={mrRef} width={800} height={300} role="img" aria-label="Log–log plot of the number of particles within each radius, with the fitted slope." />
-          <Legend items={[{ color: PALETTE.cyan, label: 'Your cluster' }, { color: PALETTE.yellow, label: `Fitted slope${dimension ? ` ${dimension.toFixed(2)}` : ''}` }, { color: PALETTE.violet, label: 'Slope 1.71 for reference' }]} />
+          <div className="dla-mr-chart"><MassRadiusChart mr={mr} /></div>
+          {mrLegend}
           <p className="chart-caption">
             The slope of this line is the fractal dimension. A filled disk would give 2 and a straight line 1. The fit
             skips the innermost cells and the outer edge, which is still growing.
@@ -264,7 +303,6 @@ function App() {
         </div>
       )}
 
-      <NextTools />
       <section className="canvas-description prose" aria-labelledby="explain-heading">
         <h2 id="explain-heading">What is diffusion-limited aggregation?</h2>
         <p>
