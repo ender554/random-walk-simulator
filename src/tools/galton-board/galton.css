@@ -80,6 +80,8 @@
     order: 0;
     height: 380px;
     height: clamp(300px, calc(100svh - 270px), 480px);
+    /* and no wider than about 55% of the stage (the board is 800 × 680), so the column beside it keeps room */
+    height: min(clamp(300px, calc(100svh - 270px), 480px), calc((min(1280px, 100vw - 32px) - 426px) * 0.468));
   }
 
   .board-side {

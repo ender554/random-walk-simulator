@@ -1278,8 +1278,14 @@
     padding: 0.35rem 1.1rem;
   }
 
+  .stage-headline {
+    flex-wrap: wrap;
+  }
+
+  /* 34 px at 1366 px wide, smaller on narrower laptop windows where the stage shares its width */
   .stage-headline strong {
     font-size: 2.125rem;
+    font-size: clamp(1.5rem, 2.5vw, 2.125rem);
   }
 
   /* Fills what the window has left under the title row and the stage's own lines (1366 × 650: 237 px) */

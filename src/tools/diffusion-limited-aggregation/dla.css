@@ -101,6 +101,8 @@
     order: 0;
     height: 405px;
     height: clamp(300px, calc(100svh - 245px), 460px);
+    /* and no wider than about 55% of the stage, so the column beside it keeps room (1024 × 768: 311 px) */
+    height: min(clamp(300px, calc(100svh - 245px), 460px), calc((min(1280px, 100vw - 32px) - 426px) * 0.55));
   }
 
   .dla-side {
