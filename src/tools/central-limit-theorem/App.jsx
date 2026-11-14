@@ -1,16 +1,18 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import ToolPage from '../../shared/ToolPage';
-import NextTools from '../../shared/NextTools';
+import NextTools, { RailNext } from '../../shared/NextTools';
 import ToolActions from '../../shared/ToolActions';
 import Faq from '../../shared/Faq';
 import { Legend, RangeControl, SeedControl, StatRow } from '../../shared/controls';
 import { useUrlState } from '../../shared/useUrlState';
+import { useScreenCanvas } from '../../shared/useScreenCanvas';
 import {
   DISTRIBUTION_KEYS, drawSamples, histogram, lognormalSkewness, makeDistribution, normalProbability, shareBetween, summarize,
 } from '../../utils/clt';
 import { downloadCSV } from '../../utils/export';
 import { randomSeed } from '../../utils/seed';
 import { COLORS, drawMeans, drawSource } from './drawCharts';
+import './clt.css';
 
 const DEFAULTS = { dist: 'exponential', skew: 0.75, n: 5, samples: 5000, seed: 'bellcurve', zoom: false };
 const MEANS_SIZE = { width: 800, height: 340 };
@@ -45,17 +47,37 @@ const FAQ = [
   },
 ];
 
+
+// One panel of "Same source, different sample sizes", drawn at its shown size
+function CompareChart({ size, means, dist, samples }) {
+  const ref = useScreenCanvas((canvas) => {
+    const sizeSe = dist.sd / Math.sqrt(size);
+    drawMeans(canvas, {
+      hist: histogram(means, dist, size, dist.range[0], dist.range[1], 40),
+      lo: dist.range[0], hi: dist.range[1], samples, mean: dist.mean, se: sizeSe,
+    });
+  });
+  return (
+    <figure>
+      <figcaption>n = {size}</figcaption>
+      <canvas ref={ref} role="img" aria-label={`Histogram of ${samples} averages of ${size} draws.`} />
+    </figure>
+  );
+}
+
+// The workbench (docs/redesign-2026-11-10/B3-LOGIC.md): the stage shows the source over the averages it makes,
+// with the spread and the CLT's prediction on top; the rail has Run, the next step, Share & export, the settings
+// and the step-through. No predict card: REPORT.md holds answers back only on Monty Hall and Birthday.
 function App() {
-  const sourceRef = useRef(null);
-  const meansRef = useRef(null);
-  const chartsRef = useRef(null);
-  const compareRefs = useRef([]);
+  const stageRef = useRef(null);
   const [settings, set, reset] = useUrlState(DEFAULTS);
   const { n, samples, seed, zoom } = settings;
   const [shown, setShown] = useState(null); // null = every sample; a number = stepping through
   const [probMode, setProbMode] = useState('above');
   const [aText, setAText] = useState('');
   const [bText, setBText] = useState('');
+  // The probability region is shaded once the visitor uses the calculator, so the chart has no unexplained box
+  const [probUsed, setProbUsed] = useState(false);
 
   const dist = useMemo(() => makeDistribution(settings.dist, settings.skew), [settings.dist, settings.skew]);
   const center = Number.isFinite(dist.mean) ? dist.mean : dist.center;
@@ -89,14 +111,11 @@ function App() {
 
   const meansDraw = (canvas) =>
     drawMeans(canvas, {
-      hist, lo, hi, samples: visible.length, mean: dist.mean, se, shade: region,
+      hist, lo, hi, samples: visible.length, mean: dist.mean, se, shade: probUsed ? region : undefined,
       latest: sample ? sample.mean : undefined,
     });
-
-  useEffect(() => {
-    drawSource(sourceRef.current, dist, sample);
-    meansDraw(meansRef.current);
-  });
+  const sourceRef = useScreenCanvas((canvas) => drawSource(canvas, dist, sample, `Source: ${dist.label.toLowerCase()}`));
+  const meansRef = useScreenCanvas(meansDraw);
 
   const compareSamples = Math.min(samples, 3000);
   const compareNs = COMPARE_NS.includes(n) ? [...COMPARE_NS, 100] : [...COMPARE_NS, n];
@@ -105,17 +124,6 @@ function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [dist, compareSamples, seed, compareNs.join()],
   );
-
-  useEffect(() => {
-    compareNs.forEach((size, i) => {
-      const canvas = compareRefs.current[i];
-      const sizeSe = dist.sd / Math.sqrt(size);
-      drawMeans(canvas, {
-        hist: histogram(compareData[i], dist, size, dist.range[0], dist.range[1], 40),
-        lo: dist.range[0], hi: dist.range[1], samples: compareSamples, mean: dist.mean, se: sizeSe,
-      });
-    });
-  });
 
   const step = (count) => setShown((s) => Math.min(samples, (s ?? 0) + count));
   const exportCsv = () => {
@@ -130,53 +138,91 @@ function App() {
   return (
     <ToolPage
       slug="central-limit-theorem"
+      workbench
       title="Central Limit Theorem Simulator"
-      intro="Pick any distribution, average n random draws, and repeat thousands of times. Watch each sample being drawn, see the averages pile up into a bell curve, check probabilities against theory, and find out when the theorem breaks."
+      intro="Pick any distribution, average n random draws, and repeat thousands of times: the averages pile up into a bell curve."
     >
+      <div className="wb">
+        <div className="wb-stage pinned" ref={stageRef}>
+          <div className="stage-headline">
+            <p><span>Spread of averages</span> <strong className="s1">{fmt(observed.sd)}</strong></p>
+            <p><span>CLT predicts σ/√n</span> <strong>{Number.isFinite(se) ? fmt(se) : 'none'}</strong></p>
+            <p className="stage-meta">
+              <span>{visible.length.toLocaleString()} averages of n = {n}</span>{' '}
+              <span>skewness {observed.skewness.toFixed(2)} (a bell is 0)</span>
+            </p>
+          </div>
+          <div className="stage-chart source-chart">
+            <canvas ref={sourceRef} role="img"
+              aria-label={`Shape of the ${dist.label} distribution${sample ? `, with ${n} sampled values averaging ${sample.mean.toFixed(3)}` : ''}.`} />
+          </div>
+          <div className="stage-chart means-chart">
+            <canvas ref={meansRef} role="img"
+              aria-label={`Histogram of ${visible.length} sample means of ${n} draws, centered at ${fmt(observed.mean)} with spread ${fmt(observed.sd)}.`} />
+          </div>
+          <Legend
+            items={[
+              { color: COLORS.bars, label: 'Sample means' },
+              ...(Number.isFinite(se) ? [{ color: COLORS.curve, label: 'Normal curve predicted by the CLT' }] : []),
+              ...(probUsed ? [{ color: '#a78bfa', label: 'Probability region' }] : []),
+              ...(sample ? [{ color: COLORS.sample, label: 'Latest sample' }] : []),
+            ]}
+          />
+          {outside > 0.001 && (
+            <p className="chart-caption">{pct(outside)} of the averages fall outside this view.</p>
+          )}
+        </div>
 
-      <div className="workbench">
-        <div className="workbench-controls">
-          <section className="controls-panel" aria-label="Simulation settings">
-            <div className="control-grid">
-              <div className="control-row">
-                <label htmlFor="dist-select">Source distribution</label>
-                <select id="dist-select" value={settings.dist} onChange={(e) => { set('dist', e.target.value); setShown(null); }}>
-                  {DISTRIBUTION_KEYS.map((key) => (
-                    <option key={key} value={key}>{makeDistribution(key, settings.skew).label}</option>
-                  ))}
-                </select>
-              </div>
-              {settings.dist === 'lognormal' && (
-                <RangeControl id="skew-range" label="Skewness of the source" display={lognormalSkewness(settings.skew).toFixed(1)}
-                  value={settings.skew} min={0.25} max={1.5} step={0.05} onChange={(v) => set('skew', v)} />
-              )}
-              <RangeControl id="n-range" label="Sample size n (values in each average)" value={n} min={1} max={100}
-                onChange={(v) => { set('n', v); setShown(null); }} />
-              <RangeControl id="samples-range" label="Number of samples (how many averages)" display={samples.toLocaleString()}
-                value={samples} min={100} max={10000} step={100} onChange={(v) => { set('samples', v); setShown(null); }} />
-              <SeedControl value={seed} onChange={(v) => set('seed', v)} />
+        <div className="wb-rail">
+          <button type="button" className="run-button" onClick={() => { set('seed', randomSeed()); setShown(null); }}>
+            New samples
+          </button>
+
+          <RailNext />
+
+          <ToolActions
+            menu
+            image={{ draw: meansDraw, size: MEANS_SIZE, filename: 'central-limit-theorem.png' }}
+            onCsv={exportCsv}
+            csvLabel="Download sample means (CSV)"
+            onReset={() => { reset(); setShown(null); }}
+            fullscreenRef={stageRef}
+          />
+
+          <section className="wb-settings" aria-labelledby="settings-heading">
+            <h2 id="settings-heading">Simulation settings</h2>
+            <div className="control-row">
+              <label htmlFor="dist-select">Source distribution</label>
+              <select id="dist-select" value={settings.dist} onChange={(e) => { set('dist', e.target.value); setShown(null); }}>
+                {DISTRIBUTION_KEYS.map((key) => (
+                  <option key={key} value={key}>{makeDistribution(key, settings.skew).label}</option>
+                ))}
+              </select>
             </div>
-
+            {settings.dist === 'lognormal' && (
+              <RangeControl id="skew-range" label="Skewness of the source" display={lognormalSkewness(settings.skew).toFixed(1)}
+                value={settings.skew} min={0.25} max={1.5} step={0.05} onChange={(v) => set('skew', v)} />
+            )}
+            <RangeControl id="n-range" label="Sample size n (values in each average)" value={n} min={1} max={100}
+              onChange={(v) => { set('n', v); setShown(null); }} />
+            <RangeControl id="samples-range" label="Number of samples (how many averages)" display={samples.toLocaleString()}
+              value={samples} min={100} max={10000} step={100} onChange={(v) => { set('samples', v); setShown(null); }} />
             <label className="check-row" htmlFor="zoom-check">
               <input id="zoom-check" type="checkbox" checked={zoom && canZoom} disabled={!canZoom}
                 onChange={(e) => set('zoom', e.target.checked)} />
               Zoom in on the sample means
             </label>
-
-            <ToolActions
-              image={{ draw: meansDraw, size: MEANS_SIZE, filename: 'central-limit-theorem.png' }}
-              onCsv={exportCsv}
-              csvLabel="Download sample means (CSV)"
-              onReset={() => { reset(); setShown(null); }}
-              fullscreenRef={chartsRef}
-            >
-              <button type="button" onClick={() => { set('seed', randomSeed()); setShown(null); }}>🎲 New samples</button>
-            </ToolActions>
+            <details className="more-settings">
+              <summary>More settings</summary>
+              <div>
+                <SeedControl value={seed} onChange={(v) => set('seed', v)} />
+              </div>
+            </details>
           </section>
 
-          <section className="panel" aria-labelledby="step-heading">
-            <h2 id="step-heading">Step through one sample at a time</h2>
-            <div className="button-row">
+          <section className="wb-settings" aria-labelledby="step-heading">
+            <h2 id="step-heading">Watch it build, one sample at a time</h2>
+            <div className="button-row step-row">
               <button type="button" onClick={() => setShown(0)}>Start from zero</button>
               <button type="button" onClick={() => step(1)}>+1 sample</button>
               <button type="button" onClick={() => step(10)}>+10</button>
@@ -196,39 +242,16 @@ function App() {
             )}
           </section>
         </div>
-        <div className="workbench-stage">
-          <div className="canvas-wrapper chart-wrapper" ref={chartsRef}>
-            <h2 className="chart-title">
-              {sample ? `The source distribution, with sample #${latest + 1}'s ${n} values` : `One draw from the source: ${dist.label.toLowerCase()}`}
-            </h2>
-            <canvas ref={sourceRef} width={800} height={200} role="img"
-              aria-label={`Shape of the ${dist.label} distribution${sample ? `, with ${n} sampled values averaging ${sample.mean.toFixed(3)}` : ''}.`} />
-            <h2 className="chart-title">
-              Averages of {n} draws, {visible.length.toLocaleString()} times
-            </h2>
-            <canvas ref={meansRef} width={MEANS_SIZE.width} height={MEANS_SIZE.height} role="img"
-              aria-label={`Histogram of ${visible.length} sample means of ${n} draws, centered at ${fmt(observed.mean)} with spread ${fmt(observed.sd)}.`} />
-            <Legend
-              items={[
-                { color: COLORS.bars, label: 'Sample means' },
-                ...(Number.isFinite(se) ? [{ color: COLORS.curve, label: 'Normal curve predicted by the CLT' }] : []),
-                { color: '#a78bfa', label: 'Probability region' },
-                ...(sample ? [{ color: COLORS.sample, label: 'Latest sample' }] : []),
-              ]}
-            />
-            {outside > 0.001 && (
-              <p className="chart-caption">{pct(outside)} of the averages fall outside this view.</p>
-            )}
-          </div>
-        </div>
       </div>
+
+      <NextTools />
 
       <section className="panel" aria-labelledby="prob-heading">
         <h2 id="prob-heading">Probability calculator</h2>
         <div className="inline-fields">
           <label>
             Chance that the average is
-            <select value={probMode} onChange={(e) => setProbMode(e.target.value)}>
+            <select value={probMode} onChange={(e) => { setProbMode(e.target.value); setProbUsed(true); }}>
               <option value="below">below a</option>
               <option value="above">above a</option>
               <option value="between">between a and b</option>
@@ -236,12 +259,12 @@ function App() {
           </label>
           <label>
             a
-            <input type="number" step="any" value={aText} placeholder={String(defaultA)} onChange={(e) => setAText(e.target.value)} />
+            <input type="number" step="any" value={aText} placeholder={String(defaultA)} onChange={(e) => { setAText(e.target.value); setProbUsed(true); }} />
           </label>
           {probMode === 'between' && (
             <label>
               b
-              <input type="number" step="any" value={bText} placeholder={String(defaultB)} onChange={(e) => setBText(e.target.value)} />
+              <input type="number" step="any" value={bText} placeholder={String(defaultB)} onChange={(e) => { setBText(e.target.value); setProbUsed(true); }} />
             </label>
           )}
         </div>
@@ -278,11 +301,7 @@ function App() {
         <h2 className="chart-title">Same source, different sample sizes</h2>
         <div className="small-multiples">
           {compareNs.map((size, i) => (
-            <figure key={size}>
-              <figcaption>n = {size}</figcaption>
-              <canvas ref={(el) => { compareRefs.current[i] = el; }} width={380} height={190} role="img"
-                aria-label={`Histogram of ${compareSamples} averages of ${size} draws.`} />
-            </figure>
+            <CompareChart key={size} size={size} means={compareData[i]} dist={dist} samples={compareSamples} />
           ))}
         </div>
         <p className="chart-caption">
@@ -291,7 +310,6 @@ function App() {
         </p>
       </div>
 
-      <NextTools />
       <section className="canvas-description prose" aria-labelledby="explain-heading">
         <h2 id="explain-heading">What does the central limit theorem say?</h2>
         <p>

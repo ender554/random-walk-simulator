@@ -9,39 +9,43 @@ export const COLORS = {
 };
 
 const PAD = { left: 16, right: 16, top: 14, bottom: 34 };
+// Short charts (the phone's pinned stage) keep 12 px labels and give the plot more of the height
+const padFor = (canvas) => (canvas.height < 130 ? { left: 12, right: 12, top: 8, bottom: 22 } : PAD);
 
 function frame(canvas, lo, hi, yMax) {
   const ctx = canvas.getContext('2d');
   clearCanvas(ctx, canvas);
-  const plotW = canvas.width - PAD.left - PAD.right;
-  const plotH = canvas.height - PAD.top - PAD.bottom;
-  const x = (v) => PAD.left + ((v - lo) / (hi - lo)) * plotW;
-  const y = (v) => PAD.top + (1 - v / yMax) * plotH;
+  const pad = padFor(canvas);
+  const plotW = canvas.width - pad.left - pad.right;
+  const plotH = canvas.height - pad.top - pad.bottom;
+  const x = (v) => pad.left + ((v - lo) / (hi - lo)) * plotW;
+  const y = (v) => pad.top + (1 - v / yMax) * plotH;
 
   // Baseline and five evenly spaced x labels
   ctx.strokeStyle = '#2c3850';
   ctx.lineWidth = 1;
   ctx.beginPath();
-  ctx.moveTo(PAD.left, y(0));
-  ctx.lineTo(PAD.left + plotW, y(0));
+  ctx.moveTo(pad.left, y(0));
+  ctx.lineTo(pad.left + plotW, y(0));
   ctx.stroke();
 
   ctx.fillStyle = '#aab6d4';
-  ctx.font = `${canvas.width < 500 ? 11 : 13}px system-ui, sans-serif`;
+  ctx.font = `${canvas.width < 500 ? 12 : 13}px system-ui, sans-serif`;
   ctx.textBaseline = 'top';
   const span = hi - lo;
   const digits = span < 0.5 ? 3 : span <= 5 ? 2 : 1;
   for (let i = 0; i <= 4; i += 1) {
     const v = lo + (span * i) / 4;
     ctx.textAlign = i === 0 ? 'left' : i === 4 ? 'right' : 'center';
-    ctx.fillText(v.toFixed(digits), x(v), y(0) + 8);
+    ctx.fillText(v.toFixed(digits), x(v), y(0) + (pad.bottom < 30 ? 4 : 8));
   }
 
   return { ctx, x, y };
 }
 
 // Top chart: the source distribution, plus the values of the current sample if stepping through.
-export function drawSource(canvas, dist, sample) {
+// `label` names the source in the top corner while no sample is shown.
+export function drawSource(canvas, dist, sample, label) {
   if (!canvas) return;
   const [lo, hi] = dist.range;
   let view;
@@ -74,9 +78,20 @@ export function drawSource(canvas, dist, sample) {
     ctx.stroke();
   }
 
-  if (!sample) return;
   const { ctx, x } = view;
-  const baseY = canvas.height - PAD.bottom - 10;
+  const pad = padFor(canvas);
+  if (!sample) {
+    if (label) {
+      ctx.fillStyle = '#aab6d4';
+      ctx.font = '600 12px system-ui, sans-serif';
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'top';
+      ctx.fillText(label, canvas.width - pad.right, 4);
+    }
+    return;
+  }
+  const baseY = canvas.height - pad.bottom - (pad.bottom < 30 ? 6 : 10);
+  const dot = canvas.height < 130 ? 3 : 4;
   ctx.fillStyle = COLORS.sample;
   // Stack repeated values (dice, counts) so every draw is visible
   const stacks = new Map();
@@ -85,7 +100,7 @@ export function drawSource(canvas, dist, sample) {
     const level = stacks.get(key) ?? 0;
     stacks.set(key, level + 1);
     ctx.beginPath();
-    ctx.arc(key, baseY - level * 9, 4, 0, Math.PI * 2);
+    ctx.arc(key, baseY - level * (dot * 2 + 1), dot, 0, Math.PI * 2);
     ctx.fill();
   }
   const meanX = x(Math.min(hi, Math.max(lo, sample.mean)));
@@ -93,7 +108,7 @@ export function drawSource(canvas, dist, sample) {
   ctx.lineWidth = 3;
   ctx.beginPath();
   ctx.moveTo(meanX, 6);
-  ctx.lineTo(meanX, canvas.height - PAD.bottom);
+  ctx.lineTo(meanX, canvas.height - pad.bottom);
   ctx.stroke();
   ctx.fillStyle = COLORS.curve;
   ctx.font = '600 13px system-ui, sans-serif';

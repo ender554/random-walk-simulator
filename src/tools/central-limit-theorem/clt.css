@@ -1,0 +1,29 @@
+/* The stage holds two charts: the source (short) over the averages it makes (the main chart).
+   Phones keep the pinned stage near 40% of the small viewport height. */
+.wb-stage .source-chart {
+  height: 70px;
+  margin-bottom: 0.4rem;
+}
+
+.wb-stage .means-chart {
+  height: 130px;
+  height: clamp(100px, calc(40svh - 165px), 200px);
+}
+
+.small-multiples canvas {
+  display: block;
+  aspect-ratio: 2 / 1;
+  height: auto;
+}
+
+@media (min-width: 1000px) {
+  .wb-stage .source-chart {
+    height: 110px;
+  }
+
+  /* Fills what a laptop window has left (1366 × 650: 195 px) */
+  .wb-stage .means-chart {
+    height: 220px;
+    height: clamp(180px, calc(100svh - 455px), 440px);
+  }
+}
