@@ -162,13 +162,13 @@ function App() {
     >
       <div className="wb">
         <div className="wb-stage pinned" ref={stageRef}>
-          <div className="dla-grid">
-            <div className="dla-layers">
+          <div className="dla-grid side-grid">
+            <div className="dla-layers side-square">
               <canvas ref={canvasRef} width={SIZE.width} height={SIZE.height} role="img"
                 aria-label={`A branching cluster of ${progress.count} particles grown by diffusion-limited aggregation.`} />
               <canvas ref={overlayRef} className="dla-overlay" width={SIZE.width} height={SIZE.height} aria-hidden="true" />
             </div>
-            <div className="dla-side">
+            <div className="dla-side side-col">
               <div className="stage-headline">
                 <p><span>Particles stuck</span> <strong className="s1">{progress.count.toLocaleString()}</strong></p>
                 <p><span>Fractal dimension</span> <strong>{dimension ? dimension.toFixed(2) : '…'}</strong></p>
@@ -178,7 +178,7 @@ function App() {
                 </p>
               </div>
               {shape === 'point' && (
-                <div className="dla-mr">
+                <div className="dla-mr side-chart">
                   {mr ? (
                     <>
                       <div className="dla-mr-chart"><MassRadiusChart mr={mr} /></div>

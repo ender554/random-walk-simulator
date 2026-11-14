@@ -1,17 +1,7 @@
 import { clearCanvas } from './canvas';
+import { PALETTE } from './theme';
 
-export const PALETTE = {
-  cyan: '#1de5d0',
-  pink: '#ff6b8b',
-  yellow: '#ffd166',
-  violet: '#a78bfa',
-  muted: '#8a96b3',
-  label: '#aab6d4',
-  grid: '#1f2836',
-};
-
-// Distinct colors for several runs on one chart.
-export const SERIES = ['#1de5d0', '#ff6b8b', '#ffd166', '#a78bfa', '#7dd3fc', '#86efac', '#fdba74', '#f0abfc'];
+export { PALETTE, SERIES, alpha } from './theme';
 
 const DEFAULT_PAD = { left: 60, right: 18, top: 18, bottom: 42 };
 

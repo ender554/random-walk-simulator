@@ -157,3 +157,22 @@
     width: auto;
   }
 }
+
+/* Present mode: the room fills the stage's height */
+.present .room-canvas {
+  width: min(78cqh, 48cqw);
+  height: min(78cqh, 48cqw);
+}
+
+.present .room-status {
+  font-size: 1rem;
+}
+
+/* The month strip runs past one screen at projector size; the room's dots already show the matches */
+.present .room-calendar > :not(.chart-caption) {
+  display: none;
+}
+
+.present .room-calendar .chart-caption {
+  font-size: 1rem;
+}

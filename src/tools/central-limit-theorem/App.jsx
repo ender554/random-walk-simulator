@@ -9,6 +9,7 @@ import { useScreenCanvas } from '../../shared/useScreenCanvas';
 import {
   DISTRIBUTION_KEYS, drawSamples, histogram, lognormalSkewness, makeDistribution, normalProbability, shareBetween, summarize,
 } from '../../utils/clt';
+import { PALETTE } from '../../utils/theme';
 import { downloadCSV } from '../../utils/export';
 import { randomSeed } from '../../utils/seed';
 import { COLORS, drawMeans, drawSource } from './drawCharts';
@@ -164,7 +165,7 @@ function App() {
             items={[
               { color: COLORS.bars, label: 'Sample means' },
               ...(Number.isFinite(se) ? [{ color: COLORS.curve, label: 'Normal curve predicted by the CLT' }] : []),
-              ...(probUsed ? [{ color: '#a78bfa', label: 'Probability region' }] : []),
+              ...(probUsed ? [{ color: PALETTE.violet, label: 'Probability region' }] : []),
               ...(sample ? [{ color: COLORS.sample, label: 'Latest sample' }] : []),
             ]}
           />

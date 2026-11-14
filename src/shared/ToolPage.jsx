@@ -3,8 +3,11 @@ import SiteLayout from './SiteLayout';
 import RelatedTools from './RelatedTools';
 import FurtherReading from './FurtherReading';
 import { ToolSlug } from './toolSlug';
+import PresentFrame from './PresentFrame';
+import { isPresent, presentHref } from './present';
 import { liveTools, pathLabel } from '../tools';
 import './tool.css';
+import './present.css';
 
 const SLUGS = new Set(liveTools.map((t) => t.slug));
 
@@ -39,8 +42,20 @@ function useHopCount(slug) {
 //
 // `workbench`: the B2 layout (docs/redesign-2026-11-10/B2-LOGIC.md). A left-aligned title row; the intro and
 // date sit in their own block, which tool.css moves under the workbench on phones so the stage comes first.
-function ToolPage({ slug, title, intro, workbench = false, children }) {
+// `question`: the predict question, shown large in present mode (Monty Hall and Birthday hold their answer back).
+function ToolPage({ slug, title, intro, workbench = false, question, children }) {
   useHopCount(slug);
+  if (workbench && isPresent()) {
+    return (
+      <ToolSlug.Provider value={slug}>
+        <SiteLayout wide>
+          <div className="tool-main has-workbench">
+            <PresentFrame title={title} question={question}>{children}</PresentFrame>
+          </div>
+        </SiteLayout>
+      </ToolSlug.Provider>
+    );
+  }
   const updated = liveTools.find((t) => t.slug === slug)?.updated;
   const step = pathLabel(slug);
   const date = updated && (
@@ -55,6 +70,12 @@ function ToolPage({ slug, title, intro, workbench = false, children }) {
           <header className={workbench ? 'page-header title-row' : 'page-header'}>
             {step && <p className="page-step">{step}</p>}
             <h1>{title}</h1>
+            {workbench && (
+              <button type="button" className="present-button" onClick={() => window.location.assign(presentHref(true))}>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="1.5" /><path d="M12 16v4M8 20h8" /></svg>
+                Present
+              </button>
+            )}
             {!workbench && <p>{intro}</p>}
             {!workbench && date}
           </header>

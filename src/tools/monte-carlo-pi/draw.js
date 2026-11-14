@@ -1,5 +1,5 @@
 import { clearCanvas } from '../../utils/canvas';
-import { PALETTE, chartFrame, clipToPlot, evenTicks, powersOfTen } from '../../utils/chart';
+import { PALETTE, alpha, chartFrame, clipToPlot, evenTicks, powersOfTen } from '../../utils/chart';
 import { SPREAD } from '../../utils/monteCarloPi';
 import { logCheckpoints, normalCdf } from '../../utils/stats';
 
@@ -68,7 +68,7 @@ export function drawConvergence(canvas, { series, shown, total, view }) {
   });
   const { ctx, x, y } = frame;
   clipToPlot(frame);
-  ctx.fillStyle = 'rgba(255, 209, 102, 0.12)';
+  ctx.fillStyle = alpha(PALETTE.yellow, 0.12);
   ctx.beginPath();
   checkpoints.forEach((n) => ctx.lineTo(x(n), y(Math.PI + (2 * SPREAD) / Math.sqrt(n))));
   [...checkpoints].reverse().forEach((n) => ctx.lineTo(x(n), y(Math.PI - (2 * SPREAD) / Math.sqrt(n))));
@@ -153,7 +153,7 @@ export function drawNeedles(canvas, { needles }) {
   }
   ctx.lineWidth = needles.length > 2000 ? 0.75 : 1.5;
   for (const [x1, y1, x2, y2, crosses] of needles) {
-    ctx.strokeStyle = crosses ? PALETTE.cyan : 'rgba(255, 107, 139, 0.7)';
+    ctx.strokeStyle = crosses ? PALETTE.cyan : alpha(PALETTE.pink, 0.7);
     ctx.beginPath();
     ctx.moveTo(x1 * sx, y1 * sy);
     ctx.lineTo(x2 * sx, y2 * sy);

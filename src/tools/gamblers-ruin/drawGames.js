@@ -1,9 +1,10 @@
 import { PALETTE, chartFrame, clipToPlot, evenTicks } from '../../utils/chart';
 
+// Getters, so present mode's light palette applies (src/utils/theme.js)
 export const COLORS = {
-  target: '#1de5d0',
-  ruin: '#ff6b8b',
-  unfinished: '#ffd166',
+  get target() { return PALETTE.cyan; },
+  get ruin() { return PALETTE.pink; },
+  get unfinished() { return PALETTE.yellow; },
 };
 
 const money = (v) => `$${Math.round(v).toLocaleString()}`;

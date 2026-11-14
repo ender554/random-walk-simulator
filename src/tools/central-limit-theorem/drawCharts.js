@@ -1,11 +1,13 @@
 import { clearCanvas } from '../../utils/canvas';
+import { PALETTE, alpha } from '../../utils/theme';
 import { normalDensity } from '../../utils/clt';
 
+// Getters, so present mode's light palette applies (src/utils/theme.js)
 export const COLORS = {
-  bars: '#1de5d0',
-  curve: '#ffd166',
-  sample: '#ff6b8b',
-  shade: 'rgba(167, 139, 250, 0.16)',
+  get bars() { return PALETTE.cyan; },
+  get curve() { return PALETTE.yellow; },
+  get sample() { return PALETTE.pink; },
+  get shade() { return alpha(PALETTE.violet, 0.16); },
 };
 
 const PAD = { left: 16, right: 16, top: 14, bottom: 34 };
@@ -22,14 +24,14 @@ function frame(canvas, lo, hi, yMax) {
   const y = (v) => pad.top + (1 - v / yMax) * plotH;
 
   // Baseline and five evenly spaced x labels
-  ctx.strokeStyle = '#2c3850';
+  ctx.strokeStyle = PALETTE.gridStrong;
   ctx.lineWidth = 1;
   ctx.beginPath();
   ctx.moveTo(pad.left, y(0));
   ctx.lineTo(pad.left + plotW, y(0));
   ctx.stroke();
 
-  ctx.fillStyle = '#aab6d4';
+  ctx.fillStyle = PALETTE.label;
   ctx.font = `${canvas.width < 500 ? 12 : 13}px system-ui, sans-serif`;
   ctx.textBaseline = 'top';
   const span = hi - lo;
@@ -65,7 +67,7 @@ export function drawSource(canvas, dist, sample, label) {
     const yMax = Math.max(...xs.map(dist.density)) * 1.15;
     view = frame(canvas, lo, hi, yMax);
     const { ctx, x, y } = view;
-    ctx.fillStyle = 'rgba(29, 229, 208, 0.35)';
+    ctx.fillStyle = alpha(PALETTE.cyan, 0.35);
     ctx.strokeStyle = COLORS.bars;
     ctx.lineWidth = 2;
     ctx.beginPath();
@@ -82,7 +84,7 @@ export function drawSource(canvas, dist, sample, label) {
   const pad = padFor(canvas);
   if (!sample) {
     if (label) {
-      ctx.fillStyle = '#aab6d4';
+      ctx.fillStyle = PALETTE.label;
       ctx.font = '600 12px system-ui, sans-serif';
       ctx.textAlign = 'right';
       ctx.textBaseline = 'top';

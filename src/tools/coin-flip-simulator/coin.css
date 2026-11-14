@@ -175,3 +175,10 @@
     height: 300px;
   }
 }
+
+/* Present mode: a coin the back row can read */
+.present .coin {
+  width: 9rem;
+  height: 9rem;
+  font-size: 3.6rem;
+}

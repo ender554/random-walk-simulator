@@ -9,7 +9,7 @@ import { useScreenCanvas } from '../../shared/useScreenCanvas';
 import {
   STEPS_PER_YEAR, callOption, gbmTheory, percentileBands, simulatePaths, targetProbabilities,
 } from '../../utils/stockPaths';
-import { PALETTE } from '../../utils/chart';
+import { PALETTE, alpha } from '../../utils/chart';
 import { quantile } from '../../utils/stats';
 import { downloadCSV } from '../../utils/export';
 import { randomSeed } from '../../utils/seed';
@@ -148,7 +148,7 @@ function App() {
           <Legend
             items={[
               ...(show !== 'bands' ? [{ color: PALETTE.cyan, label: `Ends above ${money(s0)}` }, { color: PALETTE.pink, label: `Ends below ${money(s0)}` }] : []),
-              ...(show !== 'paths' ? [{ color: 'rgba(29, 229, 208, 0.5)', label: '25–75% and 5–95% of paths' }] : []),
+              ...(show !== 'paths' ? [{ color: alpha(PALETTE.cyan, 0.5), label: '25–75% and 5–95% of paths' }] : []),
               { color: PALETTE.yellow, label: 'Median (solid) and mean (dashed) predicted' },
               { color: PALETTE.violet, label: 'Target' },
             ]}

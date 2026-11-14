@@ -1,5 +1,5 @@
 import { BACKGROUNDS, PALETTES, paletteColor } from '../../utils/palettes';
-import { PALETTE, chartFrame, clipToPlot } from '../../utils/chart';
+import { PALETTE, alpha, chartFrame, clipToPlot } from '../../utils/chart';
 
 // Position along the palette for particle i, by the chosen color mode
 function shade(sim, i, mode, norm) {
@@ -82,7 +82,7 @@ export function drawMassRadius(canvas, mr) {
     // Reference line with slope 1.71 through the middle of the fitted range
     const mid = Math.sqrt(fitRange[0] * fitRange[1]);
     const midLogN = intercept + slope * Math.log(mid);
-    line(1.71, midLogN - 1.71 * Math.log(mid), 'rgba(167, 139, 250, 0.8)', [6, 5]);
+    line(1.71, midLogN - 1.71 * Math.log(mid), alpha(PALETTE.violet, 0.8), [6, 5]);
     line(slope, intercept, PALETTE.yellow, []);
   }
   ctx.fillStyle = PALETTE.cyan;

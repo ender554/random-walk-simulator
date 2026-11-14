@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { announceUrlChange } from './present';
 
 // Read a value from the query string, coerced to the type of its default.
 function parse(raw, fallback) {
@@ -28,8 +29,9 @@ export function useUrlState(defaults) {
 
   useEffect(() => {
     const params = new URLSearchParams();
-    // Keep page-level flags such as embed mode
-    if (new URLSearchParams(window.location.search).get('embed') === '1') params.set('embed', '1');
+    // Keep page-level flags: embed and present mode
+    const flags = new URLSearchParams(window.location.search);
+    for (const flag of ['embed', 'present']) if (flags.get(flag) === '1') params.set(flag, '1');
     for (const [key, value] of Object.entries(state)) {
       if (value === defaults[key]) continue;
       params.set(key, typeof value === 'boolean' ? (value ? '1' : '0') : String(value));
@@ -37,6 +39,7 @@ export function useUrlState(defaults) {
     const query = params.toString();
     const url = `${window.location.pathname}${query ? `?${query}` : ''}${window.location.hash}`;
     window.history.replaceState(null, '', url);
+    announceUrlChange();
     // defaults is a fresh object each render but constant in practice
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state]);

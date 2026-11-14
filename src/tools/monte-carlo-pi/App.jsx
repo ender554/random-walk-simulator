@@ -242,12 +242,12 @@ function App() {
         <div className="wb-stage pinned" ref={stageRef}>
           <ViewSwitch label="Experiment" options={MODES} value={mode} onChange={(v) => set('mode', v)} />
           {mode === 'darts' ? (
-            <div className="pi-grid">
-              <div className="pi-square">
+            <div className="pi-grid side-grid">
+              <div className="pi-square side-square">
                 <canvas ref={squareRef} width={SQUARE.width} height={SQUARE.height} role="img"
                   aria-label={`${shown.toLocaleString()} points; ${inside.toLocaleString()} inside the circle, estimating pi as ${fixed(estimate, 4)}.`} />
               </div>
-              <div className="pi-side">
+              <div className="pi-side side-col">
                 <div className="stage-headline">
                   <p><span>Estimate of π</span> <strong className="s1">{fixed(estimate, 4)}</strong></p>
                   <p><span>Typical error</span> <strong>±{fixed(se, 4)}</strong></p>
@@ -256,7 +256,7 @@ function App() {
                     <span>{shown ? `off by ${estimate - Math.PI >= 0 ? '+' : ''}${fixed(estimate - Math.PI, 4)}` : 'none thrown yet'} · seed {seed}</span>
                   </p>
                 </div>
-                <div className="pi-stage-chart">
+                <div className="pi-stage-chart side-chart">
                   <div className="pi-chart"><ScreenChart draw={drawChart} label={chartLabel} /></div>
                   {chartLegend}
                 </div>

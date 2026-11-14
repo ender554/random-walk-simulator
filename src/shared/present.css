@@ -1,0 +1,577 @@
+/* Present mode (C1): ?present=1 on any tool page. docs/redesign-2026-11-10/C1-LOGIC.md.
+   Sizes use --pu, 1% of the window height (capped by width on narrow windows): at 1024 × 768 the question is
+   50 px, the result 77 px and labels 28 px, about 5% and 3.6% of the screen height for the back row. */
+
+/* The Present button, at the end of a tool's title row (tablets and laptops) */
+.present-button {
+  display: none;
+}
+
+@media (min-width: 760px) {
+  .page-header.title-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: 1rem;
+    align-items: end;
+  }
+
+  .page-header.title-row > * {
+    grid-column: 1;
+  }
+
+  .page-header.title-row .present-button {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    display: inline-flex;
+  }
+}
+
+.present-button {
+  align-items: center;
+  gap: 0.45rem;
+  min-height: var(--target);
+  padding: 0.4rem 0.9rem;
+  background: transparent;
+  border: 1px solid var(--control-line);
+  border-radius: 10px;
+  color: var(--text-label);
+  font: inherit;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.present-button:hover {
+  border-color: var(--accent);
+  color: var(--text-strong);
+}
+
+.present-button svg,
+.present-chip svg {
+  width: 1.15em;
+  height: 1.15em;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.embed .present-button {
+  display: none !important;
+}
+
+/* The light projector palette (DESIGN.md): text #0b0f14 is 19.2:1 on white, labels #3d4a63 8.9:1,
+   Run #00756a carries white text at 5.6:1, control edges #5b6a8a are 5.1:1 on the stage. */
+html.present {
+  --bg: #ffffff;
+  --bg-deep: #f6f8fb;
+  --surface: #f6f8fb;
+  --surface-2: #ffffff;
+  --field: #ffffff;
+  --button: #ffffff;
+  --line: #d0d7e3;
+  --line-strong: #a9b4c8;
+  --control-line: #5b6a8a;
+  --text-strong: #0b0f14;
+  --text: #0b0f14;
+  --text-prose: #1f2937;
+  --text-label: #3d4a63;
+  --text-2: #3d4a63;
+  --text-muted: #5b6a8a;
+  --accent: #00756a;
+  --predict: #8a5a00;
+  --series-2: #c2264f;
+  --target: 52px;
+  --pu: min(1vh, 0.75vw);
+  color-scheme: light;
+  /* 1rem = 20 px at 1024 × 768, so each tool's own stage text (doors, coins, tallies) grows with the rest */
+  font-size: max(16px, calc(var(--pu) * 2.6));
+}
+
+html.present body {
+  background: var(--bg);
+}
+
+.present-site .site-main {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+}
+
+.present .tool-main {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+}
+
+.present-frame {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  gap: calc(var(--pu) * 1.4);
+  min-height: 100vh;
+  min-height: 100dvh;
+  height: 100dvh;
+  box-sizing: border-box;
+  padding: calc(var(--pu) * 1.6) calc(var(--pu) * 3);
+}
+
+/* Title bar */
+.present-top {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: calc(var(--pu) * 2);
+  min-height: calc(var(--pu) * 6.8);
+}
+
+.present-top h1 {
+  margin: 0 auto 0 0;
+  color: var(--text-strong);
+  font-size: calc(var(--pu) * 3.4);
+  font-weight: 600;
+  letter-spacing: 0;
+  line-height: 1.15;
+}
+
+.present-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  min-height: max(var(--target), calc(var(--pu) * 6.8));
+  box-sizing: border-box;
+  padding: 0 0.8em;
+  background: var(--bg);
+  border: 2px solid var(--control-line);
+  border-radius: 10px;
+  color: var(--text-strong);
+  font: inherit;
+  font-size: max(16px, calc(var(--pu) * 2.6));
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.present-chip:hover {
+  border-color: var(--accent);
+}
+
+.present kbd {
+  padding: 0 0.3em;
+  border: 1px solid var(--line-strong);
+  border-radius: 4px;
+  font: inherit;
+  font-size: 0.85em;
+  color: var(--text-label);
+}
+
+/* 40 px at 768 px tall: above the 5% of screen height that round2-devices.md asks for, and short enough
+   that Birthday's question takes two lines, not three */
+.present-question {
+  flex: none;
+  margin: 0;
+  color: var(--text-strong);
+  font-size: calc(var(--pu) * 5.2);
+  font-weight: 700;
+  line-height: 1.15;
+  text-wrap: balance;
+}
+
+.present-body {
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Only the workbench: the article, FAQ, next-tool block and related tools stay on the normal page */
+.present-body > :not(.wb) {
+  display: none;
+}
+
+/* Foot: the class link */
+.present-foot {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: calc(var(--pu) * 2);
+  padding-top: calc(var(--pu) * 1);
+  border-top: 2px solid var(--line);
+}
+
+.present-qr-small {
+  flex: none;
+  display: block;
+  width: calc(var(--pu) * 9.4);
+  height: calc(var(--pu) * 9.4);
+  min-width: var(--target);
+  min-height: var(--target);
+  padding: 0;
+  background: #ffffff;
+  border: 2px solid var(--control-line);
+  border-radius: 8px;
+  cursor: zoom-in;
+}
+
+.present-qr-art {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.present-link {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  margin: 0;
+  color: var(--text-label);
+  font-size: calc(var(--pu) * 2.6);
+  line-height: 1.2;
+}
+
+.present-link strong {
+  color: var(--text-strong);
+  font-size: calc(var(--pu) * 3.1);
+  overflow-wrap: anywhere;
+}
+
+.present-keys {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.2em 1em;
+  margin: 0 0 0 auto;
+  color: var(--text-label);
+  font-size: calc(var(--pu) * 2.3);
+  text-align: right;
+}
+
+.present-keys span {
+  white-space: nowrap;
+}
+
+/* The big QR code: about 70% of the screen height, so the back of the room can scan it */
+.present-qr {
+  width: min(94vw, 88vh);
+  max-height: 96vh;
+  box-sizing: border-box;
+  padding: calc(var(--pu) * 2);
+  background: #ffffff;
+  border: 0;
+  border-radius: 18px;
+  color: var(--text-strong);
+  text-align: center;
+}
+
+.present-qr::backdrop {
+  background: rgba(11, 15, 20, 0.6);
+}
+
+.present-qr[open] {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(var(--pu) * 1.2);
+}
+
+.present-qr h2 {
+  margin: 0;
+  font-size: calc(var(--pu) * 3.4);
+}
+
+.present-qr-big {
+  display: block;
+  width: min(76vh, 86vw);
+  height: min(76vh, 86vw);
+}
+
+.present-qr p {
+  margin: 0;
+  font-size: calc(var(--pu) * 3.1);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+/* The workbench, filling what is left of the window: stage left, a narrow rail right */
+.present .wb {
+  flex: 1 1 0;
+  min-height: 0;
+  grid-template-columns: minmax(0, 1fr) clamp(240px, 28vw, 380px);
+  gap: calc(var(--pu) * 2.4);
+  align-items: stretch;
+}
+
+.present .wb-stage,
+.present .wb-stage.pinned {
+  position: static;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: calc(var(--pu) * 1.6);
+  border-width: 2px;
+  box-shadow: none;
+  /* Tools size their pictures from the stage's height with cqh units */
+  container-type: size;
+}
+
+.present .wb-rail {
+  min-height: 0;
+  gap: calc(var(--pu) * 1.4);
+}
+
+/* Settings and sharing stay on the normal page; the seed is in the class link */
+.present .share-menu,
+.present .tool-actions,
+.present .wb-settings,
+.present .chart-title,
+.present .chart-caption:not(.keep-in-present),
+.present .wb-rail details,
+.present .challenge-next,
+.present .challenge-history {
+  display: none;
+}
+
+.present .view-switch {
+  flex: none;
+  align-self: flex-start;
+  margin-bottom: calc(var(--pu) * 1.2);
+  border-width: 2px;
+}
+
+.present .view-switch button {
+  min-height: calc(var(--pu) * 6.8);
+  padding: 0 1em;
+  font-size: calc(var(--pu) * 2.6);
+}
+
+/* The headline: one big result, the second one smaller */
+.present .stage-headline {
+  flex: none;
+  align-items: flex-end;
+  gap: calc(var(--pu) * 1) calc(var(--pu) * 3);
+  margin-bottom: calc(var(--pu) * 1);
+}
+
+.present .stage-headline p {
+  font-size: calc(var(--pu) * 2.9);
+  line-height: 1.1;
+}
+
+.present .stage-headline strong {
+  font-size: calc(var(--pu) * 6.25);
+  font-weight: 800;
+  line-height: 1;
+}
+
+.present .stage-headline p:first-child strong {
+  font-size: calc(var(--pu) * 10);
+}
+
+.present .stage-headline .s1 {
+  color: #004f47;
+}
+
+.present .stage-headline .stage-meta {
+  align-self: flex-end;
+  font-size: calc(var(--pu) * 2.6);
+}
+
+.present .wb-stage > .chart-caption {
+  flex: none;
+  margin: calc(var(--pu) * 0.8) 0 0;
+  font-size: calc(var(--pu) * 2.6);
+}
+
+.present .stage-chart {
+  flex: 1 1 0;
+  height: auto;
+  min-height: 120px;
+}
+
+.present .stage-held {
+  flex: 1 1 0;
+  min-height: 0;
+  font-size: calc(var(--pu) * 3.4);
+}
+
+/* Rail controls: 52–64 px tall, readable from the room */
+.present .run-button {
+  min-height: calc(var(--pu) * 8.3);
+  font-size: calc(var(--pu) * 3.4);
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.present .wb-rail button:not(.run-button):not(.text-button),
+.present .wb-rail select {
+  min-height: max(var(--target), calc(var(--pu) * 6.8));
+  font-size: max(16px, calc(var(--pu) * 2.6));
+}
+
+.present .wb-rail .text-button {
+  font-size: max(16px, calc(var(--pu) * 2.6));
+}
+
+.present .rail-next {
+  display: block;
+  margin-top: auto;
+}
+
+.present .rail-next a {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: calc(var(--pu) * 7.8);
+  box-sizing: border-box;
+  padding: calc(var(--pu) * 0.8) calc(var(--pu) * 1.6);
+  border: 2px solid var(--control-line);
+  border-radius: 12px;
+  color: var(--text-strong);
+  font-size: calc(var(--pu) * 2.9);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.present .rail-next a span {
+  color: var(--text-label);
+  font-size: calc(var(--pu) * 2.1);
+  font-weight: 600;
+}
+
+/* The predict card: the question is already the page's big line */
+.present .has-question .predict-card > p:not([class]) {
+  display: none;
+}
+
+.present .predict-card {
+  box-shadow: none;
+  font-size: calc(var(--pu) * 2.6);
+}
+
+.present .predict-card h2 {
+  font-size: calc(var(--pu) * 2.9);
+}
+
+.present .predict-card input {
+  min-height: calc(var(--pu) * 7.4);
+  font-size: calc(var(--pu) * 4);
+}
+
+.present .predict-card form button {
+  min-height: calc(var(--pu) * 7.4);
+  font-size: calc(var(--pu) * 3.1);
+}
+
+/* The verdict is enough on the projector; the teacher explains the rest */
+.present .challenge-result p:not(:first-child):not(.challenge-next) {
+  display: none;
+}
+
+.present .challenge-result strong {
+  font-size: calc(var(--pu) * 4.4);
+}
+
+/* Random walk, Galton, DLA and π: the picture beside a column with the headline and a small chart.
+   The picture takes the stage's height, up to about 52% of its width. */
+.present .side-grid {
+  flex: 1 1 0;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  gap: calc(var(--pu) * 2);
+  align-items: stretch;
+}
+
+.present .side-grid > .side-square {
+  order: 0;
+  width: auto;
+  height: min(100%, 52cqw);
+  max-width: none;
+  align-self: start;
+}
+
+.present .side-grid > .side-col {
+  order: 0;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+.present .side-col .stage-headline {
+  flex-direction: column;
+  align-items: flex-start;
+  flex-wrap: nowrap;
+  gap: calc(var(--pu) * 0.8);
+}
+
+.present .side-col .stage-headline p:first-child strong {
+  font-size: calc(var(--pu) * 7.5);
+}
+
+.present .side-col .stage-headline strong {
+  font-size: calc(var(--pu) * 5);
+}
+
+.present .side-col .stage-headline .stage-meta {
+  align-self: flex-start;
+  margin-left: 0;
+  text-align: left;
+}
+
+.present .side-col .side-chart {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0;
+  min-height: 0;
+}
+
+.present .side-chart canvas {
+  flex: 1 1 0;
+  min-height: 0;
+}
+
+/* Rail button groups: two to a row, so labels fit at projector size */
+.present .wb-rail .run-pair,
+.present .wb-rail .drop-grid,
+.present .wb-rail .growth-row,
+.present .wb-rail .throw-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: calc(var(--pu) * 1);
+}
+
+.present .wb-rail .run-pair {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+/* A narrow window (a phone, or a split screen): stack the rail under the stage and let the page scroll */
+@media (max-width: 699px) {
+  html.present {
+    --pu: 5.5px;
+  }
+
+  .present-frame {
+    height: auto;
+  }
+
+  .present-body,
+  .present .wb {
+    flex: none;
+  }
+
+  .present .wb {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .present .wb-stage,
+  .present .wb-stage.pinned {
+    height: 62svh;
+  }
+
+  .present-keys {
+    display: none;
+  }
+}

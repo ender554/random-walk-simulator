@@ -1,4 +1,4 @@
-import { PALETTE, SERIES, chartFrame, clipToPlot, evenTicks, powersOfTen } from '../../utils/chart';
+import { PALETTE, alpha, SERIES, chartFrame, clipToPlot, evenTicks, powersOfTen } from '../../utils/chart';
 import { binomialPmf } from '../../utils/stats';
 
 // Running share of heads (or heads minus tails) for every run, against the expected band.
@@ -34,7 +34,7 @@ export function drawRuns(canvas, { runs, flips, p, mode }) {
   clipToPlot(frame);
 
   const ns = runs[0].points.map(([n]) => n);
-  ctx.fillStyle = 'rgba(255, 209, 102, 0.12)';
+  ctx.fillStyle = alpha(PALETTE.yellow, 0.12);
   ctx.beginPath();
   ns.forEach((n) => ctx.lineTo(x(n), y(center(n) + spread(n))));
   [...ns].reverse().forEach((n) => ctx.lineTo(x(n), y(center(n) - spread(n))));

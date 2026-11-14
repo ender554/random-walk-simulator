@@ -1,5 +1,5 @@
 import { clearCanvas } from '../../utils/canvas';
-import { PALETTE } from '../../utils/chart';
+import { PALETTE, alpha } from '../../utils/chart';
 
 /**
  * People sitting in a circle with a faint line for every pair: the number of lines is the
@@ -22,7 +22,7 @@ export function drawRoom(canvas, days) {
   };
 
   // The empty room: the circle people will sit on
-  ctx.strokeStyle = 'rgba(138, 150, 179, 0.35)';
+  ctx.strokeStyle = alpha(PALETTE.muted, 0.35);
   ctx.lineWidth = 1;
   ctx.setLineDash([3, 5]);
   ctx.beginPath();
@@ -31,7 +31,7 @@ export function drawRoom(canvas, days) {
   ctx.setLineDash([]);
 
   const matched = new Set();
-  ctx.strokeStyle = n > 40 ? 'rgba(138, 150, 179, 0.12)' : 'rgba(138, 150, 179, 0.3)';
+  ctx.strokeStyle = n > 40 ? alpha(PALETTE.muted, 0.12) : alpha(PALETTE.muted, 0.3);
   ctx.beginPath();
   for (let i = 0; i < n; i += 1) {
     for (let j = i + 1; j < n; j += 1) {

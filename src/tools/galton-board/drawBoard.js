@@ -1,5 +1,5 @@
 import { clearCanvas } from '../../utils/canvas';
-import { PALETTE } from '../../utils/chart';
+import { PALETTE, alpha } from '../../utils/chart';
 import { binomialPmf } from '../../utils/stats';
 
 export const WIDTH = 800;
@@ -51,7 +51,7 @@ export function drawBoard(canvas, state) {
 
   // Last ball's path
   if (lastPath) {
-    ctx.strokeStyle = 'rgba(255, 107, 139, 0.85)';
+    ctx.strokeStyle = alpha(PALETTE.pink, 0.85);
     ctx.lineWidth = 3;
     ctx.beginPath();
     for (let r = 0; r <= rows; r += 1) ctx.lineTo(pegX(r, lastPath[r]), pegY(r) - 6);
@@ -62,7 +62,7 @@ export function drawBoard(canvas, state) {
   // Pegs
   for (let r = 0; r < rows; r += 1) {
     for (let k = 0; k <= r; k += 1) {
-      ctx.fillStyle = '#56647f';
+      ctx.fillStyle = PALETTE.peg;
       ctx.beginPath();
       ctx.arc(pegX(r, k), pegY(r), 3.5, 0, Math.PI * 2);
       ctx.fill();
@@ -83,7 +83,7 @@ export function drawBoard(canvas, state) {
   const barH = (count) => (count / peak) * (BIN_BOTTOM - BIN_TOP - 24);
   const binX = (k) => pegX(rows, k);
 
-  ctx.strokeStyle = '#1f2836';
+  ctx.strokeStyle = PALETTE.grid;
   ctx.lineWidth = 1;
   for (let k = 0; k <= rows + 1; k += 1) {
     const edge = binX(k) - spacing / 2;
@@ -95,7 +95,7 @@ export function drawBoard(canvas, state) {
 
   for (let k = 0; k <= rows; k += 1) {
     const h = barH(bins[k]);
-    ctx.fillStyle = lastPath && lastPath[rows] === k ? '#5ff3e2' : PALETTE.cyan;
+    ctx.fillStyle = lastPath && lastPath[rows] === k ? PALETTE.cyanHi : PALETTE.cyan;
     ctx.fillRect(binX(k) - spacing / 2 + 2, BIN_BOTTOM - h, spacing - 4, h);
     // Bar labels: count, share of balls, or binomial probability
     if (total > 0 && rows <= 14 && view !== 'none') {
@@ -132,8 +132,8 @@ export function drawBoard(canvas, state) {
       ctx.stroke();
       // Mean and ±1σ markers
       ctx.setLineDash([5, 4]);
-      for (const [offset, alpha] of [[0, 0.9], [-sd, 0.5], [sd, 0.5]]) {
-        ctx.strokeStyle = `rgba(167, 139, 250, ${alpha})`;
+      for (const [offset, a] of [[0, 0.9], [-sd, 0.5], [sd, 0.5]]) {
+        ctx.strokeStyle = alpha(PALETTE.violet, a);
         ctx.beginPath();
         ctx.moveTo(binX(mean + offset), BIN_TOP - 10);
         ctx.lineTo(binX(mean + offset), BIN_BOTTOM);
@@ -143,7 +143,7 @@ export function drawBoard(canvas, state) {
     }
   }
 
-  ctx.strokeStyle = '#2c3850';
+  ctx.strokeStyle = PALETTE.gridStrong;
   ctx.beginPath();
   ctx.moveTo(binX(0) - spacing / 2, BIN_BOTTOM);
   ctx.lineTo(binX(rows) + spacing / 2, BIN_BOTTOM);
@@ -165,7 +165,7 @@ export function drawBoard(canvas, state) {
   }
 
   // Falling balls
-  ctx.fillStyle = '#edf3ff';
+  ctx.fillStyle = PALETTE.text;
   for (const ball of inFlight) {
     const [x, y] = ballPosition(ball, rows, pegX, pegY);
     ctx.beginPath();

@@ -37,7 +37,7 @@ export const tools = [
     label: 'Random walk',
     short: 'Draw 2D random walks with seeds, compare distance to √n, and export PNGs.',
     category: 'random-paths',
-    updated: '2026-11-13',
+    updated: '2026-11-14',
     status: 'live',
   },
   {
@@ -46,7 +46,7 @@ export const tools = [
     label: "Gambler's ruin",
     short: 'Bet repeatedly from a starting bankroll and see how often you go broke.',
     category: 'random-paths',
-    updated: '2026-11-13',
+    updated: '2026-11-14',
     status: 'live',
   },
   {
@@ -55,7 +55,7 @@ export const tools = [
     label: 'Stock price paths',
     short: 'Geometric Brownian motion with drift and volatility controls.',
     category: 'random-paths',
-    updated: '2026-11-13',
+    updated: '2026-11-14',
     status: 'live',
   },
   {
@@ -64,7 +64,7 @@ export const tools = [
     label: 'Diffusion-limited aggregation',
     short: 'Random walkers stick together and grow coral-like fractals.',
     category: 'random-paths',
-    updated: '2026-11-13',
+    updated: '2026-11-14',
     status: 'live',
   },
   {
@@ -73,7 +73,7 @@ export const tools = [
     label: 'Central limit theorem',
     short: 'Average random samples and watch any distribution become a bell curve.',
     category: 'distributions',
-    updated: '2026-11-13',
+    updated: '2026-11-14',
     status: 'live',
   },
   {
@@ -82,7 +82,7 @@ export const tools = [
     label: 'Galton board',
     short: 'Balls bounce through pegs and stack into a normal distribution.',
     category: 'distributions',
-    updated: '2026-11-13',
+    updated: '2026-11-14',
     status: 'live',
   },
   {
@@ -91,7 +91,7 @@ export const tools = [
     label: 'Coin flip',
     short: 'Flip thousands of coins and watch the running average settle at 50%.',
     category: 'distributions',
-    updated: '2026-11-13',
+    updated: '2026-11-14',
     status: 'live',
   },
   {
@@ -100,7 +100,7 @@ export const tools = [
     label: 'Monty Hall problem',
     short: 'Play the game or run thousands of trials to see why switching wins.',
     category: 'puzzles',
-    updated: '2026-11-13',
+    updated: '2026-11-14',
     status: 'live',
   },
   {
@@ -109,7 +109,7 @@ export const tools = [
     label: 'Birthday paradox',
     short: 'How many people until two share a birthday? Fewer than you think.',
     category: 'puzzles',
-    updated: '2026-11-13',
+    updated: '2026-11-14',
     status: 'live',
   },
   {
@@ -118,7 +118,7 @@ export const tools = [
     label: 'Monte Carlo π',
     short: 'Throw random points at a circle and estimate π from where they land.',
     category: 'puzzles',
-    updated: '2026-11-13',
+    updated: '2026-11-14',
     status: 'live',
   },
 ];

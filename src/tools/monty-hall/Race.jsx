@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { PALETTE } from '../../utils/chart';
 
 const SPEEDS = [
   { label: 'Slow (5 games/s)', perSecond: 5 },
@@ -43,8 +44,8 @@ function Race({ sim, games }) {
     if (sim.other[g] === sim.car[g]) swap += 1;
   }
   const lanes = [
-    { label: 'Always stay', wins: stay, color: '#ff6b8b' },
-    { label: 'Always switch', wins: swap, color: '#1de5d0' },
+    { label: 'Always stay', wins: stay, color: PALETTE.pink },
+    { label: 'Always switch', wins: swap, color: PALETTE.cyan },
   ];
 
   return (

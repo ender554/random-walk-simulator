@@ -1,6 +1,7 @@
 import { useContext } from 'react';
 import { nextTools, toolPath } from '../tools';
 import { ToolSlug } from './toolSlug';
+import { isPresent } from './present';
 
 /**
  * Next experiment: three hand-picked tools with a reason each, placed right after a tool's results.
@@ -44,7 +45,8 @@ export function RailNext() {
   if (!main) return null;
   return (
     <p className="rail-next">
-      <a href={toolPath(main.tool.slug)} data-hop="rail">
+      {/* In present mode it stays in present mode, so a teacher can step through a path */}
+      <a href={isPresent() ? `${toolPath(main.tool.slug)}?present=1` : toolPath(main.tool.slug)} data-hop={isPresent() ? 'present' : 'rail'}>
         <span>{main.step ? `Next · step ${main.step.step} of ${main.step.of}` : 'Next experiment'}</span>
         {main.tool.name} →
       </a>

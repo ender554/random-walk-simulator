@@ -1,4 +1,4 @@
-import { PALETTE, chartFrame, clipToPlot, evenTicks, logTicks } from '../../utils/chart';
+import { PALETTE, alpha, chartFrame, clipToPlot, evenTicks, logTicks } from '../../utils/chart';
 import { STEPS_PER_YEAR, finalDensity } from '../../utils/stockPaths';
 import { quantile } from '../../utils/stats';
 
@@ -40,8 +40,8 @@ export function drawPaths(canvas, { sim, bands, s0, theory, years, show, logScal
       for (let i = kept - 1; i >= 0; i -= 1) ctx.lineTo(x(tAt(i)), y(Math.max(yMin || 1e-9, lower.values[i])));
       ctx.fill();
     };
-    fill(bands[0], bands[4], 'rgba(29, 229, 208, 0.12)');
-    fill(bands[1], bands[3], 'rgba(29, 229, 208, 0.25)');
+    fill(bands[0], bands[4], alpha(PALETTE.cyan, 0.12));
+    fill(bands[1], bands[3], alpha(PALETTE.cyan, 0.25));
   }
 
   if (show !== 'bands') {

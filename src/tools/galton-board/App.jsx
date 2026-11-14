@@ -6,6 +6,7 @@ import ToolActions from '../../shared/ToolActions';
 import Faq from '../../shared/Faq';
 import { Legend, RangeControl, SeedControl, StatRow } from '../../shared/controls';
 import { useUrlState } from '../../shared/useUrlState';
+import { presentZoom } from '../../shared/present';
 import { PALETTE } from '../../utils/chart';
 import { binomialPmf } from '../../utils/stats';
 import { downloadCSV } from '../../utils/export';
@@ -153,7 +154,7 @@ function App() {
         ctx.setTransform(w / WIDTH, 0, 0, h / HEIGHT, 0, 0);
         drawBoard({ width: WIDTH, height: HEIGHT, getContext: () => ctx }, {
           rows, p, bins: s.bins, inFlight: s.inFlight, lastPath: s.lastPath, view: v, pascal: pas, normal: nor,
-          textScale: WIDTH / css.width,
+          textScale: (WIDTH / css.width) * presentZoom(),
         });
       }
       setDisplay((d) => (d.landed === s.landed && d.playing === s.playing && d.queued === s.queue + s.inFlight.length && d.bins.length === s.bins.length
@@ -210,12 +211,12 @@ function App() {
     >
       <div className="wb">
         <div className="wb-stage pinned" ref={stageRef}>
-          <div className="board-grid">
-            <div className="board-canvas">
+          <div className="board-grid side-grid">
+            <div className="board-canvas side-square">
               <canvas ref={canvasRef} role="img"
                 aria-label={`Galton board with ${rows} rows; ${landed} balls have landed, averaging bin ${mean.toFixed(2)}.`} />
             </div>
-            <div className="board-side">
+            <div className="board-side side-col">
               <div className="stage-headline">
                 <p><span>Average bin</span> <strong className="s1">{mean.toFixed(2)}</strong></p>
                 <p><span>Theory, rows × p</span> <strong>{(rows * p).toFixed(2)}</strong></p>

@@ -1,11 +1,21 @@
 import { pathGroups, toolPath } from '../tools';
 import { SITE_NAME, STUDIO_NAME, STUDIO_URL } from '../site';
 import SimulatorsMenu from './SimulatorsMenu';
+import { isPresent } from './present';
 import './site.css';
 
 const isEmbedded = () => typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('embed') === '1';
 
 function SiteLayout({ children, wide = false }) {
+  // Present mode: the tool page draws its own frame (PresentFrame), with no site header or footer
+  if (isPresent()) {
+    return (
+      <div className="site present-site">
+        <main id="main" className="site-main">{children}</main>
+      </div>
+    );
+  }
+
   // Embedded in a class site or LMS: just the tool, with a link back
   if (isEmbedded()) {
     const full = window.location.href.replace(/([?&])embed=1&?/, '$1').replace(/[?&]$/, '');

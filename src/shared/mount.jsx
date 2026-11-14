@@ -1,5 +1,6 @@
 import { StrictMode } from 'react';
 import { createRoot, hydrateRoot } from 'react-dom/client';
+import { startPresent } from './present';
 import './base.css';
 
 // The build prerenders each page with its default settings and US number format
@@ -9,6 +10,7 @@ const matchesPrerender = () => window.location.search === '' && (1234.5).toLocal
 
 // Every page entry calls this with its top-level element.
 export function mount(page) {
+  startPresent();
   const root = document.getElementById('root');
   const tree = <StrictMode>{page}</StrictMode>;
   if (root.hasChildNodes() && matchesPrerender()) hydrateRoot(root, tree);

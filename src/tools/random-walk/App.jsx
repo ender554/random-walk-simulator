@@ -211,12 +211,12 @@ function App() {
       <div className="wb">
         <div className="wb-stage pinned walk-stage" ref={stageRef}>
           <ViewSwitch label="View" options={VIEWS} value={view} onChange={(v) => set('view', v)} />
-          <div className="walk-grid">
-            <div className="walk-canvas">
+          <div className="walk-grid side-grid">
+            <div className="walk-canvas side-square">
               <canvas ref={canvasRef} role="img"
                 aria-label={`${walkers} random walk${walkers > 1 ? 's' : ''} of ${at} steps; average distance from start ${fmt(current[1])} steps.`} />
             </div>
-            <div className="walk-side">
+            <div className="walk-side side-col">
               <div className="stage-headline">
                 <p><span>Average distance</span> <strong className="s1">{fmt(current[1])}</strong></p>
                 <p><span>Theory √(πn)/2</span> <strong>{distTheory ? fmt(distTheory(at)) : 'none here'}</strong></p>
@@ -225,7 +225,7 @@ function App() {
                   <span>{walkers === 1 ? '1 walker: noisy, try 100' : `${walkers.toLocaleString()} walkers`}</span>
                 </p>
               </div>
-              <div className="walk-dist">
+              <div className="walk-dist side-chart">
                 <DisplacementChart stats={visibleStats} steps={steps} measure="distance" theory={distTheory} label={distLabel} />
               </div>
             </div>

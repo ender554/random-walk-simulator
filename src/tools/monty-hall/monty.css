@@ -156,3 +156,24 @@
     gap: 0.25rem;
   }
 }
+
+/* Present mode: doors big enough to pick from across the room */
+.present .door {
+  padding: 1.25rem 0.5rem;
+}
+
+.present .door-face {
+  font-size: 4.5rem;
+}
+
+.present .door-number {
+  font-size: 1.3rem;
+}
+
+.present .door-chance {
+  font-size: 1.05rem;
+}
+
+.present .door-row.many .door-face {
+  font-size: 1.4rem;
+}

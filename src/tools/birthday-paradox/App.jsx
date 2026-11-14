@@ -11,7 +11,7 @@ import { useUrlState } from '../../shared/useUrlState';
 import {
   QUESTIONS, SPACES, canSimulate, firstMatch, parseBirthdays, peopleNeeded, probability, roomPool, simulateRooms,
 } from '../../utils/birthdays';
-import { PALETTE, chartFrame, clipToPlot, evenTicks, powersOfTen } from '../../utils/chart';
+import { PALETTE, alpha, chartFrame, clipToPlot, evenTicks, powersOfTen } from '../../utils/chart';
 import { downloadCSV } from '../../utils/export';
 import { randomSeed } from '../../utils/seed';
 import Calendar from './Calendar';
@@ -93,7 +93,7 @@ function drawChart(canvas, { question, size, window, people, maxPeople, simulate
     for (const n of points) ctx.lineTo(x(n), y(probability(q, n, size, window)));
     ctx.stroke();
   };
-  if (question !== 'anyTwo') curve('anyTwo', 'rgba(138, 150, 179, 0.7)', 1.5);
+  if (question !== 'anyTwo') curve('anyTwo', alpha(PALETTE.muted, 0.7), 1.5);
   curve(question, PALETTE.cyan, 2.5);
 
   ctx.strokeStyle = PALETTE.yellow;
@@ -240,6 +240,7 @@ function App() {
       slug="birthday-paradox"
       workbench
       title="Birthday Paradox Calculator"
+      question="How many people make a better than even chance that two of them share a birthday?"
       intro="Exact odds for any group, your own birthday, three people, near-birthdays and hash collisions, checked against thousands of random rooms or your class."
     >
       <div className="wb">
@@ -276,7 +277,7 @@ function App() {
                     <div className="room-calendar">
                       {isCalendar && <Calendar days={room} emptyText="Nobody in this room shares a birthday yet." />}
                       {firsts.length > 1 && (
-                        <p className="chart-caption">First match in each room so far: {firsts.join(', ')} {persons}.</p>
+                        <p className="chart-caption keep-in-present">First match in each room so far: {firsts.join(', ')} {persons}.</p>
                       )}
                     </div>
                   )}

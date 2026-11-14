@@ -165,6 +165,7 @@ function App() {
       slug="monty-hall"
       workbench
       title="Monty Hall Problem Simulator"
+      question="Out of 100 games, how many would you win by always switching?"
       intro="Three doors, one car, two goats. You pick a door, the host opens another to show a goat, and offers you the switch."
     >
       <div className="wb">
@@ -217,7 +218,7 @@ function App() {
                   aria-label={`Switching won ${pct(switchRate)} and staying won ${pct(stayRate)} of ${sim.counted} counted games.`}
                 />
               </div>
-              <p className="chart-caption">
+              <p className="chart-caption keep-in-present">
                 Dashed lines: theory, {pct(t.switch)} and {pct(t.stay)}. Games on a log scale.
               </p>
             </>
