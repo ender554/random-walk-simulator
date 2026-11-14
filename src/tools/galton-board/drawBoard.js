@@ -39,12 +39,15 @@ function ballPosition(ball, rows, pegX, pegY) {
  * last ball's path, and bins compared with the binomial prediction (and optionally the normal curve).
  */
 export function drawBoard(canvas, state) {
-  const { rows, p, bins, inFlight, lastPath, view, pascal, normal } = state;
+  const { rows, p, bins, inFlight, lastPath, view, pascal, normal, textScale = 1 } = state;
   const ctx = canvas.getContext('2d');
   clearCanvas(ctx, canvas);
   const { spacing, pegX, pegY } = layout(canvas.width, rows);
   const total = bins.reduce((a, b) => a + b, 0);
-  const labelFont = rows > 14 ? 9 : rows > 9 ? 11 : 13;
+  // The board is drawn in 800 × 680 units and scaled to the screen; textScale keeps text at its CSS size
+  // (12 px at least), and labels that would not fit their slot are left out.
+  const labelFont = Math.max(rows > 14 ? 9 : rows > 9 ? 11 : 13, textScale > 1 ? 12 : 0) * textScale;
+  const fits = (text) => ctx.measureText(text).width <= spacing - 2;
 
   // Last ball's path
   if (lastPath) {
@@ -68,7 +71,7 @@ export function drawBoard(canvas, state) {
         ctx.font = `600 ${labelFont}px system-ui, sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'top';
-        ctx.fillText(String(choose(r, k)), pegX(r, k), pegY(r) + 6);
+        if (fits(String(choose(r, k)))) ctx.fillText(String(choose(r, k)), pegX(r, k), pegY(r) + 6);
       }
     }
   }
@@ -103,7 +106,7 @@ export function drawBoard(canvas, state) {
       ctx.font = `${labelFont}px system-ui, sans-serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'bottom';
-      ctx.fillText(label, binX(k), BIN_BOTTOM - h - 3);
+      if (fits(label)) ctx.fillText(label, binX(k), BIN_BOTTOM - h - 3);
     }
   }
 
@@ -149,15 +152,15 @@ export function drawBoard(canvas, state) {
   // Bin labels: number of right bounces, and Pascal's row under them
   ctx.textAlign = 'center';
   ctx.textBaseline = 'top';
-  const every = rows > 14 ? 2 : 1;
+  const every = rows > 14 || spacing / textScale < 22 ? 2 : 1;
   for (let k = 0; k <= rows; k += every) {
     ctx.fillStyle = PALETTE.label;
-    ctx.font = '12px system-ui, sans-serif';
+    ctx.font = `${12 * textScale}px system-ui, sans-serif`;
     ctx.fillText(String(k), binX(k), BIN_BOTTOM + 6);
     if (pascal) {
       ctx.fillStyle = PALETTE.violet;
       ctx.font = `600 ${labelFont}px system-ui, sans-serif`;
-      ctx.fillText(choose(rows, k).toLocaleString(), binX(k), BIN_BOTTOM + 24);
+      if (fits(choose(rows, k).toLocaleString())) ctx.fillText(choose(rows, k).toLocaleString(), binX(k), BIN_BOTTOM + 6 + 16 * textScale);
     }
   }
 

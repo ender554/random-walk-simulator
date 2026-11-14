@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import seedrandom from 'seedrandom';
 import ToolPage from '../../shared/ToolPage';
-import NextTools from '../../shared/NextTools';
+import NextTools, { RailNext } from '../../shared/NextTools';
 import ToolActions from '../../shared/ToolActions';
 import Faq from '../../shared/Faq';
 import { Legend, RangeControl, SeedControl, StatRow } from '../../shared/controls';
@@ -11,6 +11,7 @@ import { binomialPmf } from '../../utils/stats';
 import { downloadCSV } from '../../utils/export';
 import { randomSeed } from '../../utils/seed';
 import { HEIGHT, WIDTH, drawBoard } from './drawBoard';
+import './galton.css';
 
 const MAX_BALLS = 10000;
 const SPEEDS = [
@@ -54,9 +55,13 @@ function generatePaths(rows, p, seed) {
   });
 }
 
+
+// The workbench (docs/redesign-2026-11-10/B3-LOGIC.md): the board on the stage (on a laptop with the results beside
+// it), and the rail with the drop buttons, the next step, Share & export and the settings.
 function App() {
   const canvasRef = useRef(null);
-  const chartRef = useRef(null);
+  const stageRef = useRef(null);
+  const sizeRef = useRef(null); // the board's shown size in CSS pixels, read by the animation loop
   const [settings, set, reset] = useUrlState(DEFAULTS);
   const { rows, p, seed, view, pascal, normal, speed } = settings;
   const paths = useMemo(() => generatePaths(rows, p, seed), [rows, p, seed]);
@@ -68,6 +73,17 @@ function App() {
   useEffect(() => {
     settingsRef.current = settings;
   });
+
+  // The board is drawn in 800 × 680 units, scaled to its shown size times the pixel ratio
+  useEffect(() => {
+    const el = canvasRef.current;
+    if (!el || typeof ResizeObserver === 'undefined') return undefined;
+    const observer = new ResizeObserver(([entry]) => {
+      sizeRef.current = { width: entry.contentRect.width, height: entry.contentRect.height };
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     sim.current = { released: 0, landed: 0, queue: settings.start, playing: false, inFlight: [], bins: new Array(rows + 1).fill(0), lastPath: null, lastRelease: 0, finish: false };
@@ -123,8 +139,22 @@ function App() {
       }
 
       const { view: v, pascal: pas, normal: nor } = settingsRef.current;
-      if (canvasRef.current) {
-        drawBoard(canvasRef.current, { rows, p, bins: s.bins, inFlight: s.inFlight, lastPath: s.lastPath, view: v, pascal: pas, normal: nor });
+      const el = canvasRef.current;
+      const css = sizeRef.current;
+      if (el && css?.width) {
+        const ratio = window.devicePixelRatio || 1;
+        const w = Math.round(css.width * ratio);
+        const h = Math.round(css.height * ratio);
+        if (el.width !== w || el.height !== h) {
+          el.width = w;
+          el.height = h;
+        }
+        const ctx = el.getContext('2d');
+        ctx.setTransform(w / WIDTH, 0, 0, h / HEIGHT, 0, 0);
+        drawBoard({ width: WIDTH, height: HEIGHT, getContext: () => ctx }, {
+          rows, p, bins: s.bins, inFlight: s.inFlight, lastPath: s.lastPath, view: v, pascal: pas, normal: nor,
+          textScale: WIDTH / css.width,
+        });
       }
       setDisplay((d) => (d.landed === s.landed && d.playing === s.playing && d.queued === s.queue + s.inFlight.length && d.bins.length === s.bins.length
         ? d
@@ -174,37 +204,76 @@ function App() {
   return (
     <ToolPage
       slug="galton-board"
+      workbench
       title="Galton Board Simulator"
-      intro="Drop balls through rows of pegs. Each bounce is a coin flip, left or right, and together the balls stack into a bell curve. Follow a single ball's path, see Pascal's triangle count the routes, and compare the bins with the binomial and normal curves."
+      intro="Drop balls through rows of pegs: each bounce is a coin flip, left or right, and together the balls stack into a bell curve."
     >
-
-      <div className="workbench">
-        <div className="workbench-controls">
-          <section className="controls-panel" aria-label="Board settings">
-            <div className="button-row">
-              <button type="button" className="primary" onClick={() => drop(1)}>Drop 1 ball</button>
-              <button type="button" onClick={() => drop(10)}>Drop 10</button>
-              <button type="button" onClick={() => drop(100)}>Drop 100</button>
-              <button type="button" onClick={togglePlay}>{display.playing ? '⏸ Pause' : '▶ Keep dropping'}</button>
-              <button type="button" onClick={finish} disabled={!display.queued && !display.playing}>Finish now</button>
-              <button type="button" onClick={empty}>Empty the board</button>
+      <div className="wb">
+        <div className="wb-stage pinned" ref={stageRef}>
+          <div className="board-grid">
+            <div className="board-canvas">
+              <canvas ref={canvasRef} role="img"
+                aria-label={`Galton board with ${rows} rows; ${landed} balls have landed, averaging bin ${mean.toFixed(2)}.`} />
             </div>
-            <div className="control-grid">
-              <RangeControl id="rows-range" label="Rows of pegs" value={rows} min={1} max={20} onChange={(v) => set('rows', v)} />
-              <RangeControl id="p-range" label="Chance of bouncing right" display={`${Math.round(p * 100)}%`} value={p}
-                min={0.1} max={0.9} step={0.01} onChange={(v) => set('p', v)} />
-              <div className="control-row">
-                <label htmlFor="speed-select">Speed</label>
-                <select id="speed-select" value={speed} onChange={(e) => set('speed', Number(e.target.value))}>
-                  {SPEEDS.map((s, i) => <option key={s.label} value={i}>{s.label}</option>)}
-                </select>
+            <div className="board-side">
+              <div className="stage-headline">
+                <p><span>Average bin</span> <strong className="s1">{mean.toFixed(2)}</strong></p>
+                <p><span>Theory, rows × p</span> <strong>{(rows * p).toFixed(2)}</strong></p>
+                <p className="stage-meta">
+                  <span>{landed.toLocaleString()} balls landed</span>{' '}
+                  <span>spread {sd.toFixed(2)} (theory {Math.sqrt(rows * p * (1 - p)).toFixed(2)})</span>
+                </p>
               </div>
-              <SeedControl value={seed} onChange={(v) => set('seed', v)} />
+              <div className="board-extra">
+                {lastPath && (
+                  <p className="board-last" aria-live="off">
+                    Last ball: {pathText} → {lastPath[rows]} right bounce{lastPath[rows] === 1 ? '' : 's'} → bin {lastPath[rows]}
+                  </p>
+                )}
+                <Legend
+                  items={[
+                    { color: PALETTE.cyan, label: 'Balls in each bin (number of right bounces)' },
+                    { color: PALETTE.yellow, label: 'Binomial prediction' },
+                    ...(normal ? [{ color: PALETTE.violet, label: 'Normal curve, mean, ±1σ' }] : []),
+                    { color: PALETTE.pink, label: 'Last ball\'s path' },
+                  ]}
+                />
+              </div>
             </div>
-            <div className="preset-row" role="group" aria-label="Bar labels">
-              {[['count', 'Counts'], ['fraction', 'Share of balls'], ['probability', 'Exact probability'], ['none', 'No labels']].map(([key, label]) => (
-                <button key={key} type="button" aria-pressed={view === key} onClick={() => set('view', key)}>{label}</button>
-              ))}
+          </div>
+        </div>
+
+        <div className="wb-rail">
+          <div className="drop-grid">
+            <button type="button" className="run-button" onClick={() => drop(1)}>Drop 1 ball</button>
+            <button type="button" onClick={() => drop(10)}>Drop 10</button>
+            <button type="button" onClick={() => drop(100)}>Drop 100</button>
+            <button type="button" onClick={togglePlay}>{display.playing ? 'Pause' : 'Keep dropping'}</button>
+            <button type="button" onClick={finish} disabled={!display.queued && !display.playing}>Finish now</button>
+            <button type="button" onClick={empty}>Empty the board</button>
+          </div>
+
+          <RailNext />
+
+          <ToolActions
+            menu
+            image={{ draw: imageDraw, size: { width: WIDTH, height: HEIGHT }, filename: 'galton-board.png' }}
+            onCsv={exportCsv}
+            csvLabel="Download bin counts (CSV)"
+            onReset={reset}
+            fullscreenRef={stageRef}
+          />
+
+          <section className="wb-settings" aria-labelledby="settings-heading">
+            <h2 id="settings-heading">Board settings</h2>
+            <RangeControl id="rows-range" label="Rows of pegs" value={rows} min={1} max={20} onChange={(v) => set('rows', v)} />
+            <RangeControl id="p-range" label="Chance of bouncing right" display={`${Math.round(p * 100)}%`} value={p}
+              min={0.1} max={0.9} step={0.01} onChange={(v) => set('p', v)} />
+            <div className="control-row">
+              <label htmlFor="speed-select">Speed</label>
+              <select id="speed-select" value={speed} onChange={(e) => set('speed', Number(e.target.value))}>
+                {SPEEDS.map((s, i) => <option key={s.label} value={i}>{s.label}</option>)}
+              </select>
             </div>
             <label className="check-row" htmlFor="pascal-check">
               <input id="pascal-check" type="checkbox" checked={pascal} onChange={(e) => set('pascal', e.target.checked)} />
@@ -214,37 +283,27 @@ function App() {
               <input id="normal-check" type="checkbox" checked={normal} onChange={(e) => set('normal', e.target.checked)} />
               Show the normal curve, mean and ±1 standard deviation
             </label>
-            <ToolActions
-              image={{ draw: imageDraw, size: { width: WIDTH, height: HEIGHT }, filename: 'galton-board.png' }}
-              onCsv={exportCsv}
-              csvLabel="Download bin counts (CSV)"
-              onReset={reset}
-              fullscreenRef={chartRef}
-            >
-              <button type="button" onClick={() => set('seed', randomSeed())}>🎲 New balls</button>
-            </ToolActions>
+            <details className="more-settings">
+              <summary>More settings</summary>
+              <div>
+                <div className="control-row">
+                  <label htmlFor="labels-select">Bar labels</label>
+                  <select id="labels-select" value={view} onChange={(e) => set('view', e.target.value)}>
+                    <option value="count">Counts</option>
+                    <option value="fraction">Share of balls</option>
+                    <option value="probability">Exact probability</option>
+                    <option value="none">No labels</option>
+                  </select>
+                </div>
+                <SeedControl value={seed} onChange={(v) => set('seed', v)} />
+                <button type="button" className="text-button" onClick={() => set('seed', randomSeed())}>New balls (new seed)</button>
+              </div>
+            </details>
           </section>
         </div>
-        <div className="workbench-stage">
-          <div className="canvas-wrapper chart-wrapper" ref={chartRef}>
-            <canvas ref={canvasRef} width={WIDTH} height={HEIGHT} role="img"
-              aria-label={`Galton board with ${rows} rows; ${landed} balls have landed, averaging bin ${mean.toFixed(2)}.`} />
-            <Legend
-              items={[
-                { color: PALETTE.cyan, label: 'Balls in each bin (number of right bounces)' },
-                { color: PALETTE.yellow, label: 'Binomial prediction' },
-                ...(normal ? [{ color: PALETTE.violet, label: 'Normal curve, mean, ±1σ' }] : []),
-                { color: PALETTE.pink, label: 'Last ball\'s path' },
-              ]}
-            />
-            {lastPath && (
-              <p className="chart-caption" aria-live="off">
-                Last ball: {pathText} → {lastPath[rows]} right bounce{lastPath[rows] === 1 ? '' : 's'} → bin {lastPath[rows]}
-              </p>
-            )}
-          </div>
-        </div>
       </div>
+
+      <NextTools />
 
       <section className="stats-panel">
         <h2>Results</h2>
@@ -261,7 +320,6 @@ function App() {
         </div>
       </section>
 
-      <NextTools />
       <section className="canvas-description prose" aria-labelledby="explain-heading">
         <h2 id="explain-heading">What is a Galton board?</h2>
         <p>
