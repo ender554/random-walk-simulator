@@ -1,18 +1,22 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import ToolPage from '../../shared/ToolPage';
-import NextTools from '../../shared/NextTools';
+import NextTools, { RailNext } from '../../shared/NextTools';
 import ToolActions from '../../shared/ToolActions';
+import ViewSwitch from '../../shared/ViewSwitch';
 import Faq from '../../shared/Faq';
 import { Legend, LogRangeControl, RangeControl, SeedControl, StatRow } from '../../shared/controls';
 import { useUrlState } from '../../shared/useUrlState';
+import { useScreenCanvas } from '../../shared/useScreenCanvas';
 import { SPREAD, codeSnippet, dropNeedles, generatePoints, repeatedEstimates } from '../../utils/monteCarloPi';
 import { PALETTE } from '../../utils/chart';
 import { downloadCSV } from '../../utils/export';
 import { randomSeed } from '../../utils/seed';
 import { drawConvergence, drawEstimates, drawNeedles, drawSquare } from './draw';
+import './pi.css';
 
 const DEFAULTS = { count: 10000, seed: 'pi', method: 'random', full: false, view: 'estimate', compare: false, mode: 'darts', needle: 0.8 };
 const SQUARE = { width: 600, height: 600 };
+const MODES = [['darts', 'Random darts'], ['needles', "Buffon's needle"]];
 const SPEEDS = [
   { label: 'Slow', seconds: 12 },
   { label: 'Normal', seconds: 2.5 },
@@ -102,19 +106,27 @@ function Classroom() {
           Your estimate: <strong>{fixed(estimate, 4)}</strong>, off by {fixed(estimate - Math.PI, 4)}. With {n} throws the
           typical error is ±{fixed(se, 3)}, so a fair throw lands between {fixed(Math.PI - 2 * se, 2)} and{' '}
           {fixed(Math.PI + 2 * se, 2)} about 95% of the time.{' '}
-          {Math.abs(estimate - Math.PI) <= 2 * se ? 'Your class is within that range. 🎯' : 'Your class is outside that range: were the throws really uniform over the square?'}
+          {Math.abs(estimate - Math.PI) <= 2 * se ? 'Your class is within that range.' : 'Your class is outside that range: were the throws really uniform over the square?'}
         </p>
       )}
     </section>
   );
 }
 
+
+// A chart drawn at its shown size
+function ScreenChart({ draw, label }) {
+  const ref = useScreenCanvas(draw);
+  return <canvas ref={ref} role="img" aria-label={label} />;
+}
+
+// The workbench (docs/redesign-2026-11-10/B3-LOGIC.md): the darts (or Buffon's needles) on the stage, with the estimate
+// on top and, on a laptop, the convergence chart beside the square; the rail has Run, the throw buttons, the next
+// step, Share & export and the settings.
 function App() {
   const squareRef = useRef(null);
-  const chartRef = useRef(null);
-  const histRef = useRef(null);
   const needleRef = useRef(null);
-  const boardWrapRef = useRef(null);
+  const stageRef = useRef(null);
   const [settings, set, reset] = useUrlState(DEFAULTS);
   const { count, seed, method, full, view, compare, mode, needle } = settings;
   const [shown, setShown] = useState(0);
@@ -129,11 +141,11 @@ function App() {
     [compare, method, count, seed, full],
   );
 
-  // New settings: throw everything again
+  // New settings, or back from the needles: throw everything again
   useEffect(() => {
     setGoal(count);
     setShown(0);
-  }, [points, count]);
+  }, [points, count, mode]);
 
   // Animate the dartboard toward the goal, drawing only new points each frame
   useEffect(() => {
@@ -165,19 +177,19 @@ function App() {
   const estimate = shown ? (4 * inside) / n : NaN;
   const se = SPREAD / Math.sqrt(n);
 
-  const drawChart = (canvas) => drawConvergence(canvas, {
-    series: [
-      { insideSoFar: points.insideSoFar, color: PALETTE.cyan },
-      ...(other ? [{ insideSoFar: other.insideSoFar, color: PALETTE.violet }] : []),
-    ],
-    shown: Math.max(shown, 1), total: count, view,
-  });
-
-  useEffect(() => {
-    if (mode !== 'darts') return;
-    if (chartRef.current && shown > 0) drawChart(chartRef.current);
-    if (histRef.current && repeats) drawEstimates(histRef.current, { estimates: repeats.estimates, n: repeats.n, current: shown >= repeats.n ? (4 * points.insideSoFar[repeats.n]) / repeats.n : NaN });
-  });
+  const drawChart = (canvas) => {
+    if (shown < 1) return;
+    drawConvergence(canvas, {
+      series: [
+        { insideSoFar: points.insideSoFar, color: PALETTE.cyan },
+        ...(other ? [{ insideSoFar: other.insideSoFar, color: PALETTE.violet }] : []),
+      ],
+      shown: Math.max(shown, 1), total: count, view,
+    });
+  };
+  const drawRepeats = (canvas) => {
+    if (repeats) drawEstimates(canvas, { estimates: repeats.estimates, n: repeats.n, current: shown >= repeats.n ? (4 * points.insideSoFar[repeats.n]) / repeats.n : NaN });
+  };
 
   const needleRun = useMemo(() => (mode === 'needles' ? dropNeedles(Math.min(count, 20000), needle, seed) : null), [mode, count, needle, seed]);
   useEffect(() => {
@@ -205,24 +217,103 @@ function App() {
     downloadCSV(`monte-carlo-pi-${shown}.csv`, ['point', 'x', 'y', 'inside', 'running_estimate'], rows);
   };
 
+  const chartLabel = `The estimate of pi as points are added; currently ${fixed(estimate, 4)}.`;
+  const chartLegend = (
+    <Legend
+      items={[
+        { color: PALETTE.cyan, label: method === 'random' ? 'Random points' : 'Halton points' },
+        ...(compare ? [{ color: PALETTE.violet, label: method === 'random' ? 'Halton points' : 'Random points' }] : []),
+        { color: PALETTE.yellow, label: view === 'error' ? 'Typical random error, 1.64/√n' : 'π and the 95% band' },
+      ]}
+    />
+  );
+  const chartCaption = view === 'error'
+    ? 'On log–log axes the random error falls along a line of slope −½: ten times fewer errors needs a hundred times more points. Halton points fall much faster.'
+    : 'The shaded band shrinks like 1/√n: the estimate should stay inside it about 95% of the time.';
+
   return (
     <ToolPage
       slug="monte-carlo-pi"
+      workbench
       title="Monte Carlo π Estimator"
-      intro="Throw random points at a square with a circle inside it, and estimate π from the share that lands inside. See how wrong you should expect to be, compare quasi-random points, try Buffon's needle, and get code that reproduces your exact run."
+      intro="Throw random points at a square with a circle inside it, and estimate π from the share that lands inside."
     >
-
-      <div className="workbench">
-        <div className="workbench-controls">
-          <section className="controls-panel" aria-label="Simulation settings">
-            <div className="mode-tabs" role="group" aria-label="Experiment">
-              <button type="button" aria-pressed={mode === 'darts'} onClick={() => set('mode', 'darts')}>Random darts</button>
-              <button type="button" aria-pressed={mode === 'needles'} onClick={() => set('mode', 'needles')}>Buffon&apos;s needle</button>
+      <div className="wb">
+        <div className="wb-stage pinned" ref={stageRef}>
+          <ViewSwitch label="Experiment" options={MODES} value={mode} onChange={(v) => set('mode', v)} />
+          {mode === 'darts' ? (
+            <div className="pi-grid">
+              <div className="pi-square">
+                <canvas ref={squareRef} width={SQUARE.width} height={SQUARE.height} role="img"
+                  aria-label={`${shown.toLocaleString()} points; ${inside.toLocaleString()} inside the circle, estimating pi as ${fixed(estimate, 4)}.`} />
+              </div>
+              <div className="pi-side">
+                <div className="stage-headline">
+                  <p><span>Estimate of π</span> <strong className="s1">{fixed(estimate, 4)}</strong></p>
+                  <p><span>Typical error</span> <strong>±{fixed(se, 4)}</strong></p>
+                  <p className="stage-meta">
+                    <span>{shown.toLocaleString()} points, {shown ? inside.toLocaleString() : 0} inside</span>{' '}
+                    <span>{shown ? `off by ${estimate - Math.PI >= 0 ? '+' : ''}${fixed(estimate - Math.PI, 4)}` : 'none thrown yet'} · seed {seed}</span>
+                  </p>
+                </div>
+                <div className="pi-stage-chart">
+                  <div className="pi-chart"><ScreenChart draw={drawChart} label={chartLabel} /></div>
+                  {chartLegend}
+                </div>
+              </div>
             </div>
-            <div className="control-grid">
-              <LogRangeControl id="points-range" label={mode === 'darts' ? 'Points to throw' : 'Needles to drop'} value={count}
-                minExp={2} maxExp={mode === 'darts' ? 5.3 : 4.3} onChange={(v) => set('count', v)} />
-              {mode === 'darts' ? (
+          ) : (
+            <>
+              <div className="stage-headline">
+                <p><span>Estimate of π</span> <strong className="s1">{fixed(needleEstimate, 4)}</strong></p>
+                <p><span>Crossing a line</span> <strong>{needleRun.hits.toLocaleString()}</strong></p>
+                <p className="stage-meta">
+                  <span>of {needleRun.needles.length.toLocaleString()} needles, length {needle}</span>{' '}
+                  <span>off by {fixed(needleEstimate - Math.PI, 4)} · seed {seed}</span>
+                </p>
+              </div>
+              <div className="pi-needles">
+                <canvas ref={needleRef} width={800} height={480} role="img"
+                  aria-label={`${needleRun.needles.length} needles; ${needleRun.hits} cross a line, estimating pi as ${fixed(needleEstimate, 4)}.`} />
+              </div>
+              <Legend items={[{ color: PALETTE.cyan, label: 'Crosses a line' }, { color: PALETTE.pink, label: 'Misses' }]} />
+            </>
+          )}
+        </div>
+
+        <div className="wb-rail">
+          <button type="button" className="run-button" onClick={() => set('seed', randomSeed())}>New throw</button>
+          {mode === 'darts' && (
+            <div className="throw-grid">
+              <button type="button" onClick={() => throwMore(1)}>+1 point</button>
+              <button type="button" onClick={() => throwMore(10)}>+10</button>
+              <button type="button" onClick={() => throwMore(100)}>+100</button>
+              <button type="button" onClick={() => throwMore(1000)}>+1,000</button>
+              <button type="button" className="wide" onClick={() => { setShown(0); setGoal(count); }}>Throw all {count.toLocaleString()}</button>
+              <button type="button" onClick={() => { drawSquare(squareRef.current, points, 0, count, full); setShown(count); setGoal(count); }} disabled={shown >= count}>
+                Skip
+              </button>
+              <button type="button" onClick={() => { setShown(0); setGoal(0); }}>Clear</button>
+            </div>
+          )}
+
+          <RailNext />
+
+          <ToolActions
+            menu
+            image={mode === 'darts' ? { draw: squareDraw, size: SQUARE, filename: 'monte-carlo-pi.png' } : { draw: (c) => needleRun && drawNeedles(c, needleRun), size: { width: 800, height: 480 }, filename: 'buffons-needle.png' }}
+            onCsv={mode === 'darts' ? exportCsv : undefined}
+            csvLabel="Download points (CSV)"
+            onReset={reset}
+            fullscreenRef={stageRef}
+          />
+
+          <section className="wb-settings" aria-labelledby="settings-heading">
+            <h2 id="settings-heading">Experiment settings</h2>
+            <LogRangeControl id="points-range" label={mode === 'darts' ? 'Points to throw' : 'Needles to drop'} value={count}
+              minExp={2} maxExp={mode === 'darts' ? 5.3 : 4.3} onChange={(v) => set('count', v)} />
+            {mode === 'darts' ? (
+              <>
                 <div className="control-row">
                   <label htmlFor="method-select">Points</label>
                   <select id="method-select" value={method} onChange={(e) => set('method', e.target.value)}>
@@ -230,74 +321,47 @@ function App() {
                     <option value="halton">Quasi-random (Halton sequence)</option>
                   </select>
                 </div>
-              ) : (
-                <RangeControl id="needle-range" label="Needle length (line spacing = 1)" value={needle} min={0.1} max={1}
-                  step={0.05} onChange={(v) => set('needle', v)} />
-              )}
-              <SeedControl value={seed} onChange={(v) => set('seed', v)} />
-              {mode === 'darts' && (
                 <div className="control-row">
-                  <label htmlFor="speed-select">Animation speed</label>
-                  <select id="speed-select" value={speed} onChange={(e) => setSpeed(Number(e.target.value))}>
-                    {SPEEDS.map((s, i) => <option key={s.label} value={i}>{s.label}</option>)}
+                  <label htmlFor="view-select">Chart</label>
+                  <select id="view-select" value={view} onChange={(e) => set('view', e.target.value)}>
+                    <option value="estimate">Estimate</option>
+                    <option value="error">Error (log–log)</option>
                   </select>
                 </div>
-              )}
-            </div>
-            {mode === 'darts' && (
-              <>
-                <label className="check-row" htmlFor="full-check">
-                  <input id="full-check" type="checkbox" checked={full} onChange={(e) => set('full', e.target.checked)} />
-                  Use a full circle in a 2 × 2 square instead of a quarter circle
-                </label>
                 <label className="check-row" htmlFor="compare-check">
                   <input id="compare-check" type="checkbox" checked={compare} onChange={(e) => set('compare', e.target.checked)} />
                   Compare with {method === 'random' ? 'quasi-random Halton' : 'random'} points on the chart
                 </label>
               </>
+            ) : (
+              <RangeControl id="needle-range" label="Needle length (line spacing = 1)" value={needle} min={0.1} max={1}
+                step={0.05} onChange={(v) => set('needle', v)} />
             )}
-            <ToolActions
-              image={mode === 'darts' ? { draw: squareDraw, size: SQUARE, filename: 'monte-carlo-pi.png' } : { draw: (c) => needleRun && drawNeedles(c, needleRun), size: { width: 800, height: 480 }, filename: 'buffons-needle.png' }}
-              onCsv={mode === 'darts' ? exportCsv : undefined}
-              csvLabel="Download points (CSV)"
-              onReset={reset}
-              fullscreenRef={boardWrapRef}
-            >
-              <button type="button" onClick={() => set('seed', randomSeed())}>🎲 New throw</button>
-            </ToolActions>
-          </section>
-          {mode === 'darts' && (
-            <section className="panel" aria-label="Throw controls">
-              <div className="button-row">
-                <button type="button" onClick={() => { setShown(0); setGoal(0); }}>Clear</button>
-                <button type="button" onClick={() => throwMore(1)}>+1 point</button>
-                <button type="button" onClick={() => throwMore(10)}>+10</button>
-                <button type="button" onClick={() => throwMore(100)}>+100</button>
-                <button type="button" onClick={() => throwMore(1000)}>+1,000</button>
-                <button type="button" className="primary" onClick={() => { setShown(0); setGoal(count); }}>Throw all {count.toLocaleString()}</button>
-                <button type="button" onClick={() => { drawSquare(squareRef.current, points, 0, count, full); setShown(count); setGoal(count); }} disabled={shown >= count}>
-                  Skip animation
-                </button>
+            <details className="more-settings">
+              <summary>More settings</summary>
+              <div>
+                {mode === 'darts' && (
+                  <>
+                    <div className="control-row">
+                      <label htmlFor="speed-select">Animation speed</label>
+                      <select id="speed-select" value={speed} onChange={(e) => setSpeed(Number(e.target.value))}>
+                        {SPEEDS.map((s, i) => <option key={s.label} value={i}>{s.label}</option>)}
+                      </select>
+                    </div>
+                    <label className="check-row" htmlFor="full-check">
+                      <input id="full-check" type="checkbox" checked={full} onChange={(e) => set('full', e.target.checked)} />
+                      Use a full circle in a 2 × 2 square instead of a quarter circle
+                    </label>
+                  </>
+                )}
+                <SeedControl value={seed} onChange={(v) => set('seed', v)} />
               </div>
-            </section>
-          )}
-        </div>
-        <div className={mode === 'darts' ? 'workbench-stage square-stage' : 'workbench-stage'}>
-          {mode === 'darts' ? (
-            <div className="canvas-wrapper chart-wrapper square-chart" ref={boardWrapRef}>
-              <canvas ref={squareRef} width={SQUARE.width} height={SQUARE.height} role="img"
-                aria-label={`${shown.toLocaleString()} points; ${inside.toLocaleString()} inside the circle, estimating pi as ${fixed(estimate, 4)}.`} />
-              <Legend items={[{ color: PALETTE.cyan, label: 'Inside the circle' }, { color: PALETTE.pink, label: 'Outside' }]} />
-            </div>
-          ) : (
-            <div className="canvas-wrapper chart-wrapper" ref={boardWrapRef}>
-              <canvas ref={needleRef} width={800} height={480} role="img"
-                aria-label={`${needleRun?.needles.length} needles; ${needleRun?.hits} cross a line, estimating pi as ${fixed(needleEstimate, 4)}.`} />
-              <Legend items={[{ color: PALETTE.cyan, label: 'Crosses a line' }, { color: PALETTE.pink, label: 'Misses' }]} />
-            </div>
-          )}
+            </details>
+          </section>
         </div>
       </div>
+
+      <NextTools />
 
       {mode === 'darts' ? (
         <>
@@ -316,25 +380,11 @@ function App() {
             )}
           </section>
 
-          <div className="canvas-wrapper chart-wrapper">
-            <div className="preset-row" role="group" aria-label="Chart view">
-              <button type="button" aria-pressed={view === 'estimate'} onClick={() => set('view', 'estimate')}>Estimate</button>
-              <button type="button" aria-pressed={view === 'error'} onClick={() => set('view', 'error')}>Error (log–log)</button>
-            </div>
-            <canvas ref={chartRef} width={800} height={360} role="img"
-              aria-label={`The estimate of pi as points are added; currently ${fixed(estimate, 4)}.`} />
-            <Legend
-              items={[
-                { color: PALETTE.cyan, label: method === 'random' ? 'Random points' : 'Halton points' },
-                ...(compare ? [{ color: PALETTE.violet, label: method === 'random' ? 'Halton points' : 'Random points' }] : []),
-                { color: PALETTE.yellow, label: view === 'error' ? 'Typical random error, 1.64/√n' : 'π and the 95% band' },
-              ]}
-            />
-            <p className="chart-caption">
-              {view === 'error'
-                ? 'On log–log axes the random error falls along a line of slope −½: ten times fewer errors needs a hundred times more points. Halton points fall much faster.'
-                : 'The shaded band shrinks like 1/√n: the estimate should stay inside it about 95% of the time.'}
-            </p>
+          <div className="canvas-wrapper chart-wrapper pi-below">
+            <h2 className="chart-title">{view === 'error' ? 'Error as points are thrown' : 'The estimate as points are thrown'}</h2>
+            <div className="pi-chart"><ScreenChart draw={drawChart} label={chartLabel} /></div>
+            {chartLegend}
+            <p className="chart-caption">{chartCaption}</p>
           </div>
 
           <section className="panel" aria-labelledby="repeat-heading">
@@ -345,8 +395,9 @@ function App() {
             </div>
             {repeats && (
               <>
-                <canvas ref={histRef} width={800} height={300} className="panel-canvas" role="img"
-                  aria-label={`Histogram of ${repeats.estimates.length} estimates of pi from ${repeats.n} points each.`} />
+                <div className="pi-chart pi-hist">
+                  <ScreenChart draw={drawRepeats} label={`Histogram of ${repeats.estimates.length} estimates of pi from ${repeats.n} points each.`} />
+                </div>
                 <Legend items={[{ color: PALETTE.cyan, label: 'Runs' }, { color: PALETTE.yellow, label: 'Predicted spread and π' }, { color: PALETTE.pink, label: 'This run' }]} />
                 <p className="result-line">
                   <strong>{(within * 100).toFixed(1)}%</strong> of runs landed within ±{fixed((2 * SPREAD) / Math.sqrt(repeats.n), 4)} of π
@@ -369,24 +420,21 @@ function App() {
           <Classroom />
         </>
       ) : (
-        <>
-          <section className="stats-panel">
-            <h2>Buffon&apos;s needle estimate</h2>
-            <div className="stats-grid">
-              <StatRow label="Needles dropped:" value={needleRun.needles.length.toLocaleString()} />
-              <StatRow label="Crossing a line:" value={needleRun.hits.toLocaleString()} />
-              <StatRow label="Estimate (2L × drops ÷ crossings):" value={fixed(needleEstimate)} />
-              <StatRow label="Error:" value={fixed(needleEstimate - Math.PI)} />
-            </div>
-            <p className="chart-caption">
-              The needle directions are drawn without using π (from random points in a disk), so the experiment does not
-              assume its own answer.
-            </p>
-          </section>
-        </>
+        <section className="stats-panel">
+          <h2>Buffon&apos;s needle estimate</h2>
+          <div className="stats-grid">
+            <StatRow label="Needles dropped:" value={needleRun.needles.length.toLocaleString()} />
+            <StatRow label="Crossing a line:" value={needleRun.hits.toLocaleString()} />
+            <StatRow label="Estimate (2L × drops ÷ crossings):" value={fixed(needleEstimate)} />
+            <StatRow label="Error:" value={fixed(needleEstimate - Math.PI)} />
+          </div>
+          <p className="chart-caption">
+            The needle directions are drawn without using π (from random points in a disk), so the experiment does not
+            assume its own answer.
+          </p>
+        </section>
       )}
 
-      <NextTools />
       <section className="canvas-description prose" aria-labelledby="explain-heading">
         <h2 id="explain-heading">How random points can find π</h2>
         <p>
