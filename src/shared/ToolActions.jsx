@@ -12,7 +12,8 @@ const TRUST = 'Runs entirely in your browser, including phones and Chromebooks. 
 /**
  * The buttons every tool shares: save image (choice of size), optional CSV data,
  * copy a link to these exact settings, reset, and fullscreen for the chart.
- * `menu` folds them into one "Share & export" disclosure, for the workbench layout.
+ * `menu` folds them into one "Share & export" disclosure, for the workbench layout; extra export buttons
+ * (children) go in it too.
  */
 function ToolActions({ image, onCsv, csvLabel = 'Download data (CSV)', onReset, fullscreenRef, menu = false, children }) {
   const [scale, setScale] = useState(2);
@@ -83,7 +84,7 @@ function ToolActions({ image, onCsv, csvLabel = 'Download data (CSV)', onReset, 
     return (
       <details className="tool-actions share-menu">
         <summary>Share &amp; export</summary>
-        <div className="button-row">{buttons}</div>
+        <div className="button-row">{children}{buttons}</div>
         <p className="trust-note">{TRUST}</p>
       </details>
     );

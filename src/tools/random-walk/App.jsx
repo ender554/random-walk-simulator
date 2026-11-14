@@ -1,21 +1,25 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import ToolPage from '../../shared/ToolPage';
-import NextTools from '../../shared/NextTools';
+import NextTools, { RailNext } from '../../shared/NextTools';
 import ToolActions from '../../shared/ToolActions';
+import ViewSwitch from '../../shared/ViewSwitch';
 import Faq from '../../shared/Faq';
 import { Legend, LogRangeControl, RangeControl, SeedControl, StatRow } from '../../shared/controls';
 import { useUrlState } from '../../shared/useUrlState';
+import { useScreenCanvas } from '../../shared/useScreenCanvas';
 import { MAX_POINTS, RULES, bounds, displacementStats, generateWalks, returnStats } from '../../utils/randomWalks';
 import { PALETTE } from '../../utils/chart';
 import { downloadCSV, downloadText } from '../../utils/export';
 import { randomSeed } from '../../utils/seed';
 import { BACKGROUNDS, PALETTES, drawDisplacement, drawWalks, walksToSvg } from './draw';
+import './walk.css';
 
 const DEFAULTS = {
   rule: 'lattice4', walkers: 1, steps: 5000, alpha: 1.5, drift: 0, angle: 0, boundary: 'none', box: 60,
   seed: 'balanced', view: 'paths', color: 'walker', palette: 'neon', width: 1, opacity: 1, bg: 'dark',
 };
 const SIZE = { width: 800, height: 800 };
+const VIEWS = [['paths', 'Paths'], ['heatmap', 'Heatmap of visits']];
 const SPEEDS = [
   { label: 'Slow', seconds: 20 },
   { label: 'Normal', seconds: 6 },
@@ -50,12 +54,21 @@ const FAQ = [
   },
 ];
 
+
+// A chart of distance (or mean squared displacement) against steps, drawn at its shown size
+function DisplacementChart({ stats, steps, measure, theory, label }) {
+  const ref = useScreenCanvas((canvas) => drawDisplacement(canvas, { stats, steps, measure, theory }));
+  return <canvas ref={ref} role="img" aria-label={label} />;
+}
+
+// The workbench (docs/redesign-2026-11-10/B3-LOGIC.md): the walk on the stage with Paths / Heatmap, and on a laptop
+// the live distance chart beside it; the rail has New walk and Play, the next step, Share & export, the settings,
+// step-by-step playback and the style options.
 function App() {
+  const stageRef = useRef(null);
   const canvasRef = useRef(null);
-  const distRef = useRef(null);
-  const msdRef = useRef(null);
-  const wrapRef = useRef(null);
   const drawnRef = useRef(0);
+  const [size, setSize] = useState(null); // the walk canvas's shown size in CSS pixels
   const [settings, set, reset] = useUrlState(DEFAULTS);
   const { rule, walkers, alpha, boundary, box, seed, view, color, palette, width, opacity, bg } = settings;
   const maxSteps = Math.max(10, Math.min(100000, Math.floor(MAX_POINTS / walkers)));
@@ -85,19 +98,46 @@ function App() {
 
   const drawOpts = { walk, view, colorMode: color, palette, lineWidth: width, opacity, background: bg, bounds: extent, jumpLimit: boundary === 'wrap' ? box : 0 };
 
+  // The walk is drawn at its shown size; playback adds only the new steps, so it keeps its own canvas logic
+  useEffect(() => {
+    const el = canvasRef.current;
+    if (!el || typeof ResizeObserver === 'undefined') return undefined;
+    const observer = new ResizeObserver(([entry]) => {
+      const w = Math.round(entry.contentRect.width);
+      const h = Math.round(entry.contentRect.height);
+      setSize((s) => (s && s.width === w && s.height === h ? s : { width: w, height: h }));
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  const surface = () => {
+    const el = canvasRef.current;
+    const ratio = window.devicePixelRatio || 1;
+    const w = Math.round(size.width * ratio);
+    const h = Math.round(size.height * ratio);
+    if (el.width !== w || el.height !== h) {
+      el.width = w;
+      el.height = h;
+    }
+    const ctx = el.getContext('2d');
+    ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+    return { width: size.width, height: size.height, getContext: () => ctx };
+  };
+
   // Redraw from scratch when anything visual changes; playback then adds only new steps
   useEffect(() => {
-    if (!canvasRef.current) return;
-    drawWalks(canvasRef.current, { ...drawOpts, from: 0, to: Math.min(shown, steps) });
+    if (!canvasRef.current || !size?.width || !size?.height) return;
+    drawWalks(surface(), { ...drawOpts, from: 0, to: Math.min(shown, steps) });
     drawnRef.current = Math.min(shown, steps);
     // shown is handled incrementally by the next effect
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [walk, view, color, palette, width, opacity, bg, extent]);
+  }, [walk, view, color, palette, width, opacity, bg, extent, size]);
 
   useEffect(() => {
-    if (!canvasRef.current || shown === drawnRef.current || shown > steps) return;
-    if (shown < drawnRef.current || view === 'heatmap') drawWalks(canvasRef.current, { ...drawOpts, from: 0, to: shown });
-    else drawWalks(canvasRef.current, { ...drawOpts, from: drawnRef.current, to: shown });
+    if (!canvasRef.current || !size?.width || shown === drawnRef.current || shown > steps) return;
+    if (shown < drawnRef.current || view === 'heatmap') drawWalks(surface(), { ...drawOpts, from: 0, to: shown });
+    else drawWalks(surface(), { ...drawOpts, from: drawnRef.current, to: shown });
     drawnRef.current = shown;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shown]);
@@ -147,11 +187,7 @@ function App() {
   );
   const trapped = rule === 'selfAvoiding' ? Array.from(walk.trappedAt).filter((t) => t >= 0 && t <= at).length : 0;
 
-  useEffect(() => {
-    drawDisplacement(distRef.current, { stats: visibleStats, steps, measure: 'distance', theory: distTheory });
-    drawDisplacement(msdRef.current, { stats: visibleStats, steps, measure: 'msd', theory: msdTheory });
-  });
-
+  const play = () => { if (at >= steps) setShown(0); setPlaying((p) => !p); };
   const exportSvg = () => downloadText('random-walk.svg', walksToSvg({ ...drawOpts, colorMode: color === 'time' ? 'walker' : color }), 'image/svg+xml');
   const exportCsv = () => {
     const stride = (walk.steps + 1) * 2;
@@ -163,99 +199,107 @@ function App() {
     downloadCSV('random-walk.csv', ['walker', 'step', 'x', 'y'], rows);
   };
 
+  const distLabel = 'Average distance from start against steps, with the theoretical curve.';
+
   return (
     <ToolPage
       slug="random-walk"
+      workbench
       title="Random Walk Simulator"
-      intro="Release one walker or a thousand, watch them diffuse step by step, and check the √n law against live charts. Switch to Lévy flights, self-avoiding walks or drift, then style the paths as art and export PNG, SVG or data."
+      intro="Release one walker or a thousand, watch them spread out step by step, and check the √n law against live charts."
     >
-
-      <div className="workbench">
-        <div className="workbench-controls">
-          <section className="controls-panel" aria-label="Walk settings">
-            <div className="control-grid">
-              <div className="control-row">
-                <label htmlFor="rule-select">Step rule</label>
-                <select id="rule-select" value={rule} onChange={(e) => set('rule', e.target.value)}>
-                  {Object.entries(RULES).map(([key, value]) => <option key={key} value={key}>{value.label}</option>)}
-                </select>
-              </div>
-              {rule === 'levy' && (
-                <RangeControl id="alpha-range" label="Tail exponent α (smaller = longer jumps)" value={alpha} min={1.1} max={2.5} step={0.1} onChange={(v) => set('alpha', v)} />
-              )}
-              <LogRangeControl id="walkers-range" label="Walkers" value={walkers} minExp={0} maxExp={3} onChange={(v) => set('walkers', Math.max(1, v))} />
-              <LogRangeControl id="steps-range" label="Steps per walker" value={steps} minExp={1} maxExp={Math.log10(maxSteps)} onChange={(v) => set('steps', v)} />
-              {rule !== 'selfAvoiding' && (
-                <>
-                  <RangeControl id="drift-range" label="Drift (bias per step)" display={settings.drift === 0 ? 'none' : settings.drift.toFixed(2)} value={settings.drift} min={0} max={0.3} step={0.01} onChange={(v) => set('drift', v)} />
-                  {settings.drift > 0 && (
-                    <RangeControl id="angle-range" label="Drift direction" display={`${settings.angle}°`} value={settings.angle} min={0} max={345} step={15} onChange={(v) => set('angle', v)} />
-                  )}
-                </>
-              )}
-              <div className="control-row">
-                <label htmlFor="boundary-select">Edges</label>
-                <select id="boundary-select" value={boundary} onChange={(e) => set('boundary', e.target.value)}>
-                  <option value="none">No walls (zoom to fit)</option>
-                  <option value="reflect">Walls that reflect</option>
-                  <option value="wrap">Wrap around (torus)</option>
-                </select>
-              </div>
-              {boundary !== 'none' && (
-                <RangeControl id="box-range" label="Box half-width (steps)" value={box} min={5} max={500} step={5} onChange={(v) => set('box', v)} />
-              )}
-              <SeedControl value={seed} onChange={(v) => set('seed', v)} />
+      <div className="wb">
+        <div className="wb-stage pinned walk-stage" ref={stageRef}>
+          <ViewSwitch label="View" options={VIEWS} value={view} onChange={(v) => set('view', v)} />
+          <div className="walk-grid">
+            <div className="walk-canvas">
+              <canvas ref={canvasRef} role="img"
+                aria-label={`${walkers} random walk${walkers > 1 ? 's' : ''} of ${at} steps; average distance from start ${fmt(current[1])} steps.`} />
             </div>
-            {steps < settings.steps && (
-              <p className="chart-caption">Limited to {steps.toLocaleString()} steps with {walkers.toLocaleString()} walkers to keep the page fast.</p>
-            )}
+            <div className="walk-side">
+              <div className="stage-headline">
+                <p><span>Average distance</span> <strong className="s1">{fmt(current[1])}</strong></p>
+                <p><span>Theory √(πn)/2</span> <strong>{distTheory ? fmt(distTheory(at)) : 'none here'}</strong></p>
+                <p className="stage-meta">
+                  <span>step {at.toLocaleString()} of {steps.toLocaleString()}</span>{' '}
+                  <span>{walkers === 1 ? '1 walker: noisy, try 100' : `${walkers.toLocaleString()} walkers`}</span>
+                </p>
+              </div>
+              <div className="walk-dist">
+                <DisplacementChart stats={visibleStats} steps={steps} measure="distance" theory={distTheory} label={distLabel} />
+              </div>
+            </div>
+          </div>
+        </div>
 
-            <details className="style-panel">
-              <summary>🎨 Style and art options</summary>
-              <div className="control-grid">
-                <div className="control-row">
-                  <label htmlFor="color-select">Color</label>
-                  <select id="color-select" value={color} onChange={(e) => set('color', e.target.value)}>
-                    <option value="walker">One color per walker</option>
-                    <option value="time">Gradient along each path (by time)</option>
-                    <option value="single">Single color</option>
-                  </select>
-                </div>
-                <div className="control-row">
-                  <label htmlFor="palette-select">Palette</label>
-                  <select id="palette-select" value={palette} onChange={(e) => set('palette', e.target.value)}>
-                    {Object.keys(PALETTES).map((key) => <option key={key} value={key}>{key[0].toUpperCase() + key.slice(1)}</option>)}
-                  </select>
-                </div>
-                <div className="control-row">
-                  <label htmlFor="bg-select">Background</label>
-                  <select id="bg-select" value={bg} onChange={(e) => set('bg', e.target.value)}>
-                    {Object.keys(BACKGROUNDS).map((key) => <option key={key} value={key}>{key[0].toUpperCase() + key.slice(1)}</option>)}
-                  </select>
-                </div>
-                <RangeControl id="width-range" label="Line width" value={width} min={0.25} max={6} step={0.25} onChange={(v) => set('width', v)} />
-                <RangeControl id="opacity-range" label="Opacity" display={`${Math.round(opacity * 100)}%`} value={opacity} min={0.05} max={1} step={0.05} onChange={(v) => set('opacity', v)} />
+        <div className="wb-rail">
+          <div className="run-pair">
+            <button type="button" className="run-button" onClick={() => set('seed', randomSeed())}>New walk</button>
+            <button type="button" className="play-button" onClick={play}>
+              {playing ? 'Pause' : 'Play'}
+            </button>
+          </div>
+
+          <RailNext />
+
+          <ToolActions
+            menu
+            image={{ draw: (c) => drawWalks(c, { ...drawOpts, from: 0, to: at }), size: SIZE, filename: 'random-walk.png' }}
+            onCsv={exportCsv}
+            csvLabel="Download positions (CSV)"
+            onReset={reset}
+            fullscreenRef={stageRef}
+          >
+            <button type="button" onClick={exportSvg}>Save SVG</button>
+          </ToolActions>
+
+          <section className="wb-settings" aria-labelledby="settings-heading">
+            <h2 id="settings-heading">Walk settings</h2>
+            <div className="control-row">
+              <label htmlFor="rule-select">Step rule</label>
+              <select id="rule-select" value={rule} onChange={(e) => set('rule', e.target.value)}>
+                {Object.entries(RULES).map(([key, value]) => <option key={key} value={key}>{value.label}</option>)}
+              </select>
+            </div>
+            {rule === 'levy' && (
+              <RangeControl id="alpha-range" label="Tail exponent α (smaller = longer jumps)" value={alpha} min={1.1} max={2.5} step={0.1} onChange={(v) => set('alpha', v)} />
+            )}
+            <LogRangeControl id="walkers-range" label="Walkers" value={walkers} minExp={0} maxExp={3} onChange={(v) => set('walkers', Math.max(1, v))} />
+            <LogRangeControl id="steps-range" label="Steps per walker" value={steps} minExp={1} maxExp={Math.log10(maxSteps)} onChange={(v) => set('steps', v)} />
+            {steps < settings.steps && (
+              <p className="setting-note">Limited to {steps.toLocaleString()} steps with {walkers.toLocaleString()} walkers to keep the page fast.</p>
+            )}
+            {rule !== 'selfAvoiding' && (
+              <>
+                <RangeControl id="drift-range" label="Drift (bias per step)" display={settings.drift === 0 ? 'none' : settings.drift.toFixed(2)} value={settings.drift} min={0} max={0.3} step={0.01} onChange={(v) => set('drift', v)} />
+                {settings.drift > 0 && (
+                  <RangeControl id="angle-range" label="Drift direction" display={`${settings.angle}°`} value={settings.angle} min={0} max={345} step={15} onChange={(v) => set('angle', v)} />
+                )}
+              </>
+            )}
+            <div className="control-row">
+              <label htmlFor="boundary-select">Edges</label>
+              <select id="boundary-select" value={boundary} onChange={(e) => set('boundary', e.target.value)}>
+                <option value="none">No walls (zoom to fit)</option>
+                <option value="reflect">Walls that reflect</option>
+                <option value="wrap">Wrap around (torus)</option>
+              </select>
+            </div>
+            {boundary !== 'none' && (
+              <RangeControl id="box-range" label="Box half-width (steps)" value={box} min={5} max={500} step={5} onChange={(v) => set('box', v)} />
+            )}
+            <details className="more-settings">
+              <summary>More settings</summary>
+              <div>
+                <SeedControl value={seed} onChange={(v) => set('seed', v)} />
               </div>
             </details>
-
-            <ToolActions
-              image={{ draw: (c) => drawWalks(c, { ...drawOpts, from: 0, to: at }), size: SIZE, filename: 'random-walk.png' }}
-              onCsv={exportCsv}
-              csvLabel="Download positions (CSV)"
-              onReset={reset}
-              fullscreenRef={wrapRef}
-            >
-              <button type="button" onClick={() => set('seed', randomSeed())}>🎲 New walk</button>
-              <button type="button" onClick={exportSvg}>Save SVG</button>
-            </ToolActions>
           </section>
 
-          <section className="panel" aria-label="Playback">
-            <div className="button-row">
-              <button type="button" className="primary" onClick={() => { if (at >= steps) setShown(0); setPlaying((p) => !p); }}>
-                {playing ? '⏸ Pause' : at >= steps ? '▶ Replay' : '▶ Play'}
-              </button>
-              <button type="button" onClick={() => { setShown(0); setPlaying(true); }} disabled={at === 0 && playing}>⏮ Restart</button>
+          <section className="wb-settings" aria-labelledby="playback-heading">
+            <h2 id="playback-heading">Step by step</h2>
+            <div className="button-row step-row">
+              <button type="button" onClick={() => { setShown(0); setPlaying(true); }} disabled={at === 0 && playing}>Restart</button>
               <button type="button" onClick={() => { setPlaying(false); setShown(0); }} disabled={at === 0}>Back to start</button>
               <button type="button" onClick={() => { setPlaying(false); setShown((s) => Math.min(steps, s + 1)); }}>+1 step</button>
               <button type="button" onClick={() => { setPlaying(false); setShown((s) => Math.min(steps, s + Math.max(10, Math.round(steps / 100)))); }}>+1%</button>
@@ -265,20 +309,40 @@ function App() {
                 {SPEEDS.map((s, i) => <option key={s.label} value={i}>{s.label}</option>)}
               </select>
             </div>
-            <div className="preset-row" role="group" aria-label="View">
-              <button type="button" aria-pressed={view === 'paths'} onClick={() => set('view', 'paths')}>Paths</button>
-              <button type="button" aria-pressed={view === 'heatmap'} onClick={() => set('view', 'heatmap')}>Heatmap of visits</button>
-            </div>
             <p className="result-line" aria-live="off">Step {at.toLocaleString()} of {steps.toLocaleString()}</p>
           </section>
-        </div>
-        <div className="workbench-stage">
-          <div className="canvas-wrapper" ref={wrapRef}>
-            <canvas ref={canvasRef} width={SIZE.width} height={SIZE.height} role="img"
-              aria-label={`${walkers} random walk${walkers > 1 ? 's' : ''} of ${at} steps; average distance from start ${fmt(current[1])} steps.`} />
-          </div>
+
+          <details className="more-settings style-settings">
+            <summary>Style and art options</summary>
+            <div>
+              <div className="control-row">
+                <label htmlFor="color-select">Color</label>
+                <select id="color-select" value={color} onChange={(e) => set('color', e.target.value)}>
+                  <option value="walker">One color per walker</option>
+                  <option value="time">Gradient along each path (by time)</option>
+                  <option value="single">Single color</option>
+                </select>
+              </div>
+              <div className="control-row">
+                <label htmlFor="palette-select">Palette</label>
+                <select id="palette-select" value={palette} onChange={(e) => set('palette', e.target.value)}>
+                  {Object.keys(PALETTES).map((key) => <option key={key} value={key}>{key[0].toUpperCase() + key.slice(1)}</option>)}
+                </select>
+              </div>
+              <div className="control-row">
+                <label htmlFor="bg-select">Background</label>
+                <select id="bg-select" value={bg} onChange={(e) => set('bg', e.target.value)}>
+                  {Object.keys(BACKGROUNDS).map((key) => <option key={key} value={key}>{key[0].toUpperCase() + key.slice(1)}</option>)}
+                </select>
+              </div>
+              <RangeControl id="width-range" label="Line width" value={width} min={0.25} max={6} step={0.25} onChange={(v) => set('width', v)} />
+              <RangeControl id="opacity-range" label="Opacity" display={`${Math.round(opacity * 100)}%`} value={opacity} min={0.05} max={1} step={0.05} onChange={(v) => set('opacity', v)} />
+            </div>
+          </details>
         </div>
       </div>
+
+      <NextTools />
 
       <section className="stats-panel" aria-live="off">
         <h2>After {at.toLocaleString()} steps{walkers > 1 ? `, averaged over ${walkers.toLocaleString()} walkers` : ''}</h2>
@@ -299,11 +363,18 @@ function App() {
         {walkers === 1 && <p className="chart-caption">One walker is noisy; set 100 or more walkers to see the averages lock onto the theory.</p>}
       </section>
 
-      <div className="canvas-wrapper chart-wrapper">
-        <h2 className="chart-title">Average distance from the start</h2>
-        <canvas ref={distRef} width={800} height={260} role="img" aria-label="Average distance from start against steps, with the theoretical curve." />
+      <div className="canvas-wrapper chart-wrapper walk-charts">
+        <div className="below-dist">
+          <h2 className="chart-title">Average distance from the start</h2>
+          <div className="walk-chart">
+            <DisplacementChart stats={visibleStats} steps={steps} measure="distance" theory={distTheory} label={distLabel} />
+          </div>
+        </div>
         <h2 className="chart-title">Mean squared displacement</h2>
-        <canvas ref={msdRef} width={800} height={260} role="img" aria-label="Mean squared displacement against steps, with the theoretical line." />
+        <div className="walk-chart">
+          <DisplacementChart stats={visibleStats} steps={steps} measure="msd" theory={msdTheory}
+            label="Mean squared displacement against steps, with the theoretical line." />
+        </div>
         <Legend items={[{ color: PALETTE.cyan, label: 'Your walkers' }, ...(hasTheory ? [{ color: PALETTE.yellow, label: 'Theory' }] : [])]} />
         <p className="chart-caption">
           Distance grows like √n but mean squared displacement grows in a straight line: this linear growth is the
@@ -311,7 +382,6 @@ function App() {
         </p>
       </div>
 
-      <NextTools />
       <section className="canvas-description prose" aria-labelledby="explain-heading">
         <h2 id="explain-heading">What is a random walk?</h2>
         <p>

@@ -1,0 +1,94 @@
+/* The stage: the walk, and on a laptop the live distance chart beside it. Phones show the headline over a
+   shorter walk so the pinned stage stays near 40% of the small viewport height. */
+.walk-grid {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.walk-side {
+  order: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.walk-canvas {
+  order: 2;
+  height: 190px;
+  height: clamp(170px, calc(40svh - 135px), 240px);
+}
+
+.walk-canvas canvas,
+.walk-dist canvas,
+.walk-chart canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 12px;
+}
+
+.walk-dist {
+  display: none;
+}
+
+.walk-chart {
+  height: 220px;
+}
+
+/* New walk and Play side by side at the top of the rail */
+.run-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.play-button {
+  min-height: 48px;
+  padding: 0.6rem 1rem;
+  background: var(--button);
+  border: 1px solid var(--control-line);
+  border-radius: 10px;
+  color: var(--text);
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.play-button:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.wb-settings .step-row {
+  margin-top: 0;
+}
+
+@media (min-width: 1000px) {
+  .walk-grid {
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 1rem;
+  }
+
+  /* Square, sized to what the window has left (1366 × 650: 350 px) */
+  .walk-canvas {
+    order: 0;
+    aspect-ratio: 1;
+    height: 350px;
+    height: clamp(300px, calc(100svh - 300px), 460px);
+  }
+
+  .walk-side {
+    order: 0;
+  }
+
+  .walk-dist {
+    display: block;
+    flex: 1;
+    min-height: 0;
+  }
+
+  .walk-charts .below-dist {
+    display: none;
+  }
+}
