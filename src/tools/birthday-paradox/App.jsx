@@ -20,6 +20,7 @@ import { drawRoom } from './drawRoom';
 import './birthday.css';
 
 const DEFAULTS = { q: 'anyTwo', space: 'birthdays', custom: 1000, people: 23, window: 1, trials: 2000, seed: 'birthday' };
+const CHOICES = { q: Object.keys(QUESTIONS), space: [...SPACES.map((s) => s.key), 'custom'] };
 const CHART_SIZE = { width: 800, height: 380 };
 const VIEWS = [['room', 'Fill a room'], ['curve', 'Chance curve']];
 const pct = (v) => (v > 0 && v < 0.001 ? '<0.1%' : v > 0.999 && v < 1 ? '>99.9%' : `${(v * 100).toFixed(1)}%`);
@@ -154,7 +155,7 @@ function ClassBirthdays({ size }) {
 function App() {
   const stageRef = useRef(null);
   const runRef = useRef(null);
-  const [settings, set, reset] = useUrlState(DEFAULTS);
+  const [settings, set, reset] = useUrlState(DEFAULTS, CHOICES);
   const { q: question, people, window, trials, seed } = settings;
   const space = SPACES.find((s) => s.key === settings.space);
   const size = space ? space.size : Math.max(2, Math.round(settings.custom));
@@ -337,6 +338,7 @@ function App() {
               unit="people"
               min={2}
               max={400}
+              step={1}
               onTest={(guess) => {
                 const guessed = Math.round(guess);
                 set('q', 'anyTwo');
@@ -345,7 +347,7 @@ function App() {
                 show('guess');
                 const chance = probability('anyTwo', guessed, 365);
                 return {
-                  verdict: guessed === 23 ? 'Exactly right!' : Math.abs(guessed - 23) <= 3 ? 'Very close!' : guessed > 23 ? 'Fewer than that!' : 'A few more than that.',
+                  verdict: guessed === 23 ? 'Exactly right!' : Math.abs(guessed - 23) <= 3 ? 'Very close!' : guessed > 23 ? 'Fewer than that!' : 'More than that!',
                   detail: `With ${guessed} people the chance is ${chance >= 0.999 && guessed < 366 ? 'over 99.9%' : pct(chance)}${guessed <= 100 ? ' (the curve now marks your guess)' : ''}. The answer is 23 people, for 50.7%: 23 people make 253 pairs, and each pair is a 1 in 365 chance.`,
                 };
               }}

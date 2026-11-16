@@ -17,6 +17,7 @@ import './pi.css';
 const DEFAULTS = { count: 10000, seed: 'pi', method: 'random', full: false, view: 'estimate', compare: false, mode: 'darts', needle: 0.8 };
 const SQUARE = { width: 600, height: 600 };
 const MODES = [['darts', 'Random darts'], ['needles', "Buffon's needle"]];
+const CHOICES = { method: ['random', 'halton'], view: ['estimate', 'error'], mode: MODES.map(([key]) => key) };
 const SPEEDS = [
   { label: 'Slow', seconds: 12 },
   { label: 'Normal', seconds: 2.5 },
@@ -127,7 +128,7 @@ function App() {
   const squareRef = useRef(null);
   const needleRef = useRef(null);
   const stageRef = useRef(null);
-  const [settings, set, reset] = useUrlState(DEFAULTS);
+  const [settings, set, reset] = useUrlState(DEFAULTS, CHOICES);
   const { count, seed, method, full, view, compare, mode, needle } = settings;
   const [shown, setShown] = useState(0);
   const [goal, setGoal] = useState(count);

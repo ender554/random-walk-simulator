@@ -20,6 +20,10 @@ const DEFAULTS = {
 };
 const SIZE = { width: 800, height: 800 };
 const VIEWS = [['paths', 'Paths'], ['heatmap', 'Heatmap of visits']];
+const CHOICES = {
+  rule: Object.keys(RULES), boundary: ['none', 'reflect', 'wrap'], view: VIEWS.map(([key]) => key),
+  color: ['walker', 'time', 'single'], palette: Object.keys(PALETTES), bg: Object.keys(BACKGROUNDS),
+};
 const SPEEDS = [
   { label: 'Slow', seconds: 20 },
   { label: 'Normal', seconds: 6 },
@@ -69,7 +73,7 @@ function App() {
   const canvasRef = useRef(null);
   const drawnRef = useRef(0);
   const [size, setSize] = useState(null); // the walk canvas's shown size in CSS pixels
-  const [settings, set, reset] = useUrlState(DEFAULTS);
+  const [settings, set, reset] = useUrlState(DEFAULTS, CHOICES);
   const { rule, walkers, alpha, boundary, box, seed, view, color, palette, width, opacity, bg } = settings;
   const maxSteps = Math.max(10, Math.min(100000, Math.floor(MAX_POINTS / walkers)));
   const steps = Math.min(settings.steps, maxSteps);

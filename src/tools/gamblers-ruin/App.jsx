@@ -14,6 +14,7 @@ import { COLORS, drawGames, drawLengths, drawRuinCurve } from './drawGames';
 import './ruin.css';
 
 const DEFAULTS = { start: 20, target: 40, open: false, p: 18 / 37, payout: 1, games: 1000, strategy: 'flat', unit: 1, limit: 500, seed: 'casino' };
+const CHOICES = { strategy: Object.keys(STRATEGIES) };
 const CHART_SIZE = { width: 800, height: 450 };
 const PRESETS = [
   { label: 'Fair coin', p: 0.5, payout: 1 },
@@ -54,7 +55,7 @@ const FAQ = [
 // against the exact formula on top; the rail has Run, the next step, Share & export and the settings.
 function App() {
   const stageRef = useRef(null);
-  const [settings, set, reset] = useUrlState(DEFAULTS);
+  const [settings, set, reset] = useUrlState(DEFAULTS, CHOICES);
   const { start, open, p, payout, games, strategy, unit, limit, seed } = settings;
   const target = open ? Infinity : Math.max(settings.target, start + 1);
   const maxBets = open ? 10000 : 100000;

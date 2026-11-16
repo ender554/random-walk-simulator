@@ -47,3 +47,15 @@ body {
 #root {
   min-height: 100vh;
 }
+
+/* Shown only if a page fails to draw (mount.jsx) */
+.recover-note {
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: 3rem 1rem;
+  text-align: center;
+}
+
+.recover-note a {
+  color: var(--accent);
+}

@@ -23,6 +23,7 @@ const SPEEDS = [
   { label: '16×', factor: 16 },
 ];
 const DEFAULTS = { rows: 12, p: 0.5, seed: 'galton', view: 'count', pascal: false, normal: false, speed: 2, start: 500 };
+const CHOICES = { view: ['count', 'fraction', 'probability', 'none'] };
 
 const FAQ = [
   {
@@ -63,7 +64,7 @@ function App() {
   const canvasRef = useRef(null);
   const stageRef = useRef(null);
   const sizeRef = useRef(null); // the board's shown size in CSS pixels, read by the animation loop
-  const [settings, set, reset] = useUrlState(DEFAULTS);
+  const [settings, set, reset] = useUrlState(DEFAULTS, CHOICES);
   const { rows, p, seed, view, pascal, normal, speed } = settings;
   const paths = useMemo(() => generatePaths(rows, p, seed), [rows, p, seed]);
 

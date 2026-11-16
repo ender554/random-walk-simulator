@@ -10,7 +10,7 @@ import { ToolSlug } from './toolSlug';
  * With `onSkip` it is the workbench's predict card: titled "Predict first", with a one-tap Skip
  * while the tool holds its answer back, and the form folds away once the result shows.
  */
-function Challenge({ question, unit = '', placeholder, min, max, onTest, onSkip, title = '🎯 Challenge' }) {
+function Challenge({ question, unit = '', placeholder, min, max, step = 'any', onTest, onSkip, title = '🎯 Challenge' }) {
   const [text, setText] = useState('');
   const [result, setResult] = useState(null);
   const [history, setHistory] = useState([]);
@@ -51,7 +51,7 @@ function Challenge({ question, unit = '', placeholder, min, max, onTest, onSkip,
           <p>{question}</p>
           <form onSubmit={test}>
             <label className="visually-hidden" htmlFor="challenge-input">Your guess</label>
-            <input id="challenge-input" type="number" step="any" min={min} max={max} value={text}
+            <input id="challenge-input" type="number" step={step} min={min} max={max} value={text}
               placeholder={placeholder} onChange={(e) => setText(e.target.value)} />
             {unit && <span>{unit}</span>}
             <button type="submit">{result ? 'Test again' : 'Test it'}</button>

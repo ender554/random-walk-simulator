@@ -16,6 +16,7 @@ import './dla.css';
 
 const GRID = 400;
 const SIZE = { width: 800, height: 800 };
+const CHOICES = { shape: Object.keys(SEEDS), color: ['order', 'distance', 'depth'], palette: Object.keys(PALETTES), bg: Object.keys(BACKGROUNDS) };
 const SPEEDS = [
   { label: 'Slow (watch each walker)', steps: 4000 },
   { label: 'Normal', steps: 400000 },
@@ -64,7 +65,7 @@ function App() {
   const overlayRef = useRef(null);
   const stageRef = useRef(null);
   const simRef = useRef(null);
-  const [settings, set, reset] = useUrlState(DEFAULTS);
+  const [settings, set, reset] = useUrlState(DEFAULTS, CHOICES);
   const { particles, stickiness, seed, shape, bias, angle, color, palette, bg, speed } = settings;
   const [runId, setRunId] = useState(0);
   const [paused, setPaused] = useState(false);

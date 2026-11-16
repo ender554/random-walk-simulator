@@ -17,6 +17,7 @@ import { drawFinals, drawMeanConvergence, drawPaths, money } from './draw';
 import './stock.css';
 
 const DEFAULTS = { s0: 100, mu: 0.1, sigma: 0.5, years: 10, paths: 1000, seed: 'market', show: 'both', log: true, fat: false, target: 200 };
+const CHOICES = { show: ['both', 'paths', 'bands'] };
 const CHART_SIZE = { width: 800, height: 450 };
 // Rough long-run figures, for orientation only
 const PRESETS = [
@@ -83,7 +84,7 @@ function OptionPanel({ s0, sigma, years, seed }) {
 // final price on top; the rail has Run, the next step, Share & export and the settings.
 function App() {
   const stageRef = useRef(null);
-  const [settings, set, reset] = useUrlState(DEFAULTS);
+  const [settings, set, reset] = useUrlState(DEFAULTS, CHOICES);
   const { s0, mu, sigma, years, paths, seed, show, log, fat, target } = settings;
 
   const sim = useMemo(

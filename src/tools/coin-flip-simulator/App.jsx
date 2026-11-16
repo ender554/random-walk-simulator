@@ -20,6 +20,7 @@ import Sequence from './Sequence';
 import './coin.css';
 
 const DEFAULTS = { flips: 10000, p: 0.5, runs: 5, seed: 'heads', mode: 'share', expN: 100 };
+const CHOICES = { mode: ['share', 'diff'] };
 const CHART_SIZE = { width: 800, height: 420 };
 const EXPERIMENTS = 2000;
 const VIEWS = [['flip', 'Flip a coin'], ['runs', 'Run thousands']];
@@ -113,7 +114,7 @@ function RealOrFake() {
 function App() {
   const stageRef = useRef(null);
   const runRef = useRef(null);
-  const [settings, set, reset] = useUrlState(DEFAULTS);
+  const [settings, set, reset] = useUrlState(DEFAULTS, CHOICES);
   const { flips, p, runs: runCount, seed, mode, expN } = settings;
   const [view, setView] = useState('flip');
   const [challengeOpen, setChallengeOpen] = useState(true);
@@ -240,6 +241,7 @@ function App() {
               unit="in a row"
               min={1}
               max={100}
+              step={1}
               onTest={(guess) => {
                 set('flips', 100);
                 set('p', 0.5);

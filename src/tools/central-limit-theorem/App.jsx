@@ -17,6 +17,7 @@ import { COLORS, drawMeans, drawSource } from './drawCharts';
 import './clt.css';
 
 const DEFAULTS = { dist: 'exponential', skew: 0.75, n: 5, samples: 5000, seed: 'bellcurve', zoom: false };
+const CHOICES = { dist: DISTRIBUTION_KEYS };
 const MEANS_SIZE = { width: 800, height: 340 };
 const COMPARE_NS = [1, 5, 30];
 const fmt = (v) => (Number.isFinite(v) ? v.toLocaleString(undefined, { maximumFractionDigits: 3 }) : 'undefined');
@@ -72,7 +73,7 @@ function CompareChart({ size, means, dist, samples }) {
 // and the step-through. No predict card: REPORT.md holds answers back only on Monty Hall and Birthday.
 function App() {
   const stageRef = useRef(null);
-  const [settings, set, reset] = useUrlState(DEFAULTS);
+  const [settings, set, reset] = useUrlState(DEFAULTS, CHOICES);
   const { n, samples, seed, zoom } = settings;
   const [shown, setShown] = useState(null); // null = every sample; a number = stepping through
   const [probMode, setProbMode] = useState('above');

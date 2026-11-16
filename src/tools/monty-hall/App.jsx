@@ -19,6 +19,7 @@ import Race from './Race';
 import './monty.css';
 
 const DEFAULTS = { doors: 3, host: 'knows', games: 1000, seed: 'montyhall' };
+const CHOICES = { host: Object.keys(HOST_RULES) };
 const CHART_SIZE = { width: 800, height: 380 };
 const pct = (v) => `${(v * 100).toFixed(1)}%`;
 
@@ -116,7 +117,7 @@ function TallyRow({ label, tally }) {
 function App() {
   const stageRef = useRef(null);
   const runRef = useRef(null);
-  const [settings, set, reset] = useUrlState(DEFAULTS);
+  const [settings, set, reset] = useUrlState(DEFAULTS, CHOICES);
   const { doors, host, games, seed } = settings;
   const [view, setView] = useState('play');
   const [reveal, setReveal] = useState(null); // null until a guess ('guess') or Skip ('skip')
