@@ -6,7 +6,7 @@ import ViewSwitch from '../../shared/ViewSwitch';
 import Faq from '../../shared/Faq';
 import Challenge from '../../shared/Challenge';
 import { Legend, LogRangeControl, RangeControl, SeedControl, StatRow } from '../../shared/controls';
-import { useUrlState } from '../../shared/useUrlState';
+import { between, useUrlState } from '../../shared/useUrlState';
 import { useScreenCanvas } from '../../shared/useScreenCanvas';
 import {
   expectedRunsOfLength, headsCounts, runLengths, scoreSequence, simulateRuns, typicalLongestStreak,
@@ -20,7 +20,10 @@ import Sequence from './Sequence';
 import './coin.css';
 
 const DEFAULTS = { flips: 10000, p: 0.5, runs: 5, seed: 'heads', mode: 'share', expN: 100 };
-const CHOICES = { mode: ['share', 'diff'] };
+const CHOICES = {
+  mode: ['share', 'diff'], flips: between(10, 1e6, true), p: between(0.05, 0.95), runs: between(1, 8, true),
+  expN: between(10, 1000, true),
+};
 const CHART_SIZE = { width: 800, height: 420 };
 const EXPERIMENTS = 2000;
 const VIEWS = [['flip', 'Flip a coin'], ['runs', 'Run thousands']];

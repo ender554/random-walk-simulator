@@ -5,7 +5,7 @@ import ToolActions from '../../shared/ToolActions';
 import ViewSwitch from '../../shared/ViewSwitch';
 import Faq from '../../shared/Faq';
 import { Legend, LogRangeControl, RangeControl, SeedControl, StatRow } from '../../shared/controls';
-import { useUrlState } from '../../shared/useUrlState';
+import { between, useUrlState } from '../../shared/useUrlState';
 import { useScreenCanvas } from '../../shared/useScreenCanvas';
 import { SPREAD, codeSnippet, dropNeedles, generatePoints, repeatedEstimates } from '../../utils/monteCarloPi';
 import { PALETTE } from '../../utils/chart';
@@ -17,7 +17,11 @@ import './pi.css';
 const DEFAULTS = { count: 10000, seed: 'pi', method: 'random', full: false, view: 'estimate', compare: false, mode: 'darts', needle: 0.8 };
 const SQUARE = { width: 600, height: 600 };
 const MODES = [['darts', 'Random darts'], ['needles', "Buffon's needle"]];
-const CHOICES = { method: ['random', 'halton'], view: ['estimate', 'error'], mode: MODES.map(([key]) => key) };
+// count's top is the darts slider's (10^5.3, rounded); needles use at most 20,000 of it
+const CHOICES = {
+  method: ['random', 'halton'], view: ['estimate', 'error'], mode: MODES.map(([key]) => key),
+  count: between(100, 200000, true), needle: between(0.1, 1),
+};
 const SPEEDS = [
   { label: 'Slow', seconds: 12 },
   { label: 'Normal', seconds: 2.5 },

@@ -4,7 +4,7 @@ import NextTools, { RailNext } from '../../shared/NextTools';
 import ToolActions from '../../shared/ToolActions';
 import Faq from '../../shared/Faq';
 import { Legend, RangeControl, SeedControl, StatRow } from '../../shared/controls';
-import { useUrlState } from '../../shared/useUrlState';
+import { between, useUrlState } from '../../shared/useUrlState';
 import { useScreenCanvas } from '../../shared/useScreenCanvas';
 import {
   STEPS_PER_YEAR, callOption, gbmTheory, percentileBands, simulatePaths, targetProbabilities,
@@ -17,7 +17,11 @@ import { drawFinals, drawMeanConvergence, drawPaths, money } from './draw';
 import './stock.css';
 
 const DEFAULTS = { s0: 100, mu: 0.1, sigma: 0.5, years: 10, paths: 1000, seed: 'market', show: 'both', log: true, fat: false, target: 200 };
-const CHOICES = { show: ['both', 'paths', 'bands'] };
+// Start and target prices are typed in, with no top on the page; the caps here only stop absurd links
+const CHOICES = {
+  show: ['both', 'paths', 'bands'], s0: between(1, 1e6), mu: between(-0.1, 0.3), sigma: between(0.01, 1),
+  years: between(1, 30, true), paths: between(10, 5000, true), target: between(0, 1e9),
+};
 const CHART_SIZE = { width: 800, height: 450 };
 // Rough long-run figures, for orientation only
 const PRESETS = [

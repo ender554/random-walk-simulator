@@ -4,7 +4,7 @@ import NextTools, { RailNext } from '../../shared/NextTools';
 import ToolActions from '../../shared/ToolActions';
 import Faq from '../../shared/Faq';
 import { Legend, RangeControl, SeedControl, StatRow } from '../../shared/controls';
-import { useUrlState } from '../../shared/useUrlState';
+import { between, useUrlState } from '../../shared/useUrlState';
 import { useScreenCanvas } from '../../shared/useScreenCanvas';
 import { SEEDS, createAggregation, massRadius } from '../../utils/dla';
 import { BACKGROUNDS, PALETTES } from '../../utils/palettes';
@@ -16,12 +16,16 @@ import './dla.css';
 
 const GRID = 400;
 const SIZE = { width: 800, height: 800 };
-const CHOICES = { shape: Object.keys(SEEDS), color: ['order', 'distance', 'depth'], palette: Object.keys(PALETTES), bg: Object.keys(BACKGROUNDS) };
 const SPEEDS = [
   { label: 'Slow (watch each walker)', steps: 4000 },
   { label: 'Normal', steps: 400000 },
   { label: 'Fast', steps: 3000000 },
 ];
+const CHOICES = {
+  shape: Object.keys(SEEDS), color: ['order', 'distance', 'depth'], palette: Object.keys(PALETTES), bg: Object.keys(BACKGROUNDS),
+  speed: SPEEDS.map((_, i) => i), particles: between(500, 20000, true), stickiness: between(0.05, 1), bias: between(0, 0.3),
+  angle: between(0, 345),
+};
 const DEFAULTS = {
   particles: 4000, stickiness: 1, seed: 'coral', shape: 'point', bias: 0, angle: 90,
   color: 'order', palette: 'neon', bg: 'dark', speed: 1,

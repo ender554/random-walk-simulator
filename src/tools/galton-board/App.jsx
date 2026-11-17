@@ -5,7 +5,7 @@ import NextTools, { RailNext } from '../../shared/NextTools';
 import ToolActions from '../../shared/ToolActions';
 import Faq from '../../shared/Faq';
 import { Legend, RangeControl, SeedControl, StatRow } from '../../shared/controls';
-import { useUrlState } from '../../shared/useUrlState';
+import { between, useUrlState } from '../../shared/useUrlState';
 import { presentZoom } from '../../shared/present';
 import { PALETTE } from '../../utils/chart';
 import { binomialPmf } from '../../utils/stats';
@@ -23,7 +23,10 @@ const SPEEDS = [
   { label: '16×', factor: 16 },
 ];
 const DEFAULTS = { rows: 12, p: 0.5, seed: 'galton', view: 'count', pascal: false, normal: false, speed: 2, start: 500 };
-const CHOICES = { view: ['count', 'fraction', 'probability', 'none'] };
+const CHOICES = {
+  view: ['count', 'fraction', 'probability', 'none'], speed: SPEEDS.map((_, i) => i), rows: between(1, 20, true),
+  p: between(0.1, 0.9), start: between(0, MAX_BALLS, true),
+};
 
 const FAQ = [
   {

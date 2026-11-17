@@ -8,7 +8,7 @@ import Faq from '../../shared/Faq';
 import TeachSection from '../../shared/TeachSection';
 import Challenge from '../../shared/Challenge';
 import { Legend, LogRangeControl, RangeControl, SeedControl } from '../../shared/controls';
-import { useUrlState } from '../../shared/useUrlState';
+import { between, useUrlState } from '../../shared/useUrlState';
 import {
   QUESTIONS, SPACES, canSimulate, firstMatch, parseBirthdays, peopleNeeded, probability, roomPool, simulateRooms,
 } from '../../utils/birthdays';
@@ -20,7 +20,10 @@ import { drawRoom } from './drawRoom';
 import './birthday.css';
 
 const DEFAULTS = { q: 'anyTwo', space: 'birthdays', custom: 1000, people: 23, window: 1, trials: 2000, seed: 'birthday' };
-const CHOICES = { q: Object.keys(QUESTIONS), space: [...SPACES.map((s) => s.key), 'custom'] };
+const CHOICES = {
+  q: Object.keys(QUESTIONS), space: [...SPACES.map((s) => s.key), 'custom'], custom: between(2, 2 ** 64, true),
+  people: between(2, 1e12, true), window: between(0, 7, true), trials: between(100, 10000, true),
+};
 const CHART_SIZE = { width: 800, height: 380 };
 const VIEWS = [['room', 'Fill a room'], ['curve', 'Chance curve']];
 const pct = (v) => (v > 0 && v < 0.001 ? '<0.1%' : v > 0.999 && v < 1 ? '>99.9%' : `${(v * 100).toFixed(1)}%`);

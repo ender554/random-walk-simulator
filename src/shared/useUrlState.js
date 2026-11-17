@@ -12,22 +12,37 @@ function parse(raw, fallback) {
   return raw;
 }
 
+/**
+ * The allowed span of a number setting, usually its slider's ends. `whole` rounds to a whole number (counts).
+ * A link value outside it moves to the nearest end, so `?n=0` gives the smallest sample instead of NaN, and
+ * `?count=1e9` gives the largest run instead of freezing the tab.
+ */
+export const between = (min, max, whole = false) => ({ min, max, whole });
+
+function allowed(rule, parsed, fallback) {
+  if (!rule) return parsed;
+  // A link can carry any text; a value the tool doesn't offer (a typo, "Knows" for "knows", an old
+  // option name) falls back to the default instead of reaching code that looks it up
+  if (Array.isArray(rule)) return rule.includes(parsed) ? parsed : fallback;
+  const n = rule.whole ? Math.round(parsed) : parsed;
+  return Math.min(rule.max, Math.max(rule.min, n));
+}
+
 function readUrl(defaults, choices) {
   // The build-time prerender has no URL: it renders the defaults
   if (typeof window === 'undefined') return { ...defaults };
   const params = new URLSearchParams(window.location.search);
-  return Object.fromEntries(Object.entries(defaults).map(([key, value]) => {
-    const parsed = parse(params.get(key), value);
-    // A link can carry any text; a value the tool doesn't offer (a typo, "Knows" for "knows", an old
-    // option name) falls back to the default instead of reaching code that looks it up
-    return [key, choices[key] && !choices[key].includes(parsed) ? value : parsed];
-  }));
+  return Object.fromEntries(Object.entries(defaults).map(([key, value]) => (
+    [key, allowed(choices[key], parse(params.get(key), value), value)]
+  )));
 }
 
 /**
  * Settings that live in the URL, so any run can be shared or bookmarked.
  * Only values that differ from the defaults are written, which keeps links short.
- * `choices` lists the allowed values of each text setting that is picked from a list.
+ * `choices` holds what a link may set: a list of allowed values for a setting picked from a list (text, or a
+ * numbered speed), or `between(min, max)` for a number. Settings with no entry (seeds, on/off) are taken as
+ * they are.
  * Returns [settings, set(key, value), reset()].
  */
 export function useUrlState(defaults, choices = {}) {

@@ -5,7 +5,7 @@ import ToolActions from '../../shared/ToolActions';
 import ViewSwitch from '../../shared/ViewSwitch';
 import Faq from '../../shared/Faq';
 import { Legend, LogRangeControl, RangeControl, SeedControl, StatRow } from '../../shared/controls';
-import { useUrlState } from '../../shared/useUrlState';
+import { between, useUrlState } from '../../shared/useUrlState';
 import { useScreenCanvas } from '../../shared/useScreenCanvas';
 import { MAX_POINTS, RULES, bounds, displacementStats, generateWalks, returnStats } from '../../utils/randomWalks';
 import { PALETTE } from '../../utils/chart';
@@ -23,6 +23,8 @@ const VIEWS = [['paths', 'Paths'], ['heatmap', 'Heatmap of visits']];
 const CHOICES = {
   rule: Object.keys(RULES), boundary: ['none', 'reflect', 'wrap'], view: VIEWS.map(([key]) => key),
   color: ['walker', 'time', 'single'], palette: Object.keys(PALETTES), bg: Object.keys(BACKGROUNDS),
+  walkers: between(1, 1000, true), steps: between(10, 100000, true), alpha: between(1.1, 2.5), drift: between(0, 0.3),
+  angle: between(0, 345), box: between(5, 500, true), width: between(0.25, 6), opacity: between(0.05, 1),
 };
 const SPEEDS = [
   { label: 'Slow', seconds: 20 },

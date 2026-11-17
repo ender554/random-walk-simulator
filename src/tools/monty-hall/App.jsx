@@ -8,7 +8,7 @@ import Faq from '../../shared/Faq';
 import TeachSection from '../../shared/TeachSection';
 import Challenge from '../../shared/Challenge';
 import { LogRangeControl, RangeControl, SeedControl, StatRow } from '../../shared/controls';
-import { useUrlState } from '../../shared/useUrlState';
+import { between, useUrlState } from '../../shared/useUrlState';
 import { HOST_RULES, simulateGames, theory } from '../../utils/montyHall';
 import { PALETTE, chartFrame, clipToPlot, evenTicks, powersOfTen } from '../../utils/chart';
 import { downloadCSV } from '../../utils/export';
@@ -19,7 +19,7 @@ import Race from './Race';
 import './monty.css';
 
 const DEFAULTS = { doors: 3, host: 'knows', games: 1000, seed: 'montyhall' };
-const CHOICES = { host: Object.keys(HOST_RULES) };
+const CHOICES = { host: Object.keys(HOST_RULES), doors: between(3, 100, true), games: between(10, 1e5, true) };
 const CHART_SIZE = { width: 800, height: 380 };
 const pct = (v) => `${(v * 100).toFixed(1)}%`;
 

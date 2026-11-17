@@ -5,7 +5,7 @@ import ToolActions from '../../shared/ToolActions';
 import Faq from '../../shared/Faq';
 import TeachSection from '../../shared/TeachSection';
 import { Legend, RangeControl, SeedControl, StatRow } from '../../shared/controls';
-import { useUrlState } from '../../shared/useUrlState';
+import { between, useUrlState } from '../../shared/useUrlState';
 import { useScreenCanvas } from '../../shared/useScreenCanvas';
 import {
   DISTRIBUTION_KEYS, drawSamples, histogram, lognormalSkewness, makeDistribution, normalProbability, shareBetween, summarize,
@@ -17,7 +17,7 @@ import { COLORS, drawMeans, drawSource } from './drawCharts';
 import './clt.css';
 
 const DEFAULTS = { dist: 'exponential', skew: 0.75, n: 5, samples: 5000, seed: 'bellcurve', zoom: false };
-const CHOICES = { dist: DISTRIBUTION_KEYS };
+const CHOICES = { dist: DISTRIBUTION_KEYS, skew: between(0.25, 1.5), n: between(1, 100, true), samples: between(100, 10000, true) };
 const MEANS_SIZE = { width: 800, height: 340 };
 const COMPARE_NS = [1, 5, 30];
 const fmt = (v) => (Number.isFinite(v) ? v.toLocaleString(undefined, { maximumFractionDigits: 3 }) : 'undefined');

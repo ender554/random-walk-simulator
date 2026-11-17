@@ -4,7 +4,7 @@ import NextTools, { RailNext } from '../../shared/NextTools';
 import ToolActions from '../../shared/ToolActions';
 import Faq from '../../shared/Faq';
 import { Legend, LogRangeControl, RangeControl, SeedControl, StatRow } from '../../shared/controls';
-import { useUrlState } from '../../shared/useUrlState';
+import { between, useUrlState } from '../../shared/useUrlState';
 import { useScreenCanvas } from '../../shared/useScreenCanvas';
 import { STRATEGIES, gamblersRuinTheory, simulateGames, summarize } from '../../utils/gamblersRuin';
 import { PALETTE } from '../../utils/chart';
@@ -14,7 +14,10 @@ import { COLORS, drawGames, drawLengths, drawRuinCurve } from './drawGames';
 import './ruin.css';
 
 const DEFAULTS = { start: 20, target: 40, open: false, p: 18 / 37, payout: 1, games: 1000, strategy: 'flat', unit: 1, limit: 500, seed: 'casino' };
-const CHOICES = { strategy: Object.keys(STRATEGIES) };
+const CHOICES = {
+  strategy: Object.keys(STRATEGIES), start: between(1, 500, true), target: between(2, 1000, true), p: between(0.01, 0.7),
+  payout: between(0.1, 1000), games: between(10, 1e5, true), unit: between(1, 50, true), limit: between(10, 5000, true),
+};
 const CHART_SIZE = { width: 800, height: 450 };
 const PRESETS = [
   { label: 'Fair coin', p: 0.5, payout: 1 },
